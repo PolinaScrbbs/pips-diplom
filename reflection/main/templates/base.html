@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Детский центр психологии и развития «Отражение»{% endblock %}</title>
+  <!-- Bootstrap 5 -->
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+  />
+  <!-- Наша зелёная тема -->
+  <link rel="stylesheet" href="{% static 'css/styles.css' %}" />
+</head>
+<body>
+  <header class="bg-white shadow-sm">
+    <div class="container py-2">
+      <div class="row align-items-center">
+        <div class="col-auto">
+          <div class="logo fs-4 fw-bold text-success">«Отражение»</div>
+        </div>
+        <div class="col">
+          <nav class="nav justify-content-center gap-4">
+            <a href="{% url 'main:home' %}" class="nav-link text-dark">Главная</a>
+            <a href="{% url 'main:services' %}" class="nav-link text-dark">Услуги</a>
+            <a href="{% url 'main:why_us' %}" class="nav-link text-dark">Почему именно мы</a>
+            <a href="{% url 'main:reviews' %}" class="nav-link text-dark">Отзывы</a>
+          </nav>
+        </div>
+        <div class="col-auto">
+          <button class="btn btn-outline-success">Записаться</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="bg-light">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="py-4 bg-white text-dark border-top border-success">
+    <div class="container">
+      <p>Детский центр психологии и развития <strong>«Отражение»</strong>, Курск</p>
+      <p>Телефон: <a href="tel:+79611689798" class="text-success text-decoration-underline">+7 (961) 168‑97‑98</a></p>
+    </div>
+  </footer>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

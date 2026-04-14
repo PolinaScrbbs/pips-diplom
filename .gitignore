@@ -1,0 +1,49 @@
+# Django
+*.log
+*.pot
+*.pyc
+__pycache__/
+!.gitignore
+
+# Виртуальное окружение
+venv/
+env/
+envs/
+ENV/
+.venv
+.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*~
+
+# Отложенная очистка сборки
+.DS_Store
+Thumbs.db
+
+# Пользовательские настройки / локальные файлы
+local_settings.py
+secrets.py
+prod_settings.py
+debug.log
+
+# БД
+*.sqlite3
+db.sqlite3
+
+# Статика и медиа (если собираются вручную, не включать в репозиторий)
+static/CACHE/
+media/
+
+# Python
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.pytest_cache/
+
+# Проект‑специфичные исключения (если что‑то особенное потребуется)
+reflection/local_settings.py
+.env
