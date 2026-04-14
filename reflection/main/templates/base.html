@@ -29,7 +29,14 @@
           </nav>
         </div>
         <div class="col-auto">
-          <button class="btn btn-outline-success">Записаться</button>
+          <button
+  type="button"
+  class="btn btn-outline-success"
+  data-bs-toggle="modal"
+  data-bs-target="#bookingModal"
+>
+  Записаться
+</button>
         </div>
       </div>
     </div>
@@ -45,6 +52,82 @@
       <p>Телефон: <a href="tel:+79611689798" class="text-success text-decoration-underline">+7 (961) 168‑97‑98</a></p>
     </div>
   </footer>
+
+  <!-- Модальное окно записи -->
+<div class="modal fade" id="bookingModal" tabindex="-1" aria-labelledby="bookingModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title text-success" id="bookingModalLabel">Записаться на консультацию</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="bookingForm">
+          <div class="mb-3">
+            <label for="childName" class="form-label">Имя ребёнка</label>
+            <input type="text" class="form-control" id="childName" required />
+          </div>
+          <div class="mb-3">
+            <label for="parentName" class="form-label">Ваше имя (родитель)</label>
+            <input type="text" class="form-control" id="parentName" required />
+          </div>
+          <div class="mb-3">
+            <label for="phone" class="form-label">Телефон</label>
+            <input type="tel" class="form-control" id="phone" required />
+          </div>
+          <div class="mb-3">
+            <label for="category" class="form-label">Категория обращения</label>
+            <select class="form-control" id="category" required>
+              <option value="">Выберите</option>
+              <option value="child">Детская психология</option>
+              <option value="teen">Подростковые консультации</option>
+              <option value="family">Семейная психология</option>
+              <option value="parents">Консультации для родителей</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="comment" class="form-label">Кратко о ситуации (необязательно)</label>
+            <textarea class="form-control" id="comment" rows="3"></textarea>
+          </div>
+          <button type="submit" class="btn btn-success w-100">Отправить заявку</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- JS для обработки формы (без базы данных) -->
+<script>
+  document.getElementById('bookingForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const childName = document.getElementById('childName').value.trim();
+    const parentName = document.getElementById('parentName').value.trim();
+    const phone = document.getElementById('phone').value.trim();
+    const category = document.getElementById('category').value;
+    const comment = document.getElementById('comment').value.trim();
+
+    // Здесь можно добавить валидацию, например по длине телефона, но пока простой пример
+
+    alert(
+      `Заявка отправлена!\n\n` +
+      `Ребёнок: ${childName}\n` +
+      `Родитель: ${parentName}\n` +
+      `Телефон: ${phone}\n` +
+      `Категория: ${category}\n` +
+      (comment ? `Комментарий: ${comment}` : "")
+    );
+
+    // Закрыть модальное окно
+    const modal = bootstrap.Modal.getInstance(document.getElementById('bookingModal'));
+    if (modal) {
+      modal.hide();
+    }
+
+    // Очистить форму
+    this.reset();
+  });
+</script>
 
   <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
