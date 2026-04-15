@@ -1,160 +1,164 @@
 {% extends "base.html" %}
-{% block title %}Услуги — детский центр «Отражение»{% endblock %}
+{% block title %}Услуги — центр «Отражение»{% endblock %}
 
 {% block content %}
 
-<section class="hero container">
-  <div class="fade-in">
-    <h1>Услуги детского центра «Отражение»</h1>
-    <p>Помогаем детям, подросткам и родителям находить ресурсы внутреннего мира, улучшать эмоциональный климат в семье и поддерживать здоровое развитие.</p>
-  </div>
-</section>
-
-<section class="services-section">
+<section class="hero py-5 text-center text-success">
   <div class="container">
-    <h2 class="section-title">Для детей</h2>
-    <div class="cards">
-      <div class="card fade-in">
-        <h3>Индивидуальная детская психология</h3>
-        <p>Консультации и сопровождение детей, которые испытывают тревожность, страхи, трудности в общении, конфликты с родителями и сверстниками.</p>
-        <p class="card-price">Формат: индивидуальные сессии с ребёнком</p>
-      </div>
-      <div class="card fade-in">
-        <h3>Поддержка при стрессах и школьных трудностях</h3>
-        <p>Помощь при неуспеваемости, страхах перед школой, переживании конфликтов, адаптации к новому классу или школе.</p>
-        <p class="card-price">Формат: индивидуальные и групповые занятия</p>
-      </div>
-      <div class="card fade-in">
-        <h3>Развивающие группы для детей 5–9 лет</h3>
-        <p>Игровые и обучающие группы, где ребёнок развивает эмоциональный интеллект, навыки общения, уверенность в себе и умение работать в команде.</p>
-        <p class="card-price">Формат: группы до 8 человек, раз в неделю</p>
-      </div>
-    </div>
+    <h1>Каталог услуг</h1>
+    <p>Детская и семейная психология, консультации для родителей, группы поддержки и развитие.</p>
   </div>
 </section>
 
-<section class="services-section">
+<section class="py-5" id="services-section">
   <div class="container">
-    <h2 class="section-title">Для подростков</h2>
-    <div class="cards">
-      <div class="card fade-in">
-        <h3>Подростковые консультации</h3>
-        <p>Личное пространство для подростка, где можно обсудить самооценку, отношения, выбор профессии, проблемы в семье, в школе и с друзьями.</p>
-        <p class="card-price">Формат: индивидуальные консультации</p>
-      </div>
-      <div class="card fade-in">
-        <h3>Группы поддержки «Я и мир»</h3>
-        <p>Занятия, где подростки учатся выражать чувства, отстаивать границы, переживать кризисы переходного возраста с опорой на взрослого и группу.</p>
-        <p class="card-price">Формат: группы до 10–12 человек, 1–2 раза в неделю</p>
-      </div>
-      <div class="card fade-in">
-        <h3>Поддержка при эмоциональном выгорании</h3>
-        <p>Помощь тем, кто чувствует усталость, апатию, давление, переутомление от учёбы, спорта, репетиций и социальных ожиданий.</p>
-        <p class="card-price">Формат: индивидуальные и краткосрочные программы</p>
-      </div>
+    <div class="row g-4" id="services-container">
+      {% for service in page_obj %}
+        <div class="col-lg-4 col-md-6 service-item">
+          <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body">
+              <h4 class="text-success">{{ service.name }}</h4>
+              {% if service.short_description %}
+                <p class="small text-muted">{{ service.short_description }}</p>
+              {% endif %}
+              <p class="small">{{ service.description|truncatewords:20 }}</p>
+              <hr />
+              {% if service.duration or service.price %}
+                <dl class="row small">
+                  {% if service.duration %}
+                    <dt class="col-5">Длительность:</dt>
+                    <dd class="col-7 text-end">{{ service.duration }}</dd>
+                  {% endif %}
+                  {% if service.price %}
+                    <dt class="col-5">Стоимость:</dt>
+                    <dd class="col-7 text-end">{{ service.price }} ₽</dd>
+                  {% endif %}
+                </dl>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+    <div class="text-center mt-5">
+      <button
+        id="load-more-btn"
+        class="btn btn-success"
+        data-next-page="{{ page_obj.next_page_number|default:2 }}"
+        data-url="{% url 'services:load_more_services' %}"
+      >
+        Показать ещё 6 услуг
+      </button>
     </div>
   </div>
 </section>
 
-<section class="services-section">
-  <div class="container">
-    <h2 class="section-title">Для семей</h2>
-    <div class="cards">
-      <div class="card fade-in">
-        <h3>Семейная психотерапия</h3>
-        <p>Работа со всеми членами семьи, когда важна наладка коммуникации, снижение конфликтов, поддержка при разводе, переезде, рождении нового ребёнка.</p>
-        <p class="card-price">Формат: семейные сессии, несколько человек</p>
-      </div>
-      <div class="card fade-in">
-        <h3>Разрешение конфликтов «родитель–ребёнок»</h3>
-        <p>Позволяет понять, что именно вызывает напряжение в отношениях, как выстроить границы и уважительное взаимодействие без угроз и манипуляций.</p>
-        <p class="card-price">Формат: индивидуальные и семейные консультации</p>
-      </div>
-      <div class="card fade-in">
-        <h3>Поддержка при сложных жизненных обстоятельствах</h3>
-        <p>Помощь семьям в ситуациях потерь, болезней, диагнозов, стрессовых событий, переездов, смены школы.</p>
-        <p class="card-price">Формат: длительное сопровождение и краткие консультации</p>
-      </div>
-    </div>
-  </div>
-</section>
+<script>
+  // простой DOM-ready (без extra_js)
+  document.addEventListener("DOMContentLoaded", function () {
+    const servicesContainer = document.getElementById("services-container");
+    const loadMoreBtn = document.getElementById("load-more-btn");
 
-<section class="services-section">
-  <div class="container">
-    <h2 class="section-title">Для родителей</h2>
-    <div class="cards">
-      <div class="card fade-in">
-        <h3>Консультации для родителей</h3>
-        <p>Помощь в понимании поведения ребёнка, подборе мягких и устойчивых стратегий воспитания, снижении авторитарного и чрезмерно мягкого стиля.</p>
-        <p class="card-price">Формат: индивидуальные консультации и онлайн‑встречи</p>
-      </div>
-      <div class="card fade-in">
-        <h3>Группы «Семья и развитие»</h3>
-        <p>Пространство, где родители делятся опытом, получают поддержку и практические навыки для улучшения атмосферы в доме.</p>
-        <p class="card-price">Формат: группы до 10–12 человек, раз в 1–2 недели</p>
-      </div>
-      <div class="card fade-in">
-        <h3>Сопровождение при сложных диагнозах и лечении</h3>
-        <p>Помощь родителям ребёнка с диагнозом или хроническим состоянием в вопросах эмоциональной поддержки, коммуникации с медицинскими специалистами и реабилитацией.</p>
-        <p class="card-price">Формат: индивидуальные и семейные консультации</p>
-      </div>
-    </div>
-  </div>
-</section>
+    if (!loadMoreBtn || !servicesContainer) return;
 
-<section class="services-section">
-  <div class="container">
-    <h2 class="section-title">Как получить услугу</h2>
-    <div class="cards">
-      <div class="card">
-        <h3>1. Запись на консультацию</h3>
-        <p>Свяжитесь с нами по телефону, в VK или через форму на сайте. Мы обсудим ваш запрос и подберём формат и специалиста.</p>
-      </div>
-      <div class="card">
-        <h3>2. Первая консультация</h3>
-        <p>На первой встрече мы знакомимся, уточняем цели, сроки, ожидания и формируем план работы.</p>
-      </div>
-      <div class="card">
-        <h3>3. Регулярные сессии</h3>
-        <p>Далее следуют регулярные сессии (раз в неделю/раз в две недели), в процессе которых мы отслеживаем динамику и корректируем подход.</p>
-      </div>
-    </div>
-  </div>
-</section>
+    loadMoreBtn.addEventListener("click", function () {
+      const nextPage = this.getAttribute("data-next-page");
+      const url = this.getAttribute("data-url"); // /services/load-more/
 
-<section id="contacts" class="contacts container">
-  <h2 class="section-title">Записаться на консультацию</h2>
-  <p>Оставьте заявку, и мы свяжемся с вами для подбора удобного времени и формата работы.</p>
-  <div class="contacts-grid fade-in">
-    <div class="branch">
-      <h4>Контакты</h4>
-      <p><strong>Адрес:</strong> г. Курск, ул. Карла Маркса, 72/20</p>
-      <p><strong>Телефон:</strong> <a href="tel:+79611689798">+7 (961) 168‑97‑98</a></p>
-      <p><strong>VK‑страница:</strong> <a href="https://vk.com/club_otragenie" target="_blank">https://vk.com/club_otragenie</a></p>
-    </div>
-    <div class="form">
-      <h3>Форма обратной связи</h3>
-      <form action="#" method="post">
-        {% csrf_token %}
-        <input type="text" name="name" placeholder="Имя ребёнка" required />
-        <input type="text" name="parent" placeholder="Ваше имя (родителя)" required />
-        <input type="tel" name="phone" placeholder="Телефон" required />
-        <select name="reason" required>
-          <option value="">Выберите категорию услуги</option>
-          <option value="child">Детская психология</option>
-          <option value="teen">Подростковые консультации</option>
-          <option value="family">Семейная психология</option>
-          <option value="parents">Консультации для родителей</option>
-        </select>
-        <textarea
-          name="message"
-          placeholder="Кратко опишите ситуацию (не обязательно)"
-          style="display:block; width:100%; padding:0.7rem; margin-bottom:0.9rem; border:1px solid #d1fae5; border-radius:var(--radius); resize:vertical; min-height:80px; font-size:0.95rem; background:rgba(225,255,241,0.7);"
-        ></textarea>
-        <button type="submit" class="btn">Отправить заявку</button>
-      </form>
-    </div>
-  </div>
-</section>
+      const fullUrl = `${url}?page=${nextPage}`;
+
+      fetch(fullUrl, {
+        headers: {
+          "X-Requested-With": "XMLHttpRequest",
+          "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value,
+        },
+      })
+      .then((response) => {
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return response.json();
+      })
+      .then((data) => {
+        if (!data.items || data.items.length === 0) {
+          loadMoreBtn.parentElement.innerHTML =
+            '<p class="text-muted">Все услуги загружены.</p>';
+          return;
+        }
+
+        // добавляем новые карточки
+        data.items.forEach((service) => {
+          const col = document.createElement("div");
+          col.className = "col-lg-4 col-md-6 service-item";
+
+          const card = document.createElement("div");
+          card.className = "card h-100 border-0 shadow-sm";
+
+          const body = document.createElement("div");
+          body.className = "card-body";
+
+          const h4 = document.createElement("h4");
+          h4.className = "text-success";
+          h4.textContent = service.name;
+
+          const p1 = document.createElement("p");
+          p1.className = "small text-muted";
+          p1.textContent = service.short_description || "";
+
+          const p2 = document.createElement("p");
+          p2.className = "small";
+          p2.textContent = service.description || "";
+
+          const hr = document.createElement("hr");
+
+          const dl = document.createElement("dl");
+          dl.className = "row small";
+
+          if (service.duration) {
+            const dt1 = document.createElement("dt");
+            dt1.className = "col-5";
+            dt1.textContent = "Длительность:";
+            const dd1 = document.createElement("dd");
+            dd1.className = "col-7 text-end";
+            dd1.textContent = service.duration;
+            dl.appendChild(dt1);
+            dl.appendChild(dd1);
+          }
+
+          if (service.price !== null) {
+            const dt2 = document.createElement("dt");
+            dt2.className = "col-5";
+            dt2.textContent = "Стоимость:";
+            const dd2 = document.createElement("dd");
+            dd2.className = "col-7 text-end";
+            dd2.textContent = service.price + " ₽";
+            dl.appendChild(dt2);
+            dl.appendChild(dd2);
+          }
+
+          body.appendChild(h4);
+          body.appendChild(p1);
+          body.appendChild(p2);
+          body.appendChild(hr);
+          if (service.duration || service.price) body.appendChild(dl);
+
+          card.appendChild(body);
+          col.appendChild(card);
+          servicesContainer.appendChild(col);
+        });
+
+        if (data.has_next) {
+          loadMoreBtn.setAttribute("data-next-page", (parseInt(nextPage) + 1).toString());
+        } else {
+          loadMoreBtn.parentElement.innerHTML =
+            '<p class="text-muted">Все услуги загружены.</p>';
+        }
+      })
+      .catch((err) => {
+        console.error("Ошибка:", err);
+        alert("Не удалось загрузить услуги.");
+      });
+    });
+  });
+</script>
 
 {% endblock %}
