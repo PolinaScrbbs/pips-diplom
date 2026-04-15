@@ -5,7 +5,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{% block title %}Детский центр психологии и развития «Отражение»{% endblock %}</title>
-  <!-- CSRF token для JavaScript -->
   {% csrf_token %}
 
   <!-- Bootstrap 5 -->
@@ -25,10 +24,10 @@
         </div>
         <div class="col">
           <nav class="nav justify-content-center gap-4">
-            <a href="{% url 'main:home' %}" class="nav-link text-dark">Главная</a>
-            <a href="{% url 'main:services' %}" class="nav-link text-dark">Услуги</a>
+            <a href="{% url 'main:index' %}" class="nav-link text-dark">Главная</a>
+            <a href="{% url 'services:services' %}" class="nav-link text-dark">Услуги</a>
             <a href="{% url 'main:why_us' %}" class="nav-link text-dark">Почему именно мы</a>
-            <a href="{% url 'main:reviews' %}" class="nav-link text-dark">Отзывы</a>
+            <a href="{% url 'reviews:reviews' %}" class="nav-link text-dark">Отзывы</a>
           </nav>
         </div>
         <div class="col-auto">
@@ -56,93 +55,39 @@
     </div>
   </footer>
 
-  <!-- Модальное окно записи -->
-  <div class="modal fade" id="bookingModal" tabindex="-1" aria-labelledby="bookingModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title text-success" id="bookingModalLabel">Записаться на консультацию</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <form id="bookingForm">
-            <input type="hidden" name="next" value="{{ request.path }}">
-            <div class="mb-3">
-              <label for="childName" class="form-label">Имя ребёнка</label>
-              <input type="text" class="form-control" id="childName" name="child_name" required />
-            </div>
-            <div class="mb-3">
-              <label for="parentName" class="form-label">Ваше имя (родитель)</label>
-              <input type="text" class="form-control" id="parentName" name="parent_name" required />
-            </div>
-            <div class="mb-3">
-              <label for="phone" class="form-label">Телефон</label>
-              <input type="tel" class="form-control" id="phone" name="phone" required />
-            </div>
-            <div class="mb-3">
-              <label for="category" class="form-label">Категория обращения</label>
-              <select class="form-control" id="category" name="category" required>
-                <option value="">Выберите</option>
-                <option value="child">Детская психология</option>
-                <option value="teen">Подростковые консультации</option>
-                <option value="family">Семейная психология</option>
-                <option value="parents">Консультации для родителей</option>
-              </select>
-            </div>
-            <div class="mb-3">
-              <label for="comment" class="form-label">Кратко о ситуации (необязательно)</label>
-              <textarea class="form-control" id="comment" name="comment" rows="3"></textarea>
-            </div>
-            <button type="submit" class="btn btn-success w-100">Отправить заявку</button>
-          </form>
-        </div>
-      </div>
-    </div>
-  </div>
+  <!-- Общее модальное окно «Записаться» из приложения booking -->
+  {% include "booking/_form_modal.html" %}
 
   <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
-  <!-- JS для обработки формы и сохранения в Django-модель Booking -->
+  <!-- JS обработки формы -->
   <script>
-  document.getElementById('bookingForm').addEventListener('submit', function(e) {
-    e.preventDefault();
+    document.getElementById('bookingForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const csrfToken = document.querySelector('[name="csrfmiddlewaretoken"]').value;
+      const nextUrlField = document.querySelector('[name="next"]');
+      const nextUrl = nextUrlField ? nextUrlField.value : window.location.pathname;
 
-    // CSRF-токен из скрытого поля
-    const csrfToken = document.querySelector('[name="csrfmiddlewaretoken"]').value;
+      const formData = new FormData(this);
 
-    // Собираем данные как FormData (а не JSON), чтобы CSRF работал как положено
-    const formData = new FormData(this);
-
-    fetch("{% url 'main:create_booking' %}", {
-      method: "POST",
-      headers: {
-        "X-CSRFToken": csrfToken,
-      },
-      body: formData,
-    })
-    .then(response => {
-      if (!response.ok) {
-        throw new Error("Ошибка сервера: " + response.status);
-      }
-      return response.text();
-    })
-    .then(html => {
-  alert("Заявка успешно отправлена и сохранена в базе данных.");
-
-  const modal = bootstrap.Modal.getInstance(document.getElementById('bookingModal'));
-  if (modal) {
-    modal.hide();
-  }
-
-  // Обновить страницу, чтобы показать «успех» или просто оставить текущую:
-  location.reload();
-})
-    .catch(err => {
-      alert("Произошла ошибка при отправке формы.");
-      console.error(err);
+      fetch("{% url 'booking:create_booking' %}", {
+        method: "POST",
+        headers: { "X-CSRFToken": csrfToken },
+        body: formData,
+      })
+      .then(response => {
+        if (!response.ok) throw new Error(`Ошибка: ${response.status}`);
+        alert("Заявка успешно отправлена и сохранена в базе данных.");
+        const modal = bootstrap.Modal.getInstance(document.getElementById('bookingModal'));
+        if (modal) modal.hide();
+        this.reset();
+      })
+      .catch(err => {
+        alert("Произошла ошибка при отправке формы.");
+        console.error(err);
+      });
     });
-  });
-</script>
+  </script>
 </body>
 </html>

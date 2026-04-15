@@ -110,30 +110,42 @@
       <p><strong>Формат приёма:</strong> очные консультации и онлайн‑консультации (по предварительной записи).</p>
     </div>
     <div class="form">
-      <h3>Оставить заявку</h3>
-      <p>Отправьте нам форму, и мы свяжемся с вами удобным способом для записи на консультацию или онлайн‑приём.</p>
-      <form action="#" method="post">
-        {% csrf_token %}
-        <input type="text" name="name" placeholder="Имя ребёнка" required />
-        <input type="text" name="parent" placeholder="Ваше имя (родителя)" required />
-        <input type="tel" name="phone" placeholder="Телефон" required />
-        <select name="reason" required>
-          <option value="">Выберите причину обращения</option>
-          <option value="fears">Страхи, тревожность, панические атаки</option>
-          <option value="school">Проблемы в школе, неуспеваемость</option>
-          <option value="family">Конфликты в семье, развод, переезд</option>
-          <option value="puberty">Переходный возраст, конфликты</option>
-          <option value="health">Диагноз, сопровождение лечения</option>
-          <option value="other">Другое</option>
-        </select>
-        <textarea
-          name="message"
-          placeholder="Кратко опишите ситуацию (не обязательно)"
-          style="display:block; width:100%; padding:0.7rem; margin-bottom:0.9rem; border:1px solid #d1fae5; border-radius:var(--radius); resize:vertical; min-height:80px; font-size:0.95rem; background:rgba(225,255,241,0.7);"
-        ></textarea>
-        <button type="submit" class="btn">Отправить заявку</button>
-      </form>
+  <h3>Оставить заявку</h3>
+  <p>Отправьте нам форму, и мы свяжемся с вами удобным способом для записи на консультацию или онлайн‑приём.</p>
+  <form method="post" action="{% url 'booking:create_booking' %}">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ request.path }}"> <!-- вернёмся на index -->
+    
+    <div class="mb-3">
+      <input type="text" name="child_name" class="form-control" placeholder="Имя ребёнка" required />
     </div>
+    <div class="mb-3">
+      <input type="text" name="parent_name" class="form-control" placeholder="Ваше имя (родителя)" required />
+    </div>
+    <div class="mb-3">
+      <input type="tel" name="phone" class="form-control" placeholder="Телефон" required />
+    </div>
+    <div class="mb-3">
+      <select name="category" class="form-control" required>
+        <option value="">Выберите причину обращения</option>
+        <option value="fears">Страхи, тревожность, панические атаки</option>
+        <option value="school">Проблемы в школе, неуспеваемость</option>
+        <option value="family">Конфликты в семье, развод, переезд</option>
+        <option value="puberty">Переходный возраст, конфликты</option>
+        <option value="health">Диагноз, сопровождение лечения</option>
+        <option value="other">Другое</option>
+      </select>
+    </div>
+    <div class="mb-3">
+      <textarea
+        name="comment"
+        placeholder="Кратко опишите ситуацию (не обязательно)"
+        style="display:block; width:100%; padding:0.7rem; margin-bottom:0.9rem; border:1px solid #d1fae5; border-radius:var(--radius); resize:vertical; min-height:80px; font-size:0.95rem; background:rgba(225,255,241,0.7);"
+      ></textarea>
+    </div>
+    <button type="submit" class="btn btn-primary">Отправить заявку</button>
+  </form>
+</div>
   </div>
 </section>
 

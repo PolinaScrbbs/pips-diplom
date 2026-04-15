@@ -38,6 +38,9 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "main",
+    "services",
+    "reviews",
+    "booking",
 ]
 
 STATIC_URL = "/static/"
@@ -60,7 +63,12 @@ ROOT_URLCONF = "reflection.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [
+            BASE_DIR / "main" / "templates",      # здесь base.html
+            BASE_DIR / "services" / "templates",
+            BASE_DIR / "reviews" / "templates",
+            BASE_DIR / "booking" / "templates",
+        ],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [

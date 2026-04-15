@@ -17,5 +17,5 @@ class BookingForm(forms.ModelForm):
             "parent_name": "Ваше имя (родитель)",
             "phone": "Телефон",
             "category": "Категория обращения",
-            "comment": "Кратко о ситуации (необязательно)",
+            "comment": "Комментарий (необязательно)",
         }
