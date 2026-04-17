@@ -1,0 +1,30 @@
+<div
+  class="modal fade"
+  id="simpleReviewModal"
+  tabindex="-1"
+  aria-labelledby="simpleReviewModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title text-success" id="simpleReviewModalLabel">
+          Оставить отзыв
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body">
+        <p class="small text-muted">
+          Вы можете оставить отзыв на сайт, не привязывая его к конкретному заказу.
+        </p>
+
+        <form id="simpleReviewForm" method="post" data-url="{% url 'reviews:create_simple_review' %}">
+          {% csrf_token %}
+          {{ form.as_p }}
+          <button type="submit" class="btn btn-success btn-sm">Отправить отзыв</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
