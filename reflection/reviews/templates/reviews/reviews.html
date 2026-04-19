@@ -1,48 +1,198 @@
 {% extends "base.html" %}
-{% block title %}Отзывы — центр «Отражение»{% endblock %}
+{% load static %}
+{% block title %}Отзывы — Центр «Отражение»{% endblock %}
 
 {% block content %}
-<section class="hero py-5 text-center text-success">
-  <div class="container">
-    <h1>Отзывы наших клиентов</h1>
-    <p>Реальные истории семей, с которыми мы работали.</p>
-  </div>
-</section>
-
-<section class="py-5">
-  <div class="container">
-    <div class="row g-4">
-      {% for review in review_list %}
-        <div class="col-md-6">
-          <div class="card border-0 shadow-sm h-100">
-            <div class="card-body">
-              <div class="d-flex align-items-center mb-3">
-                <i class="bi bi-person-circle fs-3 text-success me-2"></i>
-                <div>
-                  <h5 class="mb-0 text-success">{{ review.name }}</h5>
-                  {% if review.relation %}<small class="text-muted">{{ review.relation }}</small>{% endif %}
-                </div>
-              </div>
-              <p class="mb-0">{{ review.content }}</p>
-              <p class="text-muted ultra-small mt-2 small">{{ review.created_at|date:"d.m.Y" }}</p>
-            </div>
-          </div>
-        </div>
-      {% endfor %}
+<section class="reviews-hero py-5">
+    <div class="container text-center">
+        <span class="badge rounded-pill bg-success-soft text-success mb-3 px-3 py-2">Голоса благодарности</span>
+        <h1 class="display-4 fw-bold text-dark mb-3">Отзывы наших клиентов</h1>
+        <p class="lead text-muted mx-auto" style="max-width: 600px;">
+            Реальные истории семей, которые доверили нам самое ценное. Мы гордимся результатами каждого ребенка.
+        </p>
     </div>
-  </div>
 </section>
 
-<section class="py-5">
-  <div class="container text-center">
-    <div class="p-5 bg-light rounded-4 shadow-sm border">
-        <h2 class="mb-3 fw-bold text-success">Поделитесь своим опытом</h2>
-        <p class="mb-4 text-muted">Ваш отзыв помогает другим семьям найти помощь.</p>
-        <a href="https://vk.com/club_otragenie" class="btn btn-success btn-lg px-5 rounded-pill" target="_blank">
-          📲 Оставить отзыв в VK
+<div class="container mb-5">
+    <div class="filter-wrapper p-3 bg-white shadow-sm rounded-4 d-flex flex-wrap justify-content-center gap-2">
+        <a href="?service=all" 
+           class="btn btn-filter {% if not current_service or current_service == 'all' %}active{% endif %}">
+            Все отзывы
         </a>
-        <p class="small text-muted mt-3">Вы также можете оставить отзыв к конкретной услуге в вашем личном кабинете.</p>
+
+        {% for service in popular_services %}
+            <a href="?service={{ service.id }}" 
+               class="btn btn-filter {% if current_service == service.id|stringformat:'s' %}active{% endif %}">
+                {{ service.name }}
+            </a>
+        {% endfor %}
     </div>
-  </div>
+</div>  
+
+<section class="pb-5">
+    <div class="container">
+        <div class="row g-4" id="reviews-masonry">
+            {% for review in page_obj %}
+            <div class="col-md-6 col-lg-4 review-card-item">
+                <div class="card h-100 border-0 shadow-sm review-card">
+                    <div class="card-body p-4">
+                        <div class="quote-icon mb-3">
+                            <i class="bi bi-quote fs-1 text-success opacity-25"></i>
+                        </div>
+                        <p class="review-text mb-4">"{{ review.content }}"</p>
+                        
+                        <div class="d-flex align-items-center mt-auto pt-3 border-top">
+                            <div class="avatar-circle bg-success-soft text-success me-3">
+                                {{ review.name|slice:":1"|upper }}
+                            </div>
+                            <div>
+                                <h6 class="mb-0 fw-bold">{{ review.name }}</h6>
+                                <div class="d-flex align-items-center">
+                                    <span class="small text-muted">{{ review.relation|default:"Клиент" }}</span>
+                                    {% if review.booking %}
+                                    <span class="dot-separator mx-2"></span>
+                                    <span class="badge bg-light text-success border-0 small fw-normal">
+                                        {{ review.booking.service.name }}
+                                    </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="text-center py-5">
+                <i class="bi bi-chat-dots fs-1 text-muted opacity-25"></i>
+                <p class="text-muted mt-3">Отзывов пока нет. Будьте первыми!</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if page_obj.has_other_pages %}
+        <nav class="mt-5">
+            <ul class="pagination justify-content-center custom-pagination">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}"><i class="bi bi-chevron-left"></i></a>
+                </li>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                </li>
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}"><i class="bi bi-chevron-right"></i></a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
 </section>
+
+<section class="py-5 bg-success-dark text-white rounded-5 mx-2 mb-5 cta-section overflow-hidden position-relative">
+    <div class="container position-relative z-1 py-4 text-center">
+        <h2 class="fw-bold mb-3">Поделитесь вашим отзывом в VK</h2>
+        <p class="mb-4 opacity-75">Ваша история может стать вдохновением для других родителей.</p>
+        <a href="https://vk.com/club_otragenie" class="btn btn-light btn-lg px-5 rounded-pill fw-bold text-success shadow-lg" target="_blank">
+            <i class="bi bi-browser-safari me-2"></i>Перейти в сообщество
+        </a>
+    </div>
+    <div class="circles-decor"></div>
+</section>
+
+<style>
+    /* CSS Переменные и кастомные стили */
+    :root {
+        --success-soft: #e8f5e9;
+        --success-dark: #198754;
+        --text-muted: #6c757d;
+    }
+
+    .bg-success-soft { background-color: var(--success-soft); }
+    .bg-success-dark { background-color: var(--success-dark); }
+    .text-success { color: var(--success-dark) !important; }
+
+    /* Карточки отзывов */
+    .review-card {
+        transition: transform 0.3s ease, shadow 0.3s ease;
+        border-radius: 20px !important;
+    }
+    .review-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 1rem 3rem rgba(0,0,0,.1) !important;
+    }
+    .review-text {
+        font-style: italic;
+        color: #444;
+        line-height: 1.6;
+    }
+    .avatar-circle {
+        width: 45px;
+        height: 45px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        font-weight: bold;
+    }
+
+    /* Фильтры */
+    .btn-filter {
+        border: 1px solid #eee;
+        border-radius: 12px;
+        padding: 8px 20px;
+        color: var(--text-muted);
+        transition: all 0.2s;
+        background: white;
+    }
+    .btn-filter.active, .btn-filter:hover {
+        background: var(--success-dark);
+        color: white;
+        border-color: var(--success-dark);
+    }
+
+    /* Пагинация */
+    .custom-pagination .page-link {
+        border: none;
+        margin: 0 5px;
+        border-radius: 10px;
+        color: var(--success-dark);
+        font-weight: 600;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .custom-pagination .page-item.active .page-link {
+        background-color: var(--success-dark);
+        color: white;
+    }
+
+    /* Декор */
+    .dot-separator {
+        width: 4px;
+        height: 4px;
+        background: #ccc;
+        border-radius: 50%;
+    }
+    .cta-section {
+        background: linear-gradient(135deg, #198754 0%, #0d5a35 100%);
+    }
+    .circles-decor {
+        position: absolute;
+        top: -50px;
+        right: -50px;
+        width: 200px;
+        height: 200px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 50%;
+    }
+</style>
 {% endblock %}
