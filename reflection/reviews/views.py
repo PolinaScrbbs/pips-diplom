@@ -1,59 +1,33 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
-from reviews.forms import SimpleReviewForm, ReviewCreateForm
+from reviews.forms import ReviewCreateForm
 from reviews.models import Review
+from booking.models import Booking
 
 
 def reviews(request):
     review_list = Review.objects.all()
-    # форма для модалки «отзыв к заказу» на странице reviews
-    form = ReviewCreateForm()
     return render(
         request,
         "reviews/reviews.html",
-        {"review_list": review_list, "form": form},
-    )
-
-
-def create_simple_review(request):
-    if request.method == "POST":
-        form = SimpleReviewForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return JsonResponse(
-                {"ok": True, "message": "Отзыв добавлен на сайт."},
-            )
-        else:
-            return JsonResponse(
-                {"ok": False, "errors": form.errors},
-                status=400,
-            )
-
-    form = SimpleReviewForm()
-    return render(
-        request,
-        "reviews/includes/_simple_review_form.html",
-        {"form": form},
+        {"review_list": review_list},
     )
 
 
 def create_review(request):
     if request.method == "POST":
+        booking_id = request.POST.get('booking_id')
+        booking = get_object_or_404(Booking, id=booking_id, user=request.user)
+        
         form = ReviewCreateForm(request.POST)
         if form.is_valid():
-            form.save()
-            return JsonResponse(
-                {"ok": True, "message": "Отзыв к заказу успешно добавлен."},
-            )
-        else:
-            return JsonResponse(
-                {"ok": False, "errors": form.errors},
-                status=400,
-            )
-
-    form = ReviewCreateForm()
-    return render(
-        request,
-        "reviews/includes/_review_form.html",
-        {"form": form},
-    )
+            review = form.save(commit=False)
+            review.booking = booking # Прямая привязка к записи
+            review.save()
+            
+            # Сохраняем обратную связь в модели Booking, если у вас OneToOneField
+            booking.review = review
+            booking.save()
+            
+            return JsonResponse({"ok": True, "message": "Отзыв успешно добавлен!"})
+        return JsonResponse({"ok": False, "errors": form.errors}, status=400)

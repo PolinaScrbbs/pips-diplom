@@ -26,6 +26,10 @@ class User(AbstractUser):
 
     def is_admin(self):
         return self.role == self.ADMIN
+    
+    def reviews_count(self):    
+        """Возвращает количество записей пользователя, к которым привязан отзыв"""
+        return self.bookings.filter(review__isnull=False).count()
 
     def __str__(self):
         return f"{self.username} ({self.get_role_display()})"

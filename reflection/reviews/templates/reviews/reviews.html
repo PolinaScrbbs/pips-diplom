@@ -2,7 +2,6 @@
 {% block title %}Отзывы — центр «Отражение»{% endblock %}
 
 {% block content %}
-
 <section class="hero py-5 text-center text-success">
   <div class="container">
     <h1>Отзывы наших клиентов</h1>
@@ -15,24 +14,17 @@
     <div class="row g-4">
       {% for review in review_list %}
         <div class="col-md-6">
-          <div class="card border-0 shadow-sm">
+          <div class="card border-0 shadow-sm h-100">
             <div class="card-body">
               <div class="d-flex align-items-center mb-3">
-                <svg class="text-success" width="30" height="30" fill="currentColor" viewBox="0 0 16 16">
-                  <path d="M11 6.5a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1-.5-.5v-2a.5.5 0 0 1 .5-.5h2z"/>
-                  <path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0"/>
-                </svg>
-                <div class="ms-2">
+                <i class="bi bi-person-circle fs-3 text-success me-2"></i>
+                <div>
                   <h5 class="mb-0 text-success">{{ review.name }}</h5>
-                  {% if review.relation %}
-                    <small class="text-muted">{{ review.relation }}</small>
-                  {% endif %}
+                  {% if review.relation %}<small class="text-muted">{{ review.relation }}</small>{% endif %}
                 </div>
               </div>
               <p class="mb-0">{{ review.content }}</p>
-              <p class="text-muted small mt-2">
-                {{ review.created_at|date:"d.m.Y" }}
-              </p>
+              <p class="text-muted ultra-small mt-2 small">{{ review.created_at|date:"d.m.Y" }}</p>
             </div>
           </div>
         </div>
@@ -41,158 +33,16 @@
   </div>
 </section>
 
-<section class="py-5 text-center bg-gradient" style="
-  background: linear-gradient(150deg, #e8f5e9 0%, #e0f2e9 100%);
-  border-radius: 1.5rem;
-  border: 1px solid #c8e6c9;
-  box-shadow: 0 8px 24px rgba(76, 175, 80, 0.15);
-">
-  <div class="container">
-    <div class="row justify-content-center">
-      <div class="col-lg-9">
+<section class="py-5">
+  <div class="container text-center">
+    <div class="p-5 bg-light rounded-4 shadow-sm border">
         <h2 class="mb-3 fw-bold text-success">Поделитесь своим опытом</h2>
-        <p class="lead mb-4 text-muted">
-          Ваш отзыв помогает другим семьям понять, как меняется ситуация после работы с «Отражением».
-        </p>
-
-        <div class="row gy-4 align-items-center justify-content-center">
-          <!-- ВК -->
-          <div class="col-md-5 d-flex flex-column align-items-center">
-            <div class="mb-3 text-center">
-              <svg class="text-success" width="40" height="40" fill="currentColor" viewBox="0 0 16 16">
-                <path d="M11 6.5a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1-.5-.5v-2a.5.5 0 0 1 .5-.5h2z"/>
-                <path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0"/>
-              </svg>
-            </div>
-            <p class="small text-muted mb-2">
-              Напишите отзыв в группе ВКонтакте и оставьте оценку для уже работающих с нами семей.
-            </p>
-            <a
-              href="https://vk.com/club_otragenie"
-              class="btn btn-outline-success btn-lg px-4 shadow-sm"
-              style="border-radius: 12px;"
-              target="_blank"
-            >
-              📲 Оставить отзыв в VK
-            </a>
-          </div>
-
-          <!-- Разделитель -->
-          <div class="col-md-1 d-none d-md-flex align-items-center justify-content-center">
-            <span class="text-muted">или</span>
-          </div>
-
-          <!-- Отзыв к заказу -->
-          <div class="col-md-5 d-flex flex-column align-items-center">
-            <div class="mb-3 text-center">
-              <svg class="text-success" width="40" height="40" fill="currentColor" viewBox="0 0 16 16">
-                <path d="M11 6.5a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1-.5-.5v-2a.5.5 0 0 1 .5-.5h2z"/>
-                <path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0"/>
-              </svg>
-            </div>
-            <p class="small text-muted mb-2">
-              Оставьте отзыв прямо на сайте, привязав его к своему заказу.
-            </p>
-            <button
-              type="button"
-              class="btn btn-success btn-lg px-4 shadow-sm"
-              style="border-radius: 12px;"
-              data-bs-toggle="modal"
-              data-bs-target="#reviewFormModal"
-            >
-              ✏️ Отзыв к заказу
-            </button>
-          </div>
-        </div>
-
-        <p class="small text-muted mt-4">
-          После отправки отзыв появится в общем списке, а если вы оставили отзыв в VK — мы можем отдельно отметить его на сайте.
-        </p>
-      </div>
+        <p class="mb-4 text-muted">Ваш отзыв помогает другим семьям найти помощь.</p>
+        <a href="https://vk.com/club_otragenie" class="btn btn-success btn-lg px-5 rounded-pill" target="_blank">
+          📲 Оставить отзыв в VK
+        </a>
+        <p class="small text-muted mt-3">Вы также можете оставить отзыв к конкретной услуге в вашем личном кабинете.</p>
     </div>
   </div>
 </section>
-
-<!-- Модальная форма "отзыв к заказу" (на самой странице reviews, с контекстом form) -->
-<div
-  class="modal fade"
-  id="reviewFormModal"
-  tabindex="-1"
-  aria-labelledby="reviewFormModalLabel"
-  aria-hidden="true"
->
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title text-success" id="reviewFormModalLabel">
-          Оставить отзыв к заказу
-        </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-
-      <div class="modal-body">
-        <p class="small text-muted">
-          Укажите ваше имя (родителя) и выберите категорию услуги.
-          Отзыв можно оставить только к существующему заказу, у которого ещё нет отзыва.
-          При нескольких подходящих заказах будет выбран самый старый по дате создания.
-        </p>
-
-        <form id="reviewCreateForm" method="post" data-url="{% url 'reviews:create_review' %}">
-          {% csrf_token %}
-          {{ form.as_p }}
-          <button type="submit" class="btn btn-success btn-sm">Отправить отзыв к заказу</button>
-        </form>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- JS для формы "отзыв к заказу" -->
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const form = document.getElementById("reviewCreateForm");
-    if (!form) return;
-
-    form.addEventListener("submit", function (e) {
-      e.preventDefault();
-
-      const formData = new FormData(this);
-      const csrfToken = document.querySelector("[name=csrfmiddlewaretoken]").value;
-      const url = this.getAttribute("data-url");
-
-      fetch(url, {
-        method: "POST",
-        headers: { "X-CSRFToken": csrfToken },
-        body: formData,
-      })
-        .then((r) => r.json())
-        .then((data) => {
-          if (data.ok) {
-            alert(data.message);
-
-            const modalEl = document.getElementById("reviewFormModal");
-            if (modalEl) {
-              const modal = bootstrap.Modal.getInstance(modalEl);
-              if (modal) {
-                modal.hide();
-              }
-            }
-
-            location.reload();
-          } else {
-            const errors = [];
-            for (const [_, msgs] of Object.entries(data.errors || {})) {
-              errors.push(...msgs);
-            }
-            alert("Ошибка: " + errors.join("\n"));
-          }
-        })
-        .catch((err) => {
-          console.error("Ошибка:", err);
-          alert("Произошла ошибка при отправке отзыва.");
-        });
-    });
-  });
-</script>
-
 {% endblock %}

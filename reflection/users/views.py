@@ -5,6 +5,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 
 from users.forms import LoginForm, RegisterForm
+from reviews.forms import ReviewCreateForm
 
 
 def register(request):
@@ -42,3 +43,11 @@ def login_view(request):
 def logout_view(request):
     logout(request)
     return redirect("users:login")
+
+@login_required
+def profile_view(request):
+    # Благодаря related_name="bookings", мы можем получить записи через request.user.bookings.all()
+    context = {
+        'review_form': ReviewCreateForm(),  # Добавляем пустую форму
+    }
+    return render(request, 'users/profile.html', context)

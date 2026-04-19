@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+{% block title %}Профиль — {{ user.username }}{% endblock %}
+
+{% block content %}
+<div class="profile-page-wrapper">
+    <div class="container py-5 flex-grow-1">
+        <div class="row g-4">
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm text-center p-4 h-100">
+                    <div class="mb-3">
+                        <div class="rounded-circle bg-success d-inline-flex align-items-center justify-content-center text-white shadow-sm" style="width: 100px; height: 100px; font-size: 2.5rem;">
+                            {{ user.username|slice:":1"|upper }}
+                        </div>
+                    </div>
+                    <h4 class="fw-bold mb-1">{{ user.get_full_name|default:user.username }}</h4>
+                    <p class="text-muted small mb-3">{{ user.get_role_display }}</p>
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#bookingModal">
+                            <i class="bi bi-plus-circle me-2"></i>Новая запись
+                        </button>
+                    </div>
+                    <hr class="my-4 text-secondary opacity-25">
+                    <div class="text-start">
+                        <h6 class="text-uppercase small fw-bold text-muted mb-3">Контакты</h6>
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="bi bi-envelope text-success me-3"></i>
+                            <span class="small">{{ user.email }}</span>
+                        </div>
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="bi bi-calendar-check text-success me-3"></i>
+                            <span class="small">С нами с {{ user.date_joined|date:"d.m.Y" }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-8 d-flex flex-column">
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <div class="card border-0 shadow-sm p-3 bg-success text-white h-100">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div><h6 class="small mb-1">Записей</h6><h3 class="fw-bold mb-0">{{ user.bookings.count }}</h3></div>
+                                <i class="bi bi-journal-bookmark fs-1 opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-0 shadow-sm p-3 h-100">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div><h6 class="small text-muted mb-1">Отзывов</h6><h3 class="fw-bold mb-0 text-success">{{ user.reviews_count }}</h3></div>
+                                <i class="bi bi-star text-warning fs-1"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm flex-grow-1">
+                    <div class="card-header bg-transparent border-0 pt-3">
+                        <ul class="nav nav-tabs nav-fill border-0" id="profileTabs">
+                            <li class="nav-item">
+                                <button class="nav-link active fw-bold text-success border-0" data-bs-toggle="tab" data-bs-target="#bookings">Мои записи</button>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-link fw-bold text-success border-0" data-bs-toggle="tab" data-bs-target="#settings">Настройки</button>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="tab-content">
+                            <div class="tab-pane fade show active" id="bookings">
+                                {% if user.bookings.all %}
+                                    <div class="table-responsive">
+                                        <table class="table table-hover align-middle">
+                                            <thead class="table-light">
+                                                <tr><th>Услуга</th><th class="text-center">Дата</th><th class="text-end">Действие</th></tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for booking in user.bookings.all %}
+                                                <tr>
+                                                    <td><div class="fw-bold text-dark">{{ booking.service.name }}</div></td>
+                                                    <td class="text-center small text-muted">{{ booking.created_at|date:"d.m.Y" }}</td>
+                                                    <td class="text-end">
+                                                        {% if not booking.review %}
+                                                            <button class="btn btn-sm btn-outline-success rounded-pill px-3 btn-review" 
+                                                                    data-bs-toggle="modal" 
+                                                                    data-bs-target="#reviewFormModal" 
+                                                                    data-booking-id="{{ booking.id }}">Отзыв</button>
+                                                        {% else %}
+                                                            <span class="badge bg-light text-success border fw-normal">Оставлен</span>
+                                                        {% endif %}
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                {% else %}
+                                    <div class="text-center py-5"><p class="text-muted">Записей нет.</p></div>
+                                {% endif %}
+                            </div>
+                            <div class="tab-pane fade" id="settings">
+                                <form method="post">{% csrf_token %}
+                                    <div class="row g-3">
+                                        <div class="col-md-6"><label class="form-label small fw-bold">Email</label>
+                                        <input type="email" class="form-control" name="email" value="{{ user.email }}"></div>
+                                        <div class="col-12 mt-3"><button type="submit" class="btn btn-success px-4 rounded-pill">Сохранить</button></div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="reviewFormModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold text-success">Ваш отзыв</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="reviewCreateForm" method="post" data-url="{% url 'reviews:create_review' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="booking_id" id="modal_booking_id">
+                    {{ review_form.as_p }}
+                    <button type="submit" class="btn btn-success w-100 mt-2 rounded-pill py-2">Опубликовать</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .profile-page-wrapper { display: flex; flex-direction: column; min-height: calc(100vh - 200px); }
+    body { background-color: #f8f9fa; }
+    .card { border-radius: 15px; }
+    .nav-tabs .nav-link.active { background: transparent !important; border-bottom: 3px solid #198754 !important; }
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    // 1. Передаем ID записи в модалку при клике
+    const reviewButtons = document.querySelectorAll('.btn-review');
+    reviewButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.getElementById('modal_booking_id').value = this.getAttribute('data-booking-id');
+        });
+    });
+
+    // 2. Отправка формы через AJAX
+    const form = document.getElementById("reviewCreateForm");
+    form.addEventListener("submit", function (e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        fetch(this.getAttribute("data-url"), {
+            method: "POST",
+            body: formData,
+            headers: { "X-CSRFToken": formData.get('csrfmiddlewaretoken') }
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.ok) { location.reload(); }
+            else { alert("Ошибка при сохранении."); }
+        });
+    });
+});
+</script>
+{% endblock %}
