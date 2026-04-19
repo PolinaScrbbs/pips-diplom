@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Авторизация{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/auth.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="auth-section py-5">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-12 col-md-6 col-lg-4">
+        <div class="card auth-card shadow-sm p-3 p-md-4">
+          <div class="card-body">
+            <div class="text-center mb-4">
+              <h3 class="fw-bold text-success">Вход в аккаунт</h3>
+            </div>
+
+            {% if messages %}
+              {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} small mb-3">{{ message }}</div>
+              {% endfor %}
+            {% endif %}
+
+            <form method="post" novalidate class="auth-form">
+              {% csrf_token %}
+              {% for field in form %}
+                <div class="mb-3">
+                  <label class="django-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                  {{ field }}
+                  {% if field.errors %}
+                    <div class="text-danger small mt-1 px-2" style="font-size: 0.75rem;">{{ field.errors.as_text }}</div>
+                  {% endif %}
+                </div>
+              {% endfor %}
+
+              <div class="d-grid mt-4">
+                <button type="submit" class="btn btn-auth">Войти</button>
+              </div>
+
+              <div class="text-center mt-4">
+                <a href="{% url 'users:register' %}" class="link-secondary small text-decoration-none">
+                  Нет аккаунта? <span class="text-success fw-bold">Зарегистрироваться</span>
+                </a>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  document.querySelectorAll('.auth-form input').forEach(function(el) {
+    el.classList.add('form-control');
+    const label = document.querySelector(`label[for="${el.id}"]`);
+    if (label) el.setAttribute('placeholder', label.textContent);
+  });
+</script>
+{% endblock %}

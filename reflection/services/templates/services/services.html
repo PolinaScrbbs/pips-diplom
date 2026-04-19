@@ -40,16 +40,67 @@
         </div>
       {% endfor %}
     </div>
+    <section class="py-5" id="services-section">
+  <div class="container">
+    {% csrf_token %}
+    <div class="row g-4" id="services-container">
+      {% for service in page_obj %}
+        <div class="col-lg-4 col-md-6 service-item">
+          <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body">
+              <h4 class="text-success">{{ service.name }}</h4>
+              {% if service.short_description %}
+                <p class="small text-muted">{{ service.short_description }}</p>
+              {% endif %}
+              <p class="small">{{ service.description|truncatewords:20 }}</p>
+              <hr />
+              {% if service.duration or service.price %}
+                <dl class="row small">
+                  {% if service.duration %}
+                    <dt class="col-5">Длительность:</dt>
+                    <dd class="col-7 text-end">{{ service.duration }}</dd>
+                  {% endif %}
+                  {% if service.price %}
+                    <dt class="col-5">Стоимость:</dt>
+                    <dd class="col-7 text-end">{{ service.price }} ₽</dd>
+                  {% endif %}
+                </dl>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      {% empty %}
+        <div class="col-12 text-center py-5">
+          <p class="text-muted fs-5">Список услуг пуст.</p>
+        </div>
+      {% endfor %}
+    </div>
 
     <div class="text-center mt-5">
-      <button
-        id="load-more-btn"
-        class="btn btn-success"
-        data-next-page="{{ page_obj.next_page_number|default:2 }}"
-        data-url="{% url 'services:load_more_services' %}"
-      >
-        Показать ещё 6 услуг
-      </button>
+      {# Показываем кнопку только если есть следующая страница #}
+      {% if page_obj.has_next %}
+        <button
+          id="load-more-btn"
+          class="btn btn-success"
+          data-next-page="{{ page_obj.next_page_number }}"
+          data-url="{% url 'services:load_more_services' %}"
+        >
+          Показать ещё 6 услуг
+        </button>
+      {% endif %}
+    </div>
+  </div>
+</section>
+      {% if page_obj.has_next %}
+        <button
+          id="load-more-btn"
+          class="btn btn-success"
+          data-next-page="{{ page_obj.next_page_number }}"
+          data-url="{% url 'services:load_more_services' %}"
+        >
+          Показать ещё 6 услуг
+        </button>
+      {% endif %}
     </div>
   </div>
 </section>

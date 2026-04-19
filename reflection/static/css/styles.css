@@ -461,3 +461,37 @@
   color: #34d399;
 }
 
+/* Убеждаемся, что база страницы занимает 100% высоты */
+html, body {
+    height: 100%;
+    margin: 0;
+}
+
+/* Обертка, которая должна быть в base.html (обычно это body или основной div) */
+body {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Секция с контентом будет забирать все свободное место, толкая футер вниз */
+.auth-main-wrapper {
+    flex: 1 0 auto;
+    display: flex;
+    align-items: center; /* Центрирует карточку по вертикали */
+    justify-content: center; /* Центрирует карточку по горизонтали */
+    background-color: #f8f9fa; /* Тот же фон, что у вас на скрине */
+}
+
+/* Футер всегда будет внизу */
+footer {
+    flex-shrink: 0;
+}
+
+/* Стили карточки (уже знакомые нам) */
+.auth-card {
+    border: 1px solid #d1e7dd; /* Тонкая рамка в цвет бренда */
+    border-radius: 20px;
+    background-color: #ffffff;
+    width: 100%;
+    max-width: 400px;
+}

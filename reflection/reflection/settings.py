@@ -41,7 +41,10 @@ INSTALLED_APPS = [
     "services",
     "reviews",
     "booking",
+    "users",
 ]
+
+AUTH_USER_MODEL = "users.User"
 
 STATIC_URL = "/static/"
 STATICFILES_DIRS = [

@@ -16,59 +16,119 @@
   <link rel="stylesheet" href="{% static 'css/styles.css' %}" />
 </head>
 <body>
-  <header class="bg-white shadow-sm">
-    <div class="container py-2">
-      <div class="row align-items-center">
-        <div class="col-auto">
-          <div class="logo fs-4 fw-bold text-success">«Отражение»</div>
+<header>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-success shadow-sm">
+    <div class="container">
+      <a class="navbar-brand text-white fw-semibold" href="{% url 'main:index' %}">
+        Отражение
+      </a>
+
+      <button
+        class="navbar-toggler"
+        type="button"
+        data-bs-toggle="collapse"
+        data-bs-target="#mainNavbar"
+        aria-controls="mainNavbar"
+        aria-expanded="false"
+        aria-label="Переключить навигацию"
+      >
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="mainNavbar">
+        <div class="navbar-nav ms-3">
+          <a class="nav-link text-white" href="{% url 'main:index' %}">
+            Главная
+          </a>
+          <a class="nav-link text-white" href="{% url 'services:services' %}">
+            Услуги
+          </a>
+          <a class="nav-link text-white" href="{% url 'reviews:reviews' %}">
+            Отзывы
+          </a>
         </div>
-        <div class="col">
-          <nav class="nav justify-content-center gap-4">
-            <a href="{% url 'main:index' %}" class="nav-link text-dark">Главная</a>
-            <a href="{% url 'services:services' %}" class="nav-link text-dark">Услуги</a>
-            <a href="{% url 'main:why_us' %}" class="nav-link text-dark">Почему именно мы</a>
-            <a href="{% url 'reviews:reviews' %}" class="nav-link text-dark">Отзывы</a>
-          </nav>
-        </div>
-        <div class="col-auto">
-          <button
-            type="button"
-            class="btn btn-outline-success"
-            data-bs-toggle="modal"
-            data-bs-target="#bookingModal"
-          >
-            Записаться
-          </button>
+
+        <div class="navbar-nav ms-auto align-items-lg-center gap-2 mt-3 mt-lg-0">
+          {% if user.is_authenticated %}
+            <a
+              href="#"
+              class="text-white text-decoration-none d-flex align-items-center me-lg-2"
+              title="Профиль"
+            >
+              <span
+                class="d-inline-flex align-items-center justify-content-center bg-white text-success fw-semibold"
+                style="width: 36px; height: 36px; border-radius: 50%;"
+              >
+                {{ user.username|first|upper }}
+              </span>
+              <span class="ms-2 d-none d-md-inline text-white">{{ user.username }}</span>
+            </a>
+
+            <a
+              href="{% url 'booking:create_booking' %}"
+              class="btn btn-outline-light btn-sm"
+            >
+              Записаться
+            </a>
+
+            <a
+              href="{% url 'users:logout' %}"
+              class="btn btn-light btn-sm text-success"
+            >
+              Выйти
+            </a>
+          {% else %}
+            <a
+              href="{% url 'users:login' %}"
+              class="btn btn-outline-light btn-sm"
+            >
+              Авторизоваться
+            </a>
+
+            <a
+              href="{% url 'users:register' %}"
+              class="btn btn-light btn-sm text-success"
+            >
+              Регистрация
+            </a>
+          {% endif %}
         </div>
       </div>
     </div>
-  </header>
+  </nav>
+</header>
 
-  <main class="bg-light">
-    {% block content %}{% endblock %}
-  </main>
+<main class="bg-light">
+  {% block content %}{% endblock %}
+</main>
 
-  <footer class="py-4 bg-white text-dark border-top border-success">
-    <div class="container">
-      <p>Детский центр психологии и развития <strong>«Отражение»</strong>, Курск</p>
-      <p>Телефон: <a href="tel:+79611689798" class="text-success text-decoration-underline">+7 (961) 168‑97‑98</a></p>
-    </div>
-  </footer>
+<footer class="py-4 bg-white text-dark border-top border-success">
+  <div class="container">
+    <p>Детский центр психологии и развития <strong>«Отражение»</strong>, Курск</p>
+    <p>
+      Телефон:
+      <a href="tel:+79611689798" class="text-success text-decoration-underline">
+        +7 (961) 168‑97‑98
+      </a>
+    </p>
+  </div>
+</footer>
 
-  <!-- Общее модальное окно «Записаться» из приложения booking -->
-  {% include "booking/_form_modal.html" %}
+<!-- Общее модальное окно «Записаться» из приложения booking -->
+{% include "booking/_form_modal.html" %}
 
-  <!-- Bootstrap JS -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
-  <!-- JS обработки формы -->
-  <script>
-    document.getElementById('bookingForm').addEventListener('submit', function(e) {
+<!-- JS обработки формы -->
+<script>
+  const bookingForm = document.getElementById("bookingForm");
+
+  if (bookingForm) {
+    bookingForm.addEventListener("submit", function(e) {
       e.preventDefault();
-      const csrfToken = document.querySelector('[name="csrfmiddlewaretoken"]').value;
-      const nextUrlField = document.querySelector('[name="next"]');
-      const nextUrl = nextUrlField ? nextUrlField.value : window.location.pathname;
 
+      const csrfToken = document.querySelector('[name="csrfmiddlewaretoken"]').value;
       const formData = new FormData(this);
 
       fetch("{% url 'booking:create_booking' %}", {
@@ -79,8 +139,13 @@
       .then(response => {
         if (!response.ok) throw new Error(`Ошибка: ${response.status}`);
         alert("Заявка успешно отправлена и сохранена в базе данных.");
-        const modal = bootstrap.Modal.getInstance(document.getElementById('bookingModal'));
-        if (modal) modal.hide();
+
+        const modalEl = document.getElementById("bookingModal");
+        if (modalEl) {
+          const modal = bootstrap.Modal.getInstance(modalEl);
+          if (modal) modal.hide();
+        }
+
         this.reset();
       })
       .catch(err => {
@@ -88,6 +153,7 @@
         console.error(err);
       });
     });
-  </script>
+  }
+</script>
 </body>
 </html>
