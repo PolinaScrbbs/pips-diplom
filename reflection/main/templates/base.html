@@ -164,7 +164,15 @@
       <div class="collapse navbar-collapse" id="mainNavbar">
         <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
           <li class="nav-item">
-            <a class="nav-link" href="{% url 'services:services' %}">Услуги</a>
+            {% if user.is_authenticated %}
+    {% if user.is_moderator %}
+        <a class="nav-link text-warning fw-bold" href="{% url 'services:moderator_list' %}">
+            <i class="bi bi-speedometer2 me-1"></i> Панель модератора
+        </a>
+    {% else %}
+        <a class="nav-link text-white" href="{% url 'services:services' %}">Услуги</a>
+    {% endif %}
+{% endif %}
           </li>
           <li class="nav-item">
             <a class="nav-link" href="{% url 'reviews:reviews' %}">Отзывы</a>
