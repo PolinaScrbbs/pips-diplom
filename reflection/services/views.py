@@ -1,5 +1,5 @@
 from django.http import JsonResponse
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from .models import Service
 
@@ -52,4 +52,11 @@ def load_more_services(request):
             "has_next": has_next,
         }
     )
-    
+
+
+def service_detail(request, pk):
+    """
+    Детальное описание услуги по её первичному ключу (ID).
+    """
+    service = get_object_or_404(Service, pk=pk)
+    return render(request, 'services/service_detail.html', {'service': service})
