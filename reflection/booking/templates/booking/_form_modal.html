@@ -6,35 +6,22 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <form id="bookingForm">
+        <form id="bookingForm" method="post">
+          {% csrf_token %}
           <input type="hidden" name="next" value="{{ request.path }}">
-          <div class="mb-3">
-            <label for="childName" class="form-label">Имя ребёнка</label>
-            <input type="text" class="form-control" id="childName" name="child_name" required />
-          </div>
-          <div class="mb-3">
-            <label for="parentName" class="form-label">Ваше имя (родитель)</label>
-            <input type="text" class="form-control" id="parentName" name="parent_name" required />
-          </div>
-          <div class="mb-3">
-            <label for="phone" class="form-label">Телефон</label>
-            <input type="tel" class="form-control" id="phone" name="phone" required />
-          </div>
-          <div class="mb-3">
-            <label for="category" class="form-label">Категория обращения</label>
-            <select class="form-control" id="category" name="category" required>
-              <option value="">Выберите</option>
-              <option value="child">Детская психология</option>
-              <option value="teen">Подростковые консультации</option>
-              <option value="family">Семейная психология</option>
-              <option value="parents">Консультации для родителей</option>
-            </select>
-          </div>
-          <div class="mb-3">
-            <label for="comment" class="form-label">Комментарий (необязательно)</label>
-            <textarea class="form-control" id="comment" name="comment" rows="3"></textarea>
-          </div>
-          <button type="submit" class="btn btn-success w-100">Отправить заявку</button>
+          
+          {# Этот цикл выведет ВСЕ поля из вашей формы, включая новый селектор услуг #}
+          {% for field in booking_form %}
+            <div class="mb-3">
+              <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+              {{ field }}
+              {% if field.errors %}
+                <div class="text-danger small">{{ field.errors.as_text }}</div>
+              {% endif %}
+            </div>
+          {% endfor %}
+
+          <button type="submit" class="btn btn-success w-100 mt-3">Отправить заявку</button>
         </form>
       </div>
     </div>

@@ -64,12 +64,14 @@
               <span class="ms-2 d-none d-md-inline text-white">{{ user.username }}</span>
             </a>
 
-            <a
-              href="{% url 'booking:create_booking' %}"
-              class="btn btn-outline-light btn-sm"
-            >
-              Записаться
-            </a>
+            <button
+            type="button"
+            class="btn btn-outline-success"
+            data-bs-toggle="modal"
+            data-bs-target="#bookingModal"
+          >
+            Записаться
+          </button>
 
             <a
               href="{% url 'users:logout' %}"
