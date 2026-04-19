@@ -4,96 +4,190 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>{% block title %}Детский центр психологии и развития «Отражение»{% endblock %}</title>
+  <title>{% block title %}Детский центр «Отражение»{% endblock %}</title>
   {% csrf_token %}
 
-  <!-- Bootstrap 5 -->
-  <link
-    rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
-  />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Montserrat:wght@600;700&display=swap" rel="stylesheet">
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-  <!-- Наша зелёная тема -->
-  <link rel="stylesheet" href="{% static 'css/styles.css' %}" />
+  
+  <style>
+    :root {
+      --primary-sage: #4a7c59; /* Успокаивающий зеленый */
+      --accent-soft: #8fc0a9;
+      --bg-light: #f8faf9;
+      --glass: rgba(255, 255, 255, 0.85);
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-light);
+      color: #2d3436;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    h1, h2, h3, .navbar-brand {
+      font-family: 'Montserrat', sans-serif;
+    }
+
+    /* Современный стеклянный навигатор */
+    .navbar {
+      background: var(--glass) !important;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(0,0,0,0.05);
+      padding: 0.8rem 0;
+    }
+
+    .navbar-brand {
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      color: var(--primary-sage) !important;
+      font-size: 1.4rem;
+    }
+
+    .nav-link {
+      font-weight: 500;
+      color: #576574 !important;
+      margin: 0 10px;
+      transition: var(--transition);
+      position: relative;
+    }
+
+    .nav-link:hover {
+      color: var(--primary-sage) !important;
+    }
+
+    /* Кнопки в стиле Soft UI */
+    .btn-sage {
+      background-color: var(--primary-sage);
+      color: white;
+      border-radius: 50px;
+      padding: 0.6rem 1.6rem;
+      border: none;
+      transition: var(--transition);
+      font-weight: 500;
+    }
+
+    .btn-sage:hover {
+      background-color: #3d664a;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(74, 124, 89, 0.2);
+      color: white;
+    }
+
+    .btn-outline-sage {
+      border: 2px solid var(--primary-sage);
+      color: var(--primary-sage);
+      border-radius: 50px;
+      padding: 0.6rem 1.6rem;
+      font-weight: 500;
+      transition: var(--transition);
+    }
+
+    .btn-outline-sage:hover {
+      background-color: var(--primary-sage);
+      color: white;
+    }
+
+    /* Профиль пользователя */
+    .user-avatar {
+      width: 38px;
+      height: 38px;
+      background: linear-gradient(135deg, var(--primary-sage), var(--accent-soft));
+      color: white;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      box-shadow: 0 4px 12px rgba(74, 124, 89, 0.15);
+    }
+
+    main {
+      flex: 1;
+    }
+
+    /* Элегантный футер */
+    footer {
+      background: white;
+      border-top: 1px solid rgba(0,0,0,0.05);
+      padding: 3rem 0;
+    }
+
+    .footer-title {
+      font-weight: 700;
+      color: var(--primary-sage);
+      margin-bottom: 1rem;
+    }
+
+    .footer-link {
+      color: #636e72;
+      text-decoration: none;
+      transition: var(--transition);
+    }
+
+    .footer-link:hover {
+      color: var(--primary-sage);
+    }
+
+    /* Анимация контента */
+    .content-fade {
+      animation: fadeIn 0.5s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
 </head>
 <body>
-<header>
-  <nav class="navbar navbar-expand-lg navbar-dark bg-success shadow-sm">
+
+<header class="sticky-top">
+  <nav class="navbar navbar-expand-lg">
     <div class="container">
-      <a class="navbar-brand text-white fw-semibold" href="{% url 'main:index' %}">
-        Отражение
+      <a class="navbar-brand d-flex align-items-center" href="{% url 'main:index' %}">
+        <i class="bi bi-flower1 me-2"></i>Отражение
       </a>
 
-      <button
-        class="navbar-toggler"
-        type="button"
-        data-bs-toggle="collapse"
-        data-bs-target="#mainNavbar"
-        aria-controls="mainNavbar"
-        aria-expanded="false"
-        aria-label="Переключить навигацию"
-      >
-        <span class="navbar-toggler-icon"></span>
+      <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar">
+        <span class="bi bi-list fs-2 text-dark"></span>
       </button>
 
       <div class="collapse navbar-collapse" id="mainNavbar">
-        <div class="navbar-nav ms-3">
-          <a class="nav-link text-white" href="{% url 'main:index' %}">
-            Главная
-          </a>
-          <a class="nav-link text-white" href="{% url 'services:services' %}">
-            Услуги
-          </a>
-          <a class="nav-link text-white" href="{% url 'reviews:reviews' %}">
-            Отзывы
-          </a>
-        </div>
+        <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'services:services' %}">Услуги</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'reviews:reviews' %}">Отзывы</a>
+          </li>
+        </ul>
 
-        <div class="navbar-nav ms-auto align-items-lg-center gap-2 mt-3 mt-lg-0">
+        <div class="d-flex align-items-center gap-3">
           {% if user.is_authenticated %}
-            <a
-              href="{% url 'users:profile' %}"
-              class="text-white text-decoration-none d-flex align-items-center me-lg-2"
-              title="Профиль"
-            >
-              <span
-                class="d-inline-flex align-items-center justify-content-center bg-white text-success fw-semibold"
-                style="width: 36px; height: 36px; border-radius: 50%;"
-              >
-                {{ user.username|first|upper }}
-              </span>
-              <span class="ms-2 d-none d-md-inline text-white">{{ user.username }}</span>
+            <a href="{% url 'users:profile' %}" class="text-decoration-none d-flex align-items-center me-2">
+              <div class="user-avatar text-uppercase">{{ user.username|first }}</div>
+              <span class="ms-2 d-none d-xl-inline fw-medium text-dark">{{ user.username }}</span>
             </a>
+            
+            <button class="btn btn-sage d-none d-md-block" data-bs-toggle="modal" data-bs-target="#bookingModal">
+              Записаться
+            </button>
 
-            <button
-            type="button"
-            class="btn btn-outline-success"
-            data-bs-toggle="modal"
-            data-bs-target="#bookingModal"
-          >
-            Записаться
-          </button>
-
-            <a
-              href="{% url 'users:logout' %}"
-              class="btn btn-light btn-sm text-success"
-            >
-              Выйти
+            <a href="{% url 'users:logout' %}" class="btn btn-link text-muted p-0 ms-2" title="Выйти">
+              <i class="bi bi-box-arrow-right fs-4"></i>
             </a>
           {% else %}
-            <a
-              href="{% url 'users:login' %}"
-              class="btn btn-outline-light btn-sm"
-            >
-              Авторизоваться
-            </a>
-
-            <a
-              href="{% url 'users:register' %}"
-              class="btn btn-light btn-sm text-success"
-            >
-              Регистрация
-            </a>
+            <a href="{% url 'users:login' %}" class="btn btn-link text-dark text-decoration-none fw-medium">Войти</a>
+            <a href="{% url 'users:register' %}" class="btn btn-sage">Регистрация</a>
           {% endif %}
         </div>
       </div>
@@ -101,60 +195,90 @@
   </nav>
 </header>
 
-<main class="bg-light">
+<main class="content-fade">
   {% block content %}{% endblock %}
 </main>
 
-<footer class="py-4 bg-white text-dark border-top border-success">
+<footer>
   <div class="container">
-    <p>Детский центр психологии и развития <strong>«Отражение»</strong>, Курск</p>
-    <p>
-      Телефон:
-      <a href="tel:+79611689798" class="text-success text-decoration-underline">
-        +7 (961) 168‑97‑98
-      </a>
-    </p>
+    <div class="row g-4">
+      <div class="col-md-4">
+        <h5 class="footer-title">Отражение</h5>
+        <p class="text-muted small">Центр психологической поддержки и развития ребенка в Курске. Работаем с любовью к каждому ребенку.</p>
+      </div>
+      <div class="col-md-2 offset-md-2">
+        <h6 class="fw-bold">Меню</h6>
+        <ul class="list-unstyled">
+          <li><a href="{% url 'services:services' %}" class="footer-link small">Услуги</a></li>
+          <li><a href="{% url 'reviews:reviews' %}" class="footer-link small">Отзывы</a></li>
+        </ul>
+      </div>
+      <div class="col-md-4">
+        <h6 class="fw-bold">Контакты</h6>
+        <p class="small text-muted mb-1"><i class="bi bi-geo-alt me-2"></i>г. Курск, ул. Карла Маркса, 72/20</p>
+        <p class="small text-muted mb-1">
+          <i class="bi bi-telephone me-2"></i>
+          <a href="tel:+79611689798" class="text-decoration-none text-muted">+7 (961) 168‑97‑98</a>
+        </p>
+      </div>
+    </div>
+    <hr class="my-4 opacity-10">
+    <div class="text-center text-muted small">
+      &copy; 2026 Центр «Отражение». Все права защищены.
+    </div>
   </div>
 </footer>
 
-<!-- Общее модальное окно «Записаться» из приложения booking -->
 {% include "booking/_form_modal.html" %}
 
-<!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
-<!-- JS обработки формы -->
 <script>
+  // Профессиональная обработка формы с обратной связью
   const bookingForm = document.getElementById("bookingForm");
 
   if (bookingForm) {
-    bookingForm.addEventListener("submit", function(e) {
+    bookingForm.addEventListener("submit", async function(e) {
       e.preventDefault();
+      
+      const submitBtn = this.querySelector('button[type="submit"]');
+      const originalContent = submitBtn.innerHTML;
+      
+      // Визуальный лоадер
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>Отправка...`;
 
-      const csrfToken = document.querySelector('[name="csrfmiddlewaretoken"]').value;
-      const formData = new FormData(this);
+      try {
+        const csrfToken = document.querySelector('[name="csrfmiddlewaretoken"]').value;
+        const formData = new FormData(this);
 
-      fetch("{% url 'booking:create_booking' %}", {
-        method: "POST",
-        headers: { "X-CSRFToken": csrfToken },
-        body: formData,
-      })
-      .then(response => {
-        if (!response.ok) throw new Error(`Ошибка: ${response.status}`);
-        alert("Заявка успешно отправлена и сохранена в базе данных.");
+        const response = await fetch("{% url 'booking:create_booking' %}", {
+          method: "POST",
+          headers: { "X-CSRFToken": csrfToken },
+          body: formData,
+        });
 
-        const modalEl = document.getElementById("bookingModal");
-        if (modalEl) {
-          const modal = bootstrap.Modal.getInstance(modalEl);
+        if (!response.ok) throw new Error();
+
+        // Успех
+        submitBtn.innerHTML = `<i class="bi bi-check-lg me-2"></i>Готово!`;
+        submitBtn.classList.replace('btn-sage', 'btn-success');
+
+        setTimeout(() => {
+          const modal = bootstrap.Modal.getInstance(document.getElementById("bookingModal"));
           if (modal) modal.hide();
-        }
+          
+          this.reset();
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalContent;
+          submitBtn.classList.replace('btn-success', 'btn-sage');
+        }, 1500);
 
-        this.reset();
-      })
-      .catch(err => {
-        alert("Произошла ошибка при отправке формы.");
-        console.error(err);
-      });
+      } catch (err) {
+        alert("Произошла ошибка. Пожалуйста, попробуйте снова.");
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalContent;
+      }
     });
   }
 </script>

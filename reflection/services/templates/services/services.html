@@ -1,129 +1,219 @@
 {% extends "base.html" %}
+{% load static %}
+
 {% block title %}Услуги — центр «Отражение»{% endblock %}
 
 {% block content %}
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
 
-<section class="hero py-5 text-center text-success">
-  <div class="container">
-    <h1>Каталог услуг</h1>
-    <p>Детская и семейная психология, консультации для родителей, группы поддержки и развитие.</p>
-  </div>
+<style>
+    :root {
+        --card-radius: 20px;
+        --accent-color: #4a7c59;
+    }
+
+    /* Hero секция с мягким градиентом */
+    .services-hero {
+        background: linear-gradient(135deg, #f8fbf9 0%, #e8f5e9 100%);
+        padding: 80px 0;
+        margin-bottom: 40px;
+        border-radius: 0 0 50px 50px;
+    }
+
+    .services-hero h1 {
+        font-weight: 700;
+        color: var(--accent-color);
+        margin-bottom: 15px;
+    }
+
+    /* Стили карточек */
+    .service-card {
+        border-radius: var(--card-radius);
+        transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+        background: #fff;
+        overflow: hidden;
+    }
+
+    .service-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.08) !important;
+    }
+
+    .service-card .card-body {
+        padding: 30px;
+    }
+
+    .service-title {
+        font-weight: 600;
+        font-size: 1.25rem;
+        margin-bottom: 12px;
+        color: var(--accent-color);
+    }
+
+    .price-tag {
+        background: rgba(74, 124, 89, 0.1);
+        color: var(--accent-color);
+        padding: 4px 12px;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    /* Скелетон для загрузки */
+    .skeleton {
+        background: #eee;
+        background: linear-gradient(110deg, #ececec 8%, #f5f5f5 18%, #ececec 33%);
+        border-radius: 5px;
+        background-size: 200% 100%;
+        animation: 1.5s shine linear infinite;
+    }
+
+    @keyframes shine {
+        to { background-position-x: -200%; }
+    }
+
+    /* Кнопка "Показать еще" */
+    #load-more-btn {
+        padding: 12px 35px;
+        border-radius: 50px;
+        font-weight: 500;
+        letter-spacing: 0.5px;
+        transition: var(--transition);
+    }
+</style>
+
+<section class="services-hero text-center" data-aos="fade-down">
+    <div class="container">
+        <h1 class="display-4">Профессиональная помощь</h1>
+        <p class="lead text-muted mx-auto" style="max-width: 700px;">
+            Мы подобрали направления, которые помогут вашему ребенку расти счастливым, а вам — чувствовать уверенность и спокойствие.
+        </p>
+    </div>
 </section>
 
 <section class="py-5" id="services-section">
-  <div class="container">
-    {% csrf_token %}
-    <div class="row g-4" id="services-container">
-      {% for service in page_obj %}
-        <div class="col-lg-4 col-md-6 service-item">
-          <div class="card h-100 border-0 shadow-sm">
-            <div class="card-body">
-              <h4 class="text-success">{{ service.name }}</h4>
-              {% if service.short_description %}
-                <p class="small text-muted">{{ service.short_description }}</p>
-              {% endif %}
-              <p class="small">{{ service.description|truncatewords:20 }}</p>
-              <hr />
-              {% if service.duration or service.price %}
-                <dl class="row small">
-                  {% if service.duration %}
-                    <dt class="col-5">Длительность:</dt>
-                    <dd class="col-7 text-end">{{ service.duration }}</dd>
-                  {% endif %}
-                  {% if service.price %}
-                    <dt class="col-5">Стоимость:</dt>
-                    <dd class="col-7 text-end">{{ service.price }} ₽</dd>
-                  {% endif %}
-                </dl>
-              {% endif %}
+    <div class="container">
+        {% csrf_token %}
+        <div class="row g-4" id="services-container">
+            {% for service in page_obj %}
+            <div class="col-lg-4 col-md-6 service-item" data-aos="fade-up" data-aos-delay="{{ forloop.counter0|add:1 }}00">
+                <div class="card h-100 border-0 shadow-sm service-card">
+                    <div class="card-body d-flex flex-column">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <h4 class="service-title mb-0">{{ service.name }}</h4>
+                            <i class="bi bi-patch-check text-success fs-5"></i>
+                        </div>
+                        
+                        {% if service.short_description %}
+                            <p class="text-muted small mb-3"><strong>{{ service.short_description }}</strong></p>
+                        {% endif %}
+                        
+                        <p class="text-secondary small flex-grow-1">
+                            {{ service.description|truncatewords:25 }}
+                        </p>
+                        
+                        <div class="mt-4 pt-3 border-top d-flex justify-content-between align-items-center">
+                            <div class="text-muted small">
+                                <i class="bi bi-clock me-1"></i> {{ service.duration|default:"—" }}
+                            </div>
+                            <div class="price-tag">
+                                {{ service.price|default:"0" }} ₽
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-          </div>
+            {% empty %}
+            <div class="col-12 text-center py-5">
+                <img src="https://cdn-icons-png.flaticon.com/512/6134/6134065.png" width="80" class="opacity-25 mb-3">
+                <p class="text-muted fs-5">На данный момент услуг не найдено.</p>
+            </div>
+            {% endfor %}
         </div>
-      {% empty %}
-        <div class="col-12 text-center py-5">
-          <p class="text-muted fs-5">Список услуг пуст.</p>
-        </div>
-      {% endfor %}
-    </div>
 
-    <div class="text-center mt-5">
-      {% if page_obj.has_next %}
-        <button
-          id="load-more-btn"
-          class="btn btn-success"
-          data-next-page="{{ page_obj.next_page_number }}"
-          data-url="{% url 'services:load_more_services' %}"
-        >
-          Показать ещё 6 услуг
-        </button>
-      {% endif %}
+        <div class="text-center mt-5">
+            {% if page_obj.has_next %}
+            <button
+                id="load-more-btn"
+                class="btn btn-outline-success btn-lg shadow-sm"
+                data-next-page="{{ page_obj.next_page_number }}"
+                data-url="{% url 'services:load_more_services' %}"
+            >
+                Показать ещё услуги
+            </button>
+            {% endif %}
+        </div>
     </div>
-  </div>
 </section>
 
+<script src="https://unpkg.com/aos@next/dist/aos.js"></script>
 <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const servicesContainer = document.getElementById("services-container");
-    const loadMoreBtn = document.getElementById("load-more-btn");
+    document.addEventListener("DOMContentLoaded", function () {
+        AOS.init({ duration: 800, once: true });
 
-    if (!loadMoreBtn || !servicesContainer) return;
+        const container = document.getElementById("services-container");
+        const btn = document.getElementById("load-more-btn");
 
-    loadMoreBtn.addEventListener("click", function () {
-      const nextPage = this.getAttribute("data-next-page");
-      const url = this.getAttribute("data-url");
-      const fullUrl = `${url}?page=${nextPage}`;
+        if (!btn) return;
 
-      fetch(fullUrl, {
-        headers: {
-          "X-Requested-With": "XMLHttpRequest",
-          "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value,
-        },
-      })
-      .then((response) => {
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        return response.json();
-      })
-      .then((data) => {
-        if (!data.items || data.items.length === 0) {
-          
-          return;
-        }
+        btn.addEventListener("click", function () {
+            const nextPage = this.getAttribute("data-next-page");
+            const url = this.getAttribute("data-url");
+            
+            // Состояние загрузки на кнопке
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>Загружаем...`;
 
-        data.items.forEach((service) => {
-          const col = document.createElement("div");
-          col.className = "col-lg-4 col-md-6 service-item";
-          
-          // Здесь мы используем innerHTML для краткости создания структуры карточки
-          col.innerHTML = `
-            <div class="card h-100 border-0 shadow-sm">
-              <div class="card-body">
-                <h4 class="text-success">${service.name}</h4>
-                ${service.short_description ? `<p class="small text-muted">${service.short_description}</p>` : ''}
-                <p class="small">${service.description}</p>
-                <hr />
-                ${(service.duration || service.price) ? `
-                  <dl class="row small">
-                    ${service.duration ? `<dt class="col-5">Длительность:</dt><dd class="col-7 text-end">${service.duration}</dd>` : ''}
-                    ${service.price ? `<dt class="col-5">Стоимость:</dt><dd class="col-7 text-end">${service.price} ₽</dd>` : ''}
-                  </dl>
-                ` : ''}
-              </div>
-            </div>
-          `;
-          servicesContainer.appendChild(col);
+            fetch(`${url}?page=${nextPage}`, {
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest",
+                    "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value,
+                },
+            })
+            .then(r => r.json())
+            .then(data => {
+                data.items.forEach((item, index) => {
+                    const div = document.createElement("div");
+                    div.className = "col-lg-4 col-md-6 service-item";
+                    div.setAttribute("data-aos", "fade-up");
+                    
+                    div.innerHTML = `
+                        <div class="card h-100 border-0 shadow-sm service-card">
+                            <div class="card-body d-flex flex-column">
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <h4 class="service-title mb-0">${item.name}</h4>
+                                    <i class="bi bi-patch-check text-success fs-5"></i>
+                                </div>
+                                ${item.short_description ? `<p class="text-muted small mb-3"><strong>${item.short_description}</strong></p>` : ''}
+                                <p class="text-secondary small flex-grow-1">${item.description}</p>
+                                <div class="mt-4 pt-3 border-top d-flex justify-content-between align-items-center">
+                                    <div class="text-muted small"><i class="bi bi-clock me-1"></i> ${item.duration || '—'}</div>
+                                    <div class="price-tag">${item.price || '0'} ₽</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    container.appendChild(div);
+                });
+
+                // Переинициализируем анимации для новых элементов
+                AOS.refresh();
+
+                if (data.has_next) {
+                    btn.setAttribute("data-next-page", parseInt(nextPage) + 1);
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                } else {
+                    btn.remove();
+                }
+            })
+            .catch(() => {
+                alert("Ошибка загрузки. Попробуйте обновить страницу.");
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            });
         });
-
-        if (data.has_next) {
-          loadMoreBtn.setAttribute("data-next-page", (parseInt(nextPage) + 1).toString());
-        } else {
-          loadMoreBtn.remove();
-        }
-      })
-      .catch((err) => {
-        console.error("Ошибка:", err);
-        alert("Не удалось загрузить услуги.");
-      });
     });
-  });
 </script>
 {% endblock %}
