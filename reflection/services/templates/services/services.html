@@ -12,36 +12,6 @@
 
 <section class="py-5" id="services-section">
   <div class="container">
-    <div class="row g-4" id="services-container">
-      {% for service in page_obj %}
-        <div class="col-lg-4 col-md-6 service-item">
-          <div class="card h-100 border-0 shadow-sm">
-            <div class="card-body">
-              <h4 class="text-success">{{ service.name }}</h4>
-              {% if service.short_description %}
-                <p class="small text-muted">{{ service.short_description }}</p>
-              {% endif %}
-              <p class="small">{{ service.description|truncatewords:20 }}</p>
-              <hr />
-              {% if service.duration or service.price %}
-                <dl class="row small">
-                  {% if service.duration %}
-                    <dt class="col-5">Длительность:</dt>
-                    <dd class="col-7 text-end">{{ service.duration }}</dd>
-                  {% endif %}
-                  {% if service.price %}
-                    <dt class="col-5">Стоимость:</dt>
-                    <dd class="col-7 text-end">{{ service.price }} ₽</dd>
-                  {% endif %}
-                </dl>
-              {% endif %}
-            </div>
-          </div>
-        </div>
-      {% endfor %}
-    </div>
-    <section class="py-5" id="services-section">
-  <div class="container">
     {% csrf_token %}
     <div class="row g-4" id="services-container">
       {% for service in page_obj %}
@@ -77,20 +47,6 @@
     </div>
 
     <div class="text-center mt-5">
-      {# Показываем кнопку только если есть следующая страница #}
-      {% if page_obj.has_next %}
-        <button
-          id="load-more-btn"
-          class="btn btn-success"
-          data-next-page="{{ page_obj.next_page_number }}"
-          data-url="{% url 'services:load_more_services' %}"
-        >
-          Показать ещё 6 услуг
-        </button>
-      {% endif %}
-    </div>
-  </div>
-</section>
       {% if page_obj.has_next %}
         <button
           id="load-more-btn"
@@ -106,7 +62,6 @@
 </section>
 
 <script>
-  // простой DOM-ready (без extra_js)
   document.addEventListener("DOMContentLoaded", function () {
     const servicesContainer = document.getElementById("services-container");
     const loadMoreBtn = document.getElementById("load-more-btn");
@@ -115,8 +70,7 @@
 
     loadMoreBtn.addEventListener("click", function () {
       const nextPage = this.getAttribute("data-next-page");
-      const url = this.getAttribute("data-url"); // /services/load-more/
-
+      const url = this.getAttribute("data-url");
       const fullUrl = `${url}?page=${nextPage}`;
 
       fetch(fullUrl, {
@@ -131,77 +85,38 @@
       })
       .then((data) => {
         if (!data.items || data.items.length === 0) {
-          loadMoreBtn.parentElement.innerHTML =
-            '<p class="text-muted">Все услуги загружены.</p>';
+          
           return;
         }
 
-        // добавляем новые карточки
         data.items.forEach((service) => {
           const col = document.createElement("div");
           col.className = "col-lg-4 col-md-6 service-item";
-
-          const card = document.createElement("div");
-          card.className = "card h-100 border-0 shadow-sm";
-
-          const body = document.createElement("div");
-          body.className = "card-body";
-
-          const h4 = document.createElement("h4");
-          h4.className = "text-success";
-          h4.textContent = service.name;
-
-          const p1 = document.createElement("p");
-          p1.className = "small text-muted";
-          p1.textContent = service.short_description || "";
-
-          const p2 = document.createElement("p");
-          p2.className = "small";
-          p2.textContent = service.description || "";
-
-          const hr = document.createElement("hr");
-
-          const dl = document.createElement("dl");
-          dl.className = "row small";
-
-          if (service.duration) {
-            const dt1 = document.createElement("dt");
-            dt1.className = "col-5";
-            dt1.textContent = "Длительность:";
-            const dd1 = document.createElement("dd");
-            dd1.className = "col-7 text-end";
-            dd1.textContent = service.duration;
-            dl.appendChild(dt1);
-            dl.appendChild(dd1);
-          }
-
-          if (service.price !== null) {
-            const dt2 = document.createElement("dt");
-            dt2.className = "col-5";
-            dt2.textContent = "Стоимость:";
-            const dd2 = document.createElement("dd");
-            dd2.className = "col-7 text-end";
-            dd2.textContent = service.price + " ₽";
-            dl.appendChild(dt2);
-            dl.appendChild(dd2);
-          }
-
-          body.appendChild(h4);
-          body.appendChild(p1);
-          body.appendChild(p2);
-          body.appendChild(hr);
-          if (service.duration || service.price) body.appendChild(dl);
-
-          card.appendChild(body);
-          col.appendChild(card);
+          
+          // Здесь мы используем innerHTML для краткости создания структуры карточки
+          col.innerHTML = `
+            <div class="card h-100 border-0 shadow-sm">
+              <div class="card-body">
+                <h4 class="text-success">${service.name}</h4>
+                ${service.short_description ? `<p class="small text-muted">${service.short_description}</p>` : ''}
+                <p class="small">${service.description}</p>
+                <hr />
+                ${(service.duration || service.price) ? `
+                  <dl class="row small">
+                    ${service.duration ? `<dt class="col-5">Длительность:</dt><dd class="col-7 text-end">${service.duration}</dd>` : ''}
+                    ${service.price ? `<dt class="col-5">Стоимость:</dt><dd class="col-7 text-end">${service.price} ₽</dd>` : ''}
+                  </dl>
+                ` : ''}
+              </div>
+            </div>
+          `;
           servicesContainer.appendChild(col);
         });
 
         if (data.has_next) {
           loadMoreBtn.setAttribute("data-next-page", (parseInt(nextPage) + 1).toString());
         } else {
-          loadMoreBtn.parentElement.innerHTML =
-            '<p class="text-muted">Все услуги загружены.</p>';
+          loadMoreBtn.remove();
         }
       })
       .catch((err) => {
@@ -211,5 +126,4 @@
     });
   });
 </script>
-
 {% endblock %}
