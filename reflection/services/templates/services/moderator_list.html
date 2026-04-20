@@ -12,7 +12,6 @@
 
     body { background-color: var(--mod-bg); }
 
-    /* Контейнер таблицы */
     .mod-table-container {
         background: white;
         border-radius: 20px;
@@ -21,7 +20,6 @@
         border: 1px solid rgba(0,0,0,0.05);
     }
 
-    /* Стили для строк и элементов */
     .search-bar {
         background: #f8faf9;
         border: 1px solid #e9ecef;
@@ -53,7 +51,6 @@
         font-size: 0.95rem;
     }
 
-    /* Визуальное состояние скрытой услуги */
     .row-hidden {
         opacity: 0.6;
         background-color: #fcfcfc;
@@ -139,42 +136,42 @@
                 <tbody>
                     {% for service in page_obj %}
                     <tr id="service-row-{{ service.pk }}" 
-    class="service-clickable-row {% if service.is_hidden %}row-hidden{% endif %}" 
-    data-url="{% url 'services:service_detail' service.pk %}"
-    style="cursor: pointer;">
-    
-    <td>
-        <span class="fw-bold text-dark d-block">{{ service.name }}</span>
-        <span class="text-muted small">ID: #{{ service.pk }} | {{ service.duration|default:"—" }}</span>
-    </td>
-    <td><span class="price-badge">{{ service.price }} ₽</span></td>
-    <td>
-        <span id="status-badge-{{ service.pk }}" class="badge {% if service.is_hidden %}bg-secondary{% else %}bg-success{% endif %}">
-            {% if service.is_hidden %}Скрыта{% else %}Активна{% endif %}
-        </span>
-    </td>
-    <td class="text-end position-relative">
-        <div class="d-flex justify-content-end gap-2 actions-wrapper" onclick="event.stopPropagation();">
-            <button class="action-btn btn-toggle-view {% if service.is_hidden %}is-hidden{% endif %}" 
-                    id="toggle-btn-{{ service.pk }}"
-                    onclick="toggleVisibility('{{ service.pk }}')" 
-                    title="Скрыть/Показать">
-                <i class="bi {% if service.is_hidden %}bi-eye-slash{% else %}bi-eye{% endif %}"></i>
-            </button>
+                        class="service-clickable-row {% if service.is_hidden %}row-hidden{% endif %}" 
+                        data-url="{% url 'services:service_detail' service.pk %}"
+                        style="cursor: pointer;">
+                        
+                        <td>
+                            <span class="fw-bold text-dark d-block">{{ service.name }}</span>
+                            <span class="text-muted small">ID: #{{ service.pk }} | {{ service.duration|default:"—" }}</span>
+                        </td>
+                        <td><span class="price-badge">{{ service.price }} ₽</span></td>
+                        <td>
+                            <span id="status-badge-{{ service.pk }}" class="badge {% if service.is_hidden %}bg-secondary{% else %}bg-success{% endif %}">
+                                {% if service.is_hidden %}Скрыта{% else %}Активна{% endif %}
+                            </span>
+                        </td>
+                        <td class="text-end position-relative">
+                            <div class="d-flex justify-content-end gap-2 actions-wrapper" onclick="event.stopPropagation();">
+                                <button class="action-btn btn-toggle-view {% if service.is_hidden %}is-hidden{% endif %}" 
+                                        id="toggle-btn-{{ service.pk }}"
+                                        onclick="toggleVisibility('{{ service.pk }}')" 
+                                        title="Скрыть/Показать">
+                                    <i class="bi {% if service.is_hidden %}bi-eye-slash{% else %}bi-eye{% endif %}"></i>
+                                </button>
 
-            <button class="action-btn btn-edit edit-service-trigger" data-id="{{ service.pk }}" title="Редактировать">
-                <i class="bi bi-pencil"></i>
-            </button>
-            
-            <button class="action-btn btn-delete text-danger delete-service-trigger" 
-        data-id="{{ service.pk }}" 
-        data-name="{{ service.name }}" 
-        title="Удалить">
-    <i class="bi bi-trash"></i>
-</button>
-        </div>
-    </td>
-</tr>
+                                <button class="action-btn btn-edit edit-service-trigger" data-id="{{ service.pk }}" title="Редактировать">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                
+                                <button class="action-btn btn-delete text-danger delete-service-trigger" 
+                                        data-id="{{ service.pk }}" 
+                                        data-name="{{ service.name }}" 
+                                        title="Удалить">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
                     {% empty %}
                     <tr>
                         <td colspan="4" class="text-center py-5 text-muted">Ничего не найдено</td>
@@ -194,7 +191,7 @@
                 {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
                     <li class="page-item">
                         <a class="page-link border-0 shadow-sm rounded-3 mx-1 text-dark" 
-                           href="?page={{ num }}&search={{ search_query|default:'' }}&min_price={{ min_price|default:'' }}&max_price={{ max_price|default:'' }}&visibility={{ visibility|default:'visible' }}&sort={{ sort|default:'' }}">{{ num }}</a>
+                           href="?page={{ num }}&search={{ search_query|default:'' }}&visibility={{ visibility|default:'visible' }}&sort={{ sort|default:'' }}">{{ num }}</a>
                     </li>
                 {% endif %}
             {% endfor %}
@@ -215,7 +212,7 @@
                     <div class="mb-4">
                         <label class="small fw-bold text-muted mb-2 text-uppercase">Статус видимости</label>
                         <select name="visibility" class="form-select search-bar">
-                            <option value="visible" {% if visibility == 'visible' %}selected{% endif %}>Только активные (дефолт)</option>
+                            <option value="visible" {% if visibility == 'visible' %}selected{% endif %}>Только активные</option>
                             <option value="hidden" {% if visibility == 'hidden' %}selected{% endif %}>Только скрытые</option>
                             <option value="all" {% if visibility == 'all' %}selected{% endif %}>Показать все</option>
                         </select>
@@ -344,33 +341,26 @@
 </div>
 
 <script>
-// Используем функцию-обертку, которая сработает только после полной загрузки страницы
 document.addEventListener('DOMContentLoaded', function() {
     
-    // ПРОВЕРКА: Если Bootstrap не загрузился, пробуем подождать еще 100мс
     if (typeof bootstrap === 'undefined') {
-        console.warn("Bootstrap еще не готов, повторная попытка через 100мс...");
         setTimeout(initScripts, 100);
     } else {
         initScripts();
     }
 
     function initScripts() {
-        console.log("Bootstrap инициализирован, запуск скриптов...");
-
-        // --- ИНИЦИАЛИЗАЦИЯ МОДАЛОК ---
         const editModalEl = document.getElementById('editServiceModal');
         const deleteModalEl = document.getElementById('deleteConfirmModal');
         
         const editModal = editModalEl ? new bootstrap.Modal(editModalEl) : null;
-        const deleteModal = deleteModalEl ? new bootstrap.Modal(deleteConfirmModal) : null;
+        const deleteModal = deleteModalEl ? new bootstrap.Modal(deleteModalEl) : null;
 
         let serviceIdToDelete = null;
 
-        // --- 1. КЛИК ПО СТРОКЕ (ПЕРЕХОД) ---
+        // Переход в детали
         document.querySelectorAll('.service-clickable-row').forEach(row => {
             row.addEventListener('click', function(e) {
-                // Если кликнули не по кнопкам управления
                 if (!e.target.closest('.actions-wrapper')) {
                     const url = this.dataset.url;
                     if (url) window.location.href = url;
@@ -378,7 +368,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
 
-        // --- 2. СКРЫТИЕ / ПОКАЗ (AJAX) ---
+        // Переключение видимости (AJAX)
         window.toggleVisibility = function(serviceId) {
             fetch(`/services/moderator/service/${serviceId}/toggle/`, {
                 method: "POST",
@@ -412,7 +402,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         };
 
-        // --- 3. РЕДАКТИРОВАНИЕ (ЗАГРУЗКА ДАННЫХ) ---
+        // Загрузка данных для редактирования
         document.querySelectorAll('.edit-service-trigger').forEach(btn => {
             btn.addEventListener('click', function(e) {
                 e.stopPropagation();
@@ -431,18 +421,58 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
 
-        // --- 4. УДАЛЕНИЕ (ПОДТВЕРЖДЕНИЕ) ---
+        // Форма редактирования (ИСПРАВЛЕННЫЙ AJAX)
+        const editForm = document.getElementById('edit-service-form');
+        if (editForm) {
+            editForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const sid = document.getElementById('edit-service-id').value;
+                const url = `/services/moderator/service/${sid}/update/`;
+                
+                fetch(url, {
+                    method: "POST",
+                    body: new FormData(this),
+                    headers: { 
+                        "X-Requested-With": "XMLHttpRequest",
+                        "X-CSRFToken": "{{ csrf_token }}"
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === "success") location.reload();
+                    else alert("Ошибка при сохранении");
+                });
+            });
+        }
+
+        // Создание (AJAX)
+        const createForm = document.getElementById('create-service-form');
+        if (createForm) {
+            createForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                fetch("{% url 'services:service_create' %}", {
+                    method: "POST",
+                    body: new FormData(this),
+                    headers: { "X-Requested-With": "XMLHttpRequest" }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === "success") location.reload();
+                    else alert("Ошибка при создании");
+                });
+            });
+        }
+
+        // Удаление (Подтверждение)
         document.querySelectorAll('.delete-service-trigger').forEach(btn => {
             btn.addEventListener('click', function(e) {
                 e.stopPropagation();
                 serviceIdToDelete = this.dataset.id;
-                const serviceName = this.dataset.name;
-                document.getElementById('delete-service-name').innerText = serviceName;
+                document.getElementById('delete-service-name').innerText = this.dataset.name;
                 if (deleteModal) deleteModal.show();
             });
         });
 
-        // ПОДТВЕРЖДЕНИЕ УДАЛЕНИЯ
         const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
         if (confirmDeleteBtn) {
             confirmDeleteBtn.addEventListener('click', function() {
@@ -456,47 +486,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 })
                 .then(res => res.json())
                 .then(data => {
-                    if (data.status === "success") {
-    deleteModal.hide();
-    const row = document.getElementById(`service-row-${serviceIdToDelete}`);
-    row.style.opacity = "0";
-    
-    setTimeout(() => {
-        row.remove();
-        // ПРОВЕРКА: Если на странице не осталось строк или мы хотим обновить счетчики
-        // Самый надежный способ обновить пагинацию — перезагрузить страницу
-        location.reload(); 
-    }, 300);
-}
+                    if (data.status === "success") location.reload();
                 });
             });
         }
-
-        // --- 5. ОТПРАВКА ФОРМ (СОЗДАНИЕ И ИЗМЕНЕНИЕ) ---
-        const handleFormSubmit = (formId, urlTemplate) => {
-            const form = document.getElementById(formId);
-            if (!form) return;
-            form.addEventListener('submit', function(e) {
-                e.preventDefault();
-                const sid = document.getElementById('edit-service-id')?.value;
-                const url = urlTemplate.replace('0', sid || ''); 
-                
-                fetch(url, {
-                    method: "POST",
-                    body: new FormData(this),
-                    headers: { "X-Requested-With": "XMLHttpRequest" }
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.status === "success") location.reload();
-                    else alert("Ошибка при сохранении");
-                });
-            });
-        };
-
-        handleFormSubmit('create-service-form', "{% url 'services:service_create' %}");
-        // Для редактирования используем заплатку, так как ID динамический
-        // (в реальном коде можно просто прописать путь /update/ в обработчике выше)
     }
 });
 </script>
