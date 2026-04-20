@@ -13,14 +13,12 @@ def create_booking(request):
     if request.method == "POST":
         # 1. ЗАЩИТА ОТ ДУБЛИКАТОВ (АНТИ-СПАМ)
         # Проверяем, не создавал ли этот же пользователь запись в последние 5 секунд
-        # Это спасет, если JS сработал дважды или пользователь быстро нажал кнопку
         last_booking_exists = Booking.objects.filter(
             user=request.user, created_at__gt=timezone.now() - timedelta(seconds=5)
         ).exists()
 
         if last_booking_exists:
-            # Если дубль пойман, возвращаем успех (чтобы фронтенд показал галочку),
-            # но в базе ничего не создаем.
+            # Если дубль пойман, возвращаем успех для фронтенда, но ничего не создаем
             if request.headers.get("x-requested-with") == "XMLHttpRequest":
                 return JsonResponse({"success": True})
             return redirect(request.POST.get("next", "main:index"))
@@ -30,23 +28,33 @@ def create_booking(request):
         if form.is_valid():
             booking = form.save(commit=False)
             booking.user = request.user
+
+            # АВТО-ОБНОВЛЕНИЕ ТЕЛЕФОНА В ПРОФИЛЕ
+            # Берем телефон из проверенных данных формы
+            phone_from_form = form.cleaned_data.get("phone")
+
+            # Если у текущего юзера поле phone пустое, а в форме оно заполнено
+            if not request.user.phone and phone_from_form:
+                request.user.phone = phone_from_form
+                # Сохраняем только поле телефона, чтобы не задеть другие данные
+                request.user.save(update_fields=["phone"])
+
             booking.save()
 
-            # Если это AJAX-запрос (от fetch в JS)
+            # Ответ для AJAX-запроса (fetch)
             if request.headers.get("x-requested-with") == "XMLHttpRequest":
                 return JsonResponse({"success": True})
 
-            # Если это обычная отправка формы (fallback)
+            # Обычный редирект для стандартной отправки формы
             return redirect(request.POST.get("next", "main:index"))
 
         else:
-            # Если форма невалидна
+            # Если форма не прошла валидацию
             if request.headers.get("x-requested-with") == "XMLHttpRequest":
                 return JsonResponse(
                     {"success": False, "errors": form.errors}, status=400
                 )
-            # В случае обычной ошибки просто возвращаем на главную (или где была форма)
             return redirect(request.POST.get("next", "main:index"))
 
-    # Если зашли через GET — просто отправляем на главную
+    # Если GET-запрос — отправляем на главную
     return redirect("main:index")

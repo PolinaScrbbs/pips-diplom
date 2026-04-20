@@ -50,8 +50,8 @@
 
                     <div class="form-floating mb-3">
                         <input type="tel" name="phone" class="form-control custom-input" id="id_phone" 
-                               placeholder="Телефон" required
-                               value="{% if last_booking %}{{ last_booking.phone }}{% endif %}">
+                            placeholder="Телефон" required
+                            value="{{ last_booking.phone|default:user.phone|default:'' }}">
                         <label for="id_phone"><i class="bi bi-telephone me-2"></i>Номер телефона</label>
                     </div>
 
