@@ -36,7 +36,6 @@ def index(request):
         },
     ]
 
-    services = Service.objects.all()
     last_booking = None
 
     if request.user.is_authenticated:
@@ -48,7 +47,6 @@ def index(request):
         "main/index.html",
         {
             "services_list": services_list,
-            "services": services,
             "last_booking": last_booking,
         },
     )
