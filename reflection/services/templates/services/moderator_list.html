@@ -12,7 +12,6 @@
 
     body { background-color: var(--mod-bg); }
 
-    
     /* Контейнер таблицы */
     .mod-table-container {
         background: white;
@@ -22,7 +21,7 @@
         border: 1px solid rgba(0,0,0,0.05);
     }
 
-    /* Стили элементов управления */
+    /* Стили для строк и элементов */
     .search-bar {
         background: #f8faf9;
         border: 1px solid #e9ecef;
@@ -31,18 +30,12 @@
         transition: all 0.3s ease;
     }
 
-    .service-name {
-        font-weight: 600;
-        color: #32325d;
-        display: block;
-    }
     .search-bar:focus {
         background: white;
         border-color: var(--mod-sage);
         box-shadow: 0 0 0 4px rgba(74, 124, 89, 0.1);
     }
 
-    /* Таблица */
     .table thead th {
         background: #fdfdfd;
         text-transform: uppercase;
@@ -60,10 +53,10 @@
         font-size: 0.95rem;
     }
 
-    .service-name {
-        font-weight: 600;
-        color: #32325d;
-        display: block;
+    /* Визуальное состояние скрытой услуги */
+    .row-hidden {
+        opacity: 0.6;
+        background-color: #fcfcfc;
     }
 
     .price-badge {
@@ -74,7 +67,6 @@
         font-weight: 700;
     }
 
-    /* Кнопки действий */
     .action-btn {
         width: 38px;
         height: 38px;
@@ -87,6 +79,7 @@
         background: white;
         color: #525f7f;
         text-decoration: none;
+        cursor: pointer;
     }
 
     .action-btn:hover {
@@ -95,10 +88,10 @@
         box-shadow: 0 4px 8px rgba(0,0,0,0.05);
     }
 
+    .btn-toggle-view.is-hidden { color: #f5365c; border-color: #f5365c; }
     .btn-edit:hover { color: #5e72e4; border-color: #5e72e4; }
     .btn-delete:hover { color: #f5365c; border-color: #f5365c; }
 
-    /* Индикатор активного фильтра */
     .filter-dot {
         position: absolute;
         top: -2px;
@@ -121,7 +114,7 @@
             
             <button class="btn btn-outline-dark rounded-pill px-3 shadow-sm position-relative" data-bs-toggle="modal" data-bs-target="#filterModal">
                 <i class="bi bi-filter-left me-1"></i> Фильтры
-                {% if search_query or min_price or max_price or sort != '-created_at' %}
+                {% if search_query or min_price or max_price or visibility != 'visible' %}
                     <span class="filter-dot"></span>
                 {% endif %}
             </button>
@@ -138,46 +131,53 @@
                 <thead>
                     <tr>
                         <th>Название услуги</th>
-                        <th>Длительность</th>
                         <th>Стоимость</th>
-                        <th>Краткое описание</th>
+                        <th>Статус</th>
                         <th class="text-end">Управление</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for service in page_obj %}
-                    <tr>
-                        <td>
-                            <span class="service-name">{{ service.name }}</span>
-                            <span class="text-muted small">ID: #{{ service.pk }}</span>
-                        </td>
-                        <td>
-                            <i class="bi bi-stopwatch me-1 text-muted"></i> {{ service.duration|default:"—" }}
-                        </td>
-                        <td>
-                            <span class="price-badge">{{ service.price }} ₽</span>
-                        </td>
-                        <td>
-                            <div class="text-muted small text-truncate" style="max-width: 250px;">
-                                {{ service.short_description|default:"—" }}
-                            </div>
-                        </td>
-                        <td class="text-end">
-                            <div class="d-flex justify-content-end gap-2">
-                                <a href="{% url 'services:service_detail' service.pk %}" class="action-btn" title="Просмотр">
-                                    <i class="bi bi-eye"></i>
-                                </a>
-                                <button class="action-btn btn-edit" title="Редактировать"><i class="bi bi-pencil"></i></button>
-                                <button class="action-btn btn-delete" title="Удалить"><i class="bi bi-trash"></i></button>
-                            </div>
-                        </td>
-                    </tr>
+                    <tr id="service-row-{{ service.pk }}" 
+    class="service-clickable-row {% if service.is_hidden %}row-hidden{% endif %}" 
+    data-url="{% url 'services:service_detail' service.pk %}"
+    style="cursor: pointer;">
+    
+    <td>
+        <span class="fw-bold text-dark d-block">{{ service.name }}</span>
+        <span class="text-muted small">ID: #{{ service.pk }} | {{ service.duration|default:"—" }}</span>
+    </td>
+    <td><span class="price-badge">{{ service.price }} ₽</span></td>
+    <td>
+        <span id="status-badge-{{ service.pk }}" class="badge {% if service.is_hidden %}bg-secondary{% else %}bg-success{% endif %}">
+            {% if service.is_hidden %}Скрыта{% else %}Активна{% endif %}
+        </span>
+    </td>
+    <td class="text-end position-relative">
+        <div class="d-flex justify-content-end gap-2 actions-wrapper" onclick="event.stopPropagation();">
+            <button class="action-btn btn-toggle-view {% if service.is_hidden %}is-hidden{% endif %}" 
+                    id="toggle-btn-{{ service.pk }}"
+                    onclick="toggleVisibility('{{ service.pk }}')" 
+                    title="Скрыть/Показать">
+                <i class="bi {% if service.is_hidden %}bi-eye-slash{% else %}bi-eye{% endif %}"></i>
+            </button>
+
+            <button class="action-btn btn-edit edit-service-trigger" data-id="{{ service.pk }}" title="Редактировать">
+                <i class="bi bi-pencil"></i>
+            </button>
+            
+            <button class="action-btn btn-delete text-danger delete-service-trigger" 
+        data-id="{{ service.pk }}" 
+        data-name="{{ service.name }}" 
+        title="Удалить">
+    <i class="bi bi-trash"></i>
+</button>
+        </div>
+    </td>
+</tr>
                     {% empty %}
                     <tr>
-                        <td colspan="5" class="text-center py-5 text-muted">
-                            <i class="bi bi-search display-4 d-block mb-3 opacity-25"></i>
-                            Услуги не найдены. Попробуйте сбросить фильтры.
-                        </td>
+                        <td colspan="4" class="text-center py-5 text-muted">Ничего не найдено</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -188,31 +188,16 @@
     {% if page_obj.has_other_pages %}
     <nav class="mt-4">
         <ul class="pagination justify-content-center">
-            {% if page_obj.has_previous %}
-                <li class="page-item">
-                    <a class="page-link shadow-sm mx-1 rounded-3 border-0" href="?page={{ page_obj.previous_page_number }}&search={{ search_query|default:'' }}&min_price={{ min_price|default:'' }}&max_price={{ max_price|default:'' }}&sort={{ sort|default:'' }}">
-                        <i class="bi bi-chevron-left"></i>
-                    </a>
-                </li>
-            {% endif %}
-
             {% for num in page_obj.paginator.page_range %}
                 {% if page_obj.number == num %}
-                    <li class="page-item active"><span class="page-link shadow-sm mx-1 rounded-3 border-0 bg-success">{{ num }}</span></li>
+                    <li class="page-item active"><span class="page-link border-0 shadow-sm rounded-3 mx-1 bg-success">{{ num }}</span></li>
                 {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
                     <li class="page-item">
-                        <a class="page-link shadow-sm mx-1 rounded-3 border-0 text-dark" href="?page={{ num }}&search={{ search_query|default:'' }}&min_price={{ min_price|default:'' }}&max_price={{ max_price|default:'' }}&sort={{ sort|default:'' }}">{{ num }}</a>
+                        <a class="page-link border-0 shadow-sm rounded-3 mx-1 text-dark" 
+                           href="?page={{ num }}&search={{ search_query|default:'' }}&min_price={{ min_price|default:'' }}&max_price={{ max_price|default:'' }}&visibility={{ visibility|default:'visible' }}&sort={{ sort|default:'' }}">{{ num }}</a>
                     </li>
                 {% endif %}
             {% endfor %}
-
-            {% if page_obj.has_next %}
-                <li class="page-item">
-                    <a class="page-link shadow-sm mx-1 rounded-3 border-0" href="?page={{ page_obj.next_page_number }}&search={{ search_query|default:'' }}&min_price={{ min_price|default:'' }}&max_price={{ max_price|default:'' }}&sort={{ sort|default:'' }}">
-                        <i class="bi bi-chevron-right"></i>
-                    </a>
-                </li>
-            {% endif %}
         </ul>
     </nav>
     {% endif %}
@@ -225,37 +210,32 @@
                 <h5 class="fw-bold px-3 pt-3">Настройка фильтров</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form method="get" id="mod-filter-form">
+            <form method="get">
                 <div class="modal-body p-4">
                     <div class="mb-4">
-                        <label class="small fw-bold text-muted mb-2 text-uppercase">Поиск по названию</label>
-                        <input type="text" name="search" class="form-control search-bar" 
-                               placeholder="Введите название..." value="{{ search_query|default:'' }}">
+                        <label class="small fw-bold text-muted mb-2 text-uppercase">Статус видимости</label>
+                        <select name="visibility" class="form-select search-bar">
+                            <option value="visible" {% if visibility == 'visible' %}selected{% endif %}>Только активные (дефолт)</option>
+                            <option value="hidden" {% if visibility == 'hidden' %}selected{% endif %}>Только скрытые</option>
+                            <option value="all" {% if visibility == 'all' %}selected{% endif %}>Показать все</option>
+                        </select>
                     </div>
-
                     <div class="mb-4">
-                        <label class="small fw-bold text-muted mb-2 text-uppercase">Ценовой диапазон (₽)</label>
-                        <div class="d-flex gap-2">
-                            <input type="number" name="min_price" class="form-control search-bar" 
-                                   placeholder="От" value="{{ min_price|default:'' }}">
-                            <input type="number" name="max_price" class="form-control search-bar" 
-                                   placeholder="До" value="{{ max_price|default:'' }}">
-                        </div>
+                        <label class="small fw-bold text-muted mb-2 text-uppercase">Поиск по названию</label>
+                        <input type="text" name="search" class="form-control search-bar" placeholder="Введите название..." value="{{ search_query|default:'' }}">
                     </div>
-
                     <div class="mb-2">
                         <label class="small fw-bold text-muted mb-2 text-uppercase">Сортировка</label>
                         <select name="sort" class="form-select search-bar">
                             <option value="-created_at" {% if sort == '-created_at' %}selected{% endif %}>Сначала новые</option>
                             <option value="price" {% if sort == 'price' %}selected{% endif %}>По возрастанию цены</option>
                             <option value="-price" {% if sort == '-price' %}selected{% endif %}>По убыванию цены</option>
-                            <option value="name" {% if sort == 'name' %}selected{% endif %}>А — Я</option>
                         </select>
                     </div>
                 </div>
                 <div class="modal-footer border-0 p-4 pt-0 justify-content-between">
-                    <a href="{% url 'services:moderator_list' %}" class="btn btn-light text-muted px-3 rounded-pill">Сбросить</a>
-                    <button type="submit" class="btn btn-dark px-4 rounded-pill">Применить</button>
+                    <a href="{% url 'services:moderator_list' %}" class="btn btn-light rounded-pill px-3">Сбросить</a>
+                    <button type="submit" class="btn btn-dark rounded-pill px-4">Применить</button>
                 </div>
             </form>
         </div>
@@ -266,8 +246,8 @@
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
             <div class="modal-header border-0 pb-0">
-                <h5 class="fw-bold px-3 pt-3">Новая услуга</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 class="fw-bold px-3 pt-3">Добавить услугу</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form id="create-service-form">
                 {% csrf_token %}
@@ -296,38 +276,227 @@
                     </div>
                 </div>
                 <div class="modal-footer border-0 p-4 pt-0">
-                    <button type="button" class="btn btn-light px-4 rounded-pill" data-bs-dismiss="modal">Отмена</button>
-                    <button type="submit" class="btn btn-success px-4 rounded-pill shadow-sm">Создать</button>
+                    <button type="submit" class="btn btn-success px-4 rounded-pill w-100 shadow-sm">Создать услугу</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
+<div class="modal fade" id="editServiceModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="fw-bold px-3 pt-3">Редактировать услугу</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="edit-service-form">
+                {% csrf_token %}
+                <input type="hidden" name="service_id" id="edit-service-id">
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="small fw-bold text-muted">Название</label>
+                            <input type="text" name="name" id="edit-name" class="form-control rounded-3" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="small fw-bold text-muted">Цена (₽)</label>
+                            <input type="number" name="price" id="edit-price" class="form-control rounded-3" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="small fw-bold text-muted">Длительность</label>
+                            <input type="text" name="duration" id="edit-duration" class="form-control rounded-3">
+                        </div>
+                        <div class="col-12">
+                            <label class="small fw-bold text-muted">Краткое описание</label>
+                            <input type="text" name="short_description" id="edit-short-description" class="form-control rounded-3">
+                        </div>
+                        <div class="col-12">
+                            <label class="small fw-bold text-muted">Полное описание</label>
+                            <textarea name="description" id="edit-description" class="form-control rounded-3" rows="4"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-4 pt-0">
+                    <button type="submit" class="btn btn-primary px-4 rounded-pill w-100 shadow-sm">Сохранить изменения</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
+            <div class="modal-body p-4 text-center">
+                <div class="text-danger mb-3">
+                    <i class="bi bi-exclamation-triangle-fill" style="font-size: 3rem;"></i>
+                </div>
+                <h5 class="fw-bold">Удалить услугу?</h5>
+                <p class="text-muted small">Вы собираетесь удалить "<span id="delete-service-name"></span>". Это действие необратимо.</p>
+                <div class="d-flex gap-2 mt-4">
+                    <button type="button" class="btn btn-light w-100 rounded-pill" data-bs-dismiss="modal">Отмена</button>
+                    <button type="button" id="confirm-delete-btn" class="btn btn-danger w-100 rounded-pill">Удалить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
+// Используем функцию-обертку, которая сработает только после полной загрузки страницы
 document.addEventListener('DOMContentLoaded', function() {
-    // Обработка создания услуги через AJAX
-    const createForm = document.getElementById('create-service-form');
-    if (createForm) {
-        createForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const formData = new FormData(this);
-            
-            fetch("{% url 'services:service_create' %}", {
+    
+    // ПРОВЕРКА: Если Bootstrap не загрузился, пробуем подождать еще 100мс
+    if (typeof bootstrap === 'undefined') {
+        console.warn("Bootstrap еще не готов, повторная попытка через 100мс...");
+        setTimeout(initScripts, 100);
+    } else {
+        initScripts();
+    }
+
+    function initScripts() {
+        console.log("Bootstrap инициализирован, запуск скриптов...");
+
+        // --- ИНИЦИАЛИЗАЦИЯ МОДАЛОК ---
+        const editModalEl = document.getElementById('editServiceModal');
+        const deleteModalEl = document.getElementById('deleteConfirmModal');
+        
+        const editModal = editModalEl ? new bootstrap.Modal(editModalEl) : null;
+        const deleteModal = deleteModalEl ? new bootstrap.Modal(deleteConfirmModal) : null;
+
+        let serviceIdToDelete = null;
+
+        // --- 1. КЛИК ПО СТРОКЕ (ПЕРЕХОД) ---
+        document.querySelectorAll('.service-clickable-row').forEach(row => {
+            row.addEventListener('click', function(e) {
+                // Если кликнули не по кнопкам управления
+                if (!e.target.closest('.actions-wrapper')) {
+                    const url = this.dataset.url;
+                    if (url) window.location.href = url;
+                }
+            });
+        });
+
+        // --- 2. СКРЫТИЕ / ПОКАЗ (AJAX) ---
+        window.toggleVisibility = function(serviceId) {
+            fetch(`/services/moderator/service/${serviceId}/toggle/`, {
                 method: "POST",
-                body: formData,
-                headers: { "X-Requested-With": "XMLHttpRequest" }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === "success") {
-                    location.reload();
-                } else {
-                    alert("Ошибка: " + JSON.stringify(data.errors));
+                headers: {
+                    "X-CSRFToken": "{{ csrf_token }}",
+                    "X-Requested-With": "XMLHttpRequest"
                 }
             })
-            .catch(error => console.error("Error:", error));
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === "success") {
+                    const row = document.getElementById(`service-row-${serviceId}`);
+                    const btn = document.getElementById(`toggle-btn-${serviceId}`);
+                    const badge = document.getElementById(`status-badge-${serviceId}`);
+                    const icon = btn.querySelector('i');
+
+                    if (data.is_hidden) {
+                        row.classList.add('row-hidden');
+                        btn.classList.add('is-hidden');
+                        badge.className = "badge bg-secondary";
+                        badge.innerText = "Скрыта";
+                        icon.className = "bi bi-eye-slash";
+                    } else {
+                        row.classList.remove('row-hidden');
+                        btn.classList.remove('is-hidden');
+                        badge.className = "badge bg-success";
+                        badge.innerText = "Активна";
+                        icon.className = "bi bi-eye";
+                    }
+                }
+            });
+        };
+
+        // --- 3. РЕДАКТИРОВАНИЕ (ЗАГРУЗКА ДАННЫХ) ---
+        document.querySelectorAll('.edit-service-trigger').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const sid = this.dataset.id;
+                fetch(`/services/moderator/service/${sid}/json/`)
+                    .then(res => res.json())
+                    .then(data => {
+                        document.getElementById('edit-service-id').value = data.id;
+                        document.getElementById('edit-name').value = data.name;
+                        document.getElementById('edit-price').value = data.price;
+                        document.getElementById('edit-duration').value = data.duration;
+                        document.getElementById('edit-short-description').value = data.short_description;
+                        document.getElementById('edit-description').value = data.description;
+                        if (editModal) editModal.show();
+                    });
+            });
         });
+
+        // --- 4. УДАЛЕНИЕ (ПОДТВЕРЖДЕНИЕ) ---
+        document.querySelectorAll('.delete-service-trigger').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                serviceIdToDelete = this.dataset.id;
+                const serviceName = this.dataset.name;
+                document.getElementById('delete-service-name').innerText = serviceName;
+                if (deleteModal) deleteModal.show();
+            });
+        });
+
+        // ПОДТВЕРЖДЕНИЕ УДАЛЕНИЯ
+        const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
+        if (confirmDeleteBtn) {
+            confirmDeleteBtn.addEventListener('click', function() {
+                if (!serviceIdToDelete) return;
+                fetch(`/services/moderator/service/${serviceIdToDelete}/delete/`, {
+                    method: "POST",
+                    headers: {
+                        "X-CSRFToken": "{{ csrf_token }}",
+                        "X-Requested-With": "XMLHttpRequest"
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === "success") {
+    deleteModal.hide();
+    const row = document.getElementById(`service-row-${serviceIdToDelete}`);
+    row.style.opacity = "0";
+    
+    setTimeout(() => {
+        row.remove();
+        // ПРОВЕРКА: Если на странице не осталось строк или мы хотим обновить счетчики
+        // Самый надежный способ обновить пагинацию — перезагрузить страницу
+        location.reload(); 
+    }, 300);
+}
+                });
+            });
+        }
+
+        // --- 5. ОТПРАВКА ФОРМ (СОЗДАНИЕ И ИЗМЕНЕНИЕ) ---
+        const handleFormSubmit = (formId, urlTemplate) => {
+            const form = document.getElementById(formId);
+            if (!form) return;
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const sid = document.getElementById('edit-service-id')?.value;
+                const url = urlTemplate.replace('0', sid || ''); 
+                
+                fetch(url, {
+                    method: "POST",
+                    body: new FormData(this),
+                    headers: { "X-Requested-With": "XMLHttpRequest" }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === "success") location.reload();
+                    else alert("Ошибка при сохранении");
+                });
+            });
+        };
+
+        handleFormSubmit('create-service-form', "{% url 'services:service_create' %}");
+        // Для редактирования используем заплатку, так как ID динамический
+        // (в реальном коде можно просто прописать путь /update/ в обработчике выше)
     }
 });
 </script>
