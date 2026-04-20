@@ -186,10 +186,11 @@
               <span class="ms-2 d-none d-xl-inline fw-medium text-dark">{{ user.username }}</span>
             </a>
             
+            {% if user.is_user %}
             <button class="btn btn-sage d-none d-md-block" data-bs-toggle="modal" data-bs-target="#bookingModal">
               Записаться
             </button>
-
+            {% endif %}
             <a href="{% url 'users:logout' %}" class="btn btn-link text-muted p-0 ms-2" title="Выйти">
               <i class="bi bi-box-arrow-right fs-4"></i>
             </a>

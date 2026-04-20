@@ -1,116 +1,183 @@
 {% extends "base.html" %}
+{% load static %}
 
-{% block title %}Управление услугами — Модератор{% endblock %}
+{% block title %}Управление услугами — Панель модератора{% endblock %}
 
 {% block content %}
 <style>
+    :root {
+        --mod-sage: #4a7c59;
+        --mod-bg: #f4f7f6;
+    }
+
+    body { background-color: var(--mod-bg); }
+
+    
+    /* Контейнер таблицы */
     .mod-table-container {
         background: white;
-        border-radius: 16px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.03);
         overflow: hidden;
-        margin-top: 2rem;
+        border: 1px solid rgba(0,0,0,0.05);
     }
+
+    /* Стили элементов управления */
     .search-bar {
-        background: #f1f3f5;
-        border: none;
-        border-radius: 10px;
-        padding: 10px 20px 10px 45px;
-    }
-    .search-icon {
-        position: absolute;
-        left: 15px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: #adb5bd;
-    }
-    .table thead th {
         background: #f8faf9;
-        text-transform: uppercase;
-        font-size: 0.75rem;
-        letter-spacing: 1px;
-        color: #6c757d;
-        border-bottom: 1px solid #edf2f0;
-        padding: 15px 20px;
+        border: 1px solid #e9ecef;
+        border-radius: 12px;
+        padding: 12px 20px;
+        transition: all 0.3s ease;
     }
-    .table tbody td {
-        padding: 15px 20px;
-        vertical-align: middle;
-    }
-    .status-pill {
-        padding: 4px 12px;
-        border-radius: 50px;
-        font-size: 0.8rem;
-        font-weight: 500;
-    }
-    .price-badge {
-        font-family: 'Monaco', monospace;
+
+    .service-name {
         font-weight: 600;
-        color: #2d3436;
+        color: #32325d;
+        display: block;
+    }
+    .search-bar:focus {
+        background: white;
+        border-color: var(--mod-sage);
+        box-shadow: 0 0 0 4px rgba(74, 124, 89, 0.1);
+    }
+
+    /* Таблица */
+    .table thead th {
+        background: #fdfdfd;
+        text-transform: uppercase;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 1px;
+        color: #8898aa;
+        padding: 18px 25px;
+        border-bottom: 1px solid #edf2f0;
+    }
+
+    .table tbody td {
+        padding: 18px 25px;
+        vertical-align: middle;
+        font-size: 0.95rem;
+    }
+
+    .service-name {
+        font-weight: 600;
+        color: #32325d;
+        display: block;
+    }
+
+    .price-badge {
+        background: #e8f5e9;
+        color: #2e7d32;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-weight: 700;
+    }
+
+    /* Кнопки действий */
+    .action-btn {
+        width: 38px;
+        height: 38px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        transition: all 0.2s;
+        border: 1px solid #eee;
+        background: white;
+        color: #525f7f;
+        text-decoration: none;
+    }
+
+    .action-btn:hover {
+        background: #f8fafb;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+    }
+
+    .btn-edit:hover { color: #5e72e4; border-color: #5e72e4; }
+    .btn-delete:hover { color: #f5365c; border-color: #f5365c; }
+
+    /* Индикатор активного фильтра */
+    .filter-dot {
+        position: absolute;
+        top: -2px;
+        right: -2px;
+        width: 10px;
+        height: 10px;
+        background-color: #f5365c;
+        border: 2px solid white;
+        border-radius: 50%;
     }
 </style>
 
 <div class="container py-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="fw-bold m-0"><i class="bi bi-shield-check text-success me-2"></i>Панель модератора</h2>
-        <a href="#" class="btn btn-sage"><i class="bi bi-plus-lg me-2"></i>Добавить услугу</a>
-    </div>
+        <div class="d-flex align-items-center gap-3">
+            <div>
+                <h2 class="fw-bold text-dark m-0">Управление услугами</h2>
+                <p class="text-muted small m-0">Найдено: {{ page_obj.paginator.count }} позиций</p>
+            </div>
+            
+            <button class="btn btn-outline-dark rounded-pill px-3 shadow-sm position-relative" data-bs-toggle="modal" data-bs-target="#filterModal">
+                <i class="bi bi-filter-left me-1"></i> Фильтры
+                {% if search_query or min_price or max_price or sort != '-created_at' %}
+                    <span class="filter-dot"></span>
+                {% endif %}
+            </button>
+        </div>
 
-    <div class="row g-3 mb-4">
-        <div class="col-lg-6">
-            <form method="get" class="position-relative">
-                <i class="bi bi-search search-icon"></i>
-                <input type="text" name="search" class="form-control search-bar w-100" placeholder="Поиск по названию или описанию..." value="{{ query }}">
-            </form>
-        </div>
-        <div class="col-lg-6">
-            <form method="get" class="d-flex gap-2">
-                <input type="number" name="min_price" class="form-control" placeholder="Мин. цена" style="border-radius: 10px;">
-                <input type="number" name="max_price" class="form-control" placeholder="Макс. цена" style="border-radius: 10px;">
-                <button type="submit" class="btn btn-outline-success rounded-3">Применить</button>
-                <a href="?" class="btn btn-outline-secondary rounded-3"><i class="bi bi-arrow-clockwise"></i></a>
-            </form>
-        </div>
+        <button class="btn btn-success px-4 py-2 rounded-pill shadow-sm" data-bs-toggle="modal" data-bs-target="#createServiceModal">
+            <i class="bi bi-plus-lg me-2"></i>Новая услуга
+        </button>
     </div>
 
     <div class="mod-table-container">
         <div class="table-responsive">
-            <table class="table table-hover m-0">
+            <table class="table table-hover align-middle m-0">
                 <thead>
                     <tr>
-                        <th>Название</th>
+                        <th>Название услуги</th>
                         <th>Длительность</th>
                         <th>Стоимость</th>
-                        <th>Кр. Описание</th>
-                        <th class="text-end">Действия</th>
+                        <th>Краткое описание</th>
+                        <th class="text-end">Управление</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for service in page_obj %}
                     <tr>
                         <td>
-                            <div class="fw-bold text-dark">{{ service.name }}</div>
+                            <span class="service-name">{{ service.name }}</span>
+                            <span class="text-muted small">ID: #{{ service.pk }}</span>
                         </td>
-                        <td><span class="text-muted"><i class="bi bi-clock me-1"></i> {{ service.duration }}</span></td>
-                        <td><span class="price-badge">{{ service.price }} ₽</span></td>
-                        <td><small class="text-muted">{{ service.short_description|truncatechars:40 }}</small></td>
+                        <td>
+                            <i class="bi bi-stopwatch me-1 text-muted"></i> {{ service.duration|default:"—" }}
+                        </td>
+                        <td>
+                            <span class="price-badge">{{ service.price }} ₽</span>
+                        </td>
+                        <td>
+                            <div class="text-muted small text-truncate" style="max-width: 250px;">
+                                {{ service.short_description|default:"—" }}
+                            </div>
+                        </td>
                         <td class="text-end">
-                            <div class="btn-group">
-                                <a href="{% url 'services:service_detail' service.pk %}" class="btn btn-sm btn-light border" title="Просмотр">
+                            <div class="d-flex justify-content-end gap-2">
+                                <a href="{% url 'services:service_detail' service.pk %}" class="action-btn" title="Просмотр">
                                     <i class="bi bi-eye"></i>
                                 </a>
-                                <button class="btn btn-sm btn-light border text-primary" title="Редактировать">
-                                    <i class="bi bi-pencil-square"></i>
-                                </button>
-                                <button class="btn btn-sm btn-light border text-danger" title="Удалить">
-                                    <i class="bi bi-trash"></i>
-                                </button>
+                                <button class="action-btn btn-edit" title="Редактировать"><i class="bi bi-pencil"></i></button>
+                                <button class="action-btn btn-delete" title="Удалить"><i class="bi bi-trash"></i></button>
                             </div>
                         </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="5" class="text-center py-5 text-muted">Услуги не найдены</td>
+                        <td colspan="5" class="text-center py-5 text-muted">
+                            <i class="bi bi-search display-4 d-block mb-3 opacity-25"></i>
+                            Услуги не найдены. Попробуйте сбросить фильтры.
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -118,18 +185,150 @@
         </div>
     </div>
 
+    {% if page_obj.has_other_pages %}
     <nav class="mt-4">
         <ul class="pagination justify-content-center">
             {% if page_obj.has_previous %}
-                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if query %}&search={{ query }}{% endif %}">Назад</a></li>
+                <li class="page-item">
+                    <a class="page-link shadow-sm mx-1 rounded-3 border-0" href="?page={{ page_obj.previous_page_number }}&search={{ search_query|default:'' }}&min_price={{ min_price|default:'' }}&max_price={{ max_price|default:'' }}&sort={{ sort|default:'' }}">
+                        <i class="bi bi-chevron-left"></i>
+                    </a>
+                </li>
             {% endif %}
-            
-            <li class="page-item active"><span class="page-link">{{ page_obj.number }}</span></li>
+
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                    <li class="page-item active"><span class="page-link shadow-sm mx-1 rounded-3 border-0 bg-success">{{ num }}</span></li>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link shadow-sm mx-1 rounded-3 border-0 text-dark" href="?page={{ num }}&search={{ search_query|default:'' }}&min_price={{ min_price|default:'' }}&max_price={{ max_price|default:'' }}&sort={{ sort|default:'' }}">{{ num }}</a>
+                    </li>
+                {% endif %}
+            {% endfor %}
 
             {% if page_obj.has_next %}
-                <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if query %}&search={{ query }}{% endif %}">Вперед</a></li>
+                <li class="page-item">
+                    <a class="page-link shadow-sm mx-1 rounded-3 border-0" href="?page={{ page_obj.next_page_number }}&search={{ search_query|default:'' }}&min_price={{ min_price|default:'' }}&max_price={{ max_price|default:'' }}&sort={{ sort|default:'' }}">
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                </li>
             {% endif %}
         </ul>
     </nav>
+    {% endif %}
 </div>
+
+<div class="modal fade" id="filterModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="fw-bold px-3 pt-3">Настройка фильтров</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="get" id="mod-filter-form">
+                <div class="modal-body p-4">
+                    <div class="mb-4">
+                        <label class="small fw-bold text-muted mb-2 text-uppercase">Поиск по названию</label>
+                        <input type="text" name="search" class="form-control search-bar" 
+                               placeholder="Введите название..." value="{{ search_query|default:'' }}">
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="small fw-bold text-muted mb-2 text-uppercase">Ценовой диапазон (₽)</label>
+                        <div class="d-flex gap-2">
+                            <input type="number" name="min_price" class="form-control search-bar" 
+                                   placeholder="От" value="{{ min_price|default:'' }}">
+                            <input type="number" name="max_price" class="form-control search-bar" 
+                                   placeholder="До" value="{{ max_price|default:'' }}">
+                        </div>
+                    </div>
+
+                    <div class="mb-2">
+                        <label class="small fw-bold text-muted mb-2 text-uppercase">Сортировка</label>
+                        <select name="sort" class="form-select search-bar">
+                            <option value="-created_at" {% if sort == '-created_at' %}selected{% endif %}>Сначала новые</option>
+                            <option value="price" {% if sort == 'price' %}selected{% endif %}>По возрастанию цены</option>
+                            <option value="-price" {% if sort == '-price' %}selected{% endif %}>По убыванию цены</option>
+                            <option value="name" {% if sort == 'name' %}selected{% endif %}>А — Я</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-4 pt-0 justify-content-between">
+                    <a href="{% url 'services:moderator_list' %}" class="btn btn-light text-muted px-3 rounded-pill">Сбросить</a>
+                    <button type="submit" class="btn btn-dark px-4 rounded-pill">Применить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="createServiceModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="fw-bold px-3 pt-3">Новая услуга</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="create-service-form">
+                {% csrf_token %}
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="small fw-bold text-muted">Название</label>
+                            <input type="text" name="name" class="form-control rounded-3" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="small fw-bold text-muted">Цена (₽)</label>
+                            <input type="number" name="price" class="form-control rounded-3" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="small fw-bold text-muted">Длительность</label>
+                            <input type="text" name="duration" class="form-control rounded-3" placeholder="60 мин.">
+                        </div>
+                        <div class="col-12">
+                            <label class="small fw-bold text-muted">Краткое описание</label>
+                            <input type="text" name="short_description" class="form-control rounded-3">
+                        </div>
+                        <div class="col-12">
+                            <label class="small fw-bold text-muted">Полное описание</label>
+                            <textarea name="description" class="form-control rounded-3" rows="4"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-4 pt-0">
+                    <button type="button" class="btn btn-light px-4 rounded-pill" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-success px-4 rounded-pill shadow-sm">Создать</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Обработка создания услуги через AJAX
+    const createForm = document.getElementById('create-service-form');
+    if (createForm) {
+        createForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            
+            fetch("{% url 'services:service_create' %}", {
+                method: "POST",
+                body: formData,
+                headers: { "X-Requested-With": "XMLHttpRequest" }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === "success") {
+                    location.reload();
+                } else {
+                    alert("Ошибка: " + JSON.stringify(data.errors));
+                }
+            })
+            .catch(error => console.error("Error:", error));
+        });
+    }
+});
+</script>
 {% endblock %}

@@ -21,6 +21,9 @@ class User(AbstractUser):
         default=USER,
     )
 
+    def is_user(self):
+        return self.role == self.USER
+
     def is_moderator(self):
         return self.role == self.MODERATOR
 

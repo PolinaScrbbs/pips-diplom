@@ -4,6 +4,7 @@ from django.shortcuts import render, get_object_or_404
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 from main.utils import moderator_required
+from services.forms import ServiceForm
 from .models import Service
 
 
@@ -67,25 +68,44 @@ def service_detail(request, pk):
 
 @moderator_required
 def moderator_services_list(request):
-    query = request.GET.get('search', '')
-    min_price = request.GET.get('min_price')
-    max_price = request.GET.get('max_price')
+    search_query = request.GET.get('search', '')
+    min_price = request.GET.get('min_price', '')
+    max_price = request.GET.get('max_price', '')
+    sort_by = request.GET.get('sort', '-created_at') # По умолчанию новые
 
-    services = Service.objects.all().order_by('-created_at')
+    services = Service.objects.all().order_by(sort_by)
 
-    if query:
-        services = services.filter(Q(name__icontains=query) | Q(short_description__icontains=query))
-    
+    if search_query:
+        services = services.filter(name__icontains=search_query)
     if min_price:
         services = services.filter(price__gte=min_price)
     if max_price:
         services = services.filter(price__lte=max_price)
 
-    paginator = Paginator(services, 10) # 10 услуг на страницу
+    paginator = Paginator(services, 6)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
     return render(request, 'services/moderator_list.html', {
         'page_obj': page_obj,
-        'query': query
+        'search_query': search_query,
+        'min_price': min_price,
+        'max_price': max_price,
+        'sort': sort_by,
     })
+    
+
+@moderator_required
+def service_create(request):
+    if request.method == "POST":
+        form = ServiceForm(request.POST)
+        if form.is_valid():
+            service = form.save()
+            return JsonResponse({
+                "status": "success",
+                "message": "Услуга успешно создана!",
+                "service": {"id": service.id, "name": service.name}
+            })
+        else:
+            return JsonResponse({"status": "error", "errors": form.errors}, status=400)
+    return JsonResponse({"status": "error", "message": "Invalid method"}, status=405)
