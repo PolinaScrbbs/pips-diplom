@@ -1,5 +1,4 @@
 from django.shortcuts import render
-from services.models import Service
 
 
 def index(request):
