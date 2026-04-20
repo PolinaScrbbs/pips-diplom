@@ -11,14 +11,16 @@ class ServiceAdmin(admin.ModelAdmin):
     readonly_fields = ["created_at", "updated_at"]
 
     fieldsets = (
-        ("Основная информация", {
-            "fields": ("name", "short_description", "description")
-        }),
-        ("Длительность и цена", {
-            "fields": ("duration", "price")
-        }),
-        ("Системные поля", {
-            "fields": ("created_at", "updated_at"),
-            "classes": ("collapse",),
-        }),
+        (
+            "Основная информация",
+            {"fields": ("name", "short_description", "description")},
+        ),
+        ("Длительность и цена", {"fields": ("duration", "price")}),
+        (
+            "Системные поля",
+            {
+                "fields": ("created_at", "updated_at"),
+                "classes": ("collapse",),
+            },
+        ),
     )

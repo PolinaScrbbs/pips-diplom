@@ -1,62 +1,213 @@
 {% extends "base.html" %}
 {% load static %}
-{% block title %}Авторизация{% endblock %}
-
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/auth.css' %}">
-{% endblock %}
+{% block title %}Вход в аккаунт — Отражение{% endblock %}
 
 {% block content %}
-<section class="auth-section py-5">
-  <div class="container">
-    <div class="row justify-content-center">
-      <div class="col-12 col-md-6 col-lg-4">
-        <div class="card auth-card shadow-sm p-3 p-md-4">
-          <div class="card-body">
-            <div class="text-center mb-4">
-              <h3 class="fw-bold text-success">Вход в аккаунт</h3>
-            </div>
+<style>
+    :root {
+        --auth-bg: #f8faf9;
+        --input-focus: #198754;
+        --error-red: #dc3545;
+    }
 
-            {% if messages %}
-              {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} small mb-3">{{ message }}</div>
-              {% endfor %}
-            {% endif %}
+    .auth-page-wrapper {
+        min-height: calc(100vh - 80px);
+        background: radial-gradient(circle at bottom left, #e8f5e9 0%, var(--auth-bg) 50%);
+        display: flex;
+        align-items: center;
+        padding: 40px 0;
+    }
 
-            <form method="post" novalidate class="auth-form">
-              {% csrf_token %}
-              {% for field in form %}
-                <div class="mb-3">
-                  <label class="django-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
-                  {{ field }}
-                  {% if field.errors %}
-                    <div class="text-danger small mt-1 px-2" style="font-size: 0.75rem;">{{ field.errors.as_text }}</div>
-                  {% endif %}
+    .auth-card {
+        border: none;
+        border-radius: 28px;
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(15px);
+        box-shadow: 0 25px 50px rgba(0,0,0,0.06);
+        transition: transform 0.3s ease;
+    }
+
+    /* Анимация тряски при ошибке */
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-8px); }
+        75% { transform: translateX(8px); }
+    }
+    .shake { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
+
+    /* Floating Labels */
+    .form-floating > .form-control {
+        border: 2px solid #edf2f0;
+        border-radius: 16px;
+        background-color: #fcfdfc;
+        transition: all 0.3s ease;
+    }
+
+    .form-floating > .form-control:focus {
+        border-color: var(--input-focus);
+        box-shadow: 0 0 0 4px rgba(25, 135, 84, 0.1);
+        background-color: #fff;
+    }
+
+    .btn-auth-submit {
+        background: linear-gradient(135deg, #198754 0%, #12633d 100%);
+        color: white;
+        border: none;
+        border-radius: 16px;
+        padding: 14px;
+        font-weight: 700;
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .btn-auth-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(25, 135, 84, 0.3);
+        color: white;
+    }
+
+    .password-toggle {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        color: #adb5bd;
+        z-index: 10;
+        padding: 10px;
+        transition: color 0.2s;
+    }
+    .password-toggle:hover { color: var(--input-focus); }
+
+    .invalid-feedback {
+        font-size: 0.75rem;
+        font-weight: 600;
+        margin-left: 1rem;
+    }
+</style>
+
+<section class="auth-page-wrapper">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-7 col-lg-5 col-xl-4">
+                
+                <div class="card auth-card p-3 p-md-4" id="authCard" data-aos="fade-up">
+                    <div class="card-body">
+                        <div class="text-center mb-5">
+                            <div class="mb-3 d-inline-block p-3 rounded-circle bg-success bg-opacity-10 text-success shadow-sm">
+                                <i class="bi bi-shield-lock-fill fs-2"></i>
+                            </div>
+                            <h2 class="fw-bold text-dark">С возвращением</h2>
+                            <p class="text-muted small">Войдите в личный кабинет</p>
+                        </div>
+
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="alert alert-{{ message.tags }} border-0 rounded-4 small mb-4 py-3 shadow-sm animate__animated animate__fadeIn">
+                                    <i class="bi bi-info-circle me-2"></i> {{ message }}
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+
+                        <form method="post" id="loginForm" novalidate class="needs-validation">
+                            {% csrf_token %}
+
+                            {% if form.non_field_errors %}
+                                {% for error in form.non_field_errors %}
+                                    <div class="alert alert-danger border-0 rounded-4 mb-4 py-2 small shadow-sm">
+                                        <i class="bi bi-exclamation-triangle me-2"></i> {{ error }}
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+
+                            <div class="form-floating mb-3">
+                                <input type="text" name="username" 
+                                       class="form-control {% if form.username.errors %}is-invalid{% endif %}" 
+                                       id="id_username" placeholder="Логин" required autofocus>
+                                <label for="id_username">Логин</label>
+                                <div class="invalid-feedback">Пожалуйста, введите логин</div>
+                            </div>
+
+                            <div class="form-floating mb-4 position-relative">
+                                <input type="password" name="password" 
+                                       class="form-control {% if form.password.errors %}is-invalid{% endif %}" 
+                                       id="id_password" placeholder="Пароль" required>
+                                <label for="id_password">Пароль</label>
+                                <i class="bi bi-eye password-toggle" id="togglePassword"></i>
+                                <div class="invalid-feedback">Пожалуйста, введите пароль</div>
+                            </div>
+
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-auth-submit shadow-sm" id="submitBtn">
+                                    Войти в систему
+                                </button>
+                            </div>
+
+                            <div class="text-center mt-4 pt-2">
+                                <p class="small text-muted">Впервые у нас? 
+                                    <a href="{% url 'users:register' %}" class="text-success fw-bold text-decoration-none ms-1">Создать аккаунт</a>
+                                </p>
+                            </div>
+                        </form>
+                    </div>
                 </div>
-              {% endfor %}
 
-              <div class="d-grid mt-4">
-                <button type="submit" class="btn btn-auth">Войти</button>
-              </div>
-
-              <div class="text-center mt-4">
-                <a href="{% url 'users:register' %}" class="link-secondary small text-decoration-none">
-                  Нет аккаунта? <span class="text-success fw-bold">Зарегистрироваться</span>
-                </a>
-              </div>
-            </form>
-          </div>
+                <div class="text-center mt-4 mb-5">
+                    <a href="/" class="btn btn-link link-secondary btn-sm text-decoration-none opacity-75 transition-all">
+                        <i class="bi bi-arrow-left me-1"></i> На главную страницу
+                    </a>
+                </div>
+            </div>
         </div>
-      </div>
     </div>
-  </div>
 </section>
 
 <script>
-  document.querySelectorAll('.auth-form input').forEach(function(el) {
-    el.classList.add('form-control');
-    const label = document.querySelector(`label[for="${el.id}"]`);
-    if (label) el.setAttribute('placeholder', label.textContent);
-  });
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('loginForm');
+    const authCard = document.getElementById('authCard');
+    const togglePassword = document.querySelector('#togglePassword');
+    const passwordInput = document.querySelector('#id_password');
+
+    // 1. Переключение видимости пароля
+    togglePassword.addEventListener('click', function() {
+        const isPassword = passwordInput.getAttribute('type') === 'password';
+        passwordInput.setAttribute('type', isPassword ? 'text' : 'password');
+        
+        // Меняем иконку
+        this.classList.toggle('bi-eye');
+        this.classList.toggle('bi-eye-slash');
+    });
+
+    // 2. Валидация и анимация ошибки
+    form.addEventListener('submit', function(event) {
+        if (!form.checkValidity()) {
+            event.preventDefault();
+            event.stopPropagation();
+            
+            // Эффект тряски при пустых полях
+            authCard.classList.remove('shake');
+            void authCard.offsetWidth; // Триггер рефлоу для перезапуска анимации
+            authCard.classList.add('shake');
+        } else {
+            // Визуальный фидбек при успешной отправке
+            const btn = document.getElementById('submitBtn');
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Проверка...';
+            btn.classList.add('opacity-75');
+        }
+        
+        form.classList.add('was-validated');
+    }, false);
+
+    // 3. Убираем "красное" состояние при вводе
+    const inputs = form.querySelectorAll('input');
+    inputs.forEach(input => {
+        input.addEventListener('input', function() {
+            if (this.checkValidity()) {
+                this.classList.remove('is-invalid');
+                authCard.classList.remove('shake');
+            }
+        });
+    });
+});
 </script>
 {% endblock %}

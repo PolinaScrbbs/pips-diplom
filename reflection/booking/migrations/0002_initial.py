@@ -9,20 +9,31 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('booking', '0001_initial'),
-        ('reviews', '0001_initial'),
-        ('services', '0001_initial'),
+        ("booking", "0001_initial"),
+        ("reviews", "0001_initial"),
+        ("services", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='booking',
-            name='review',
-            field=models.OneToOneField(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='linked_booking', to='reviews.review'),
+            model_name="booking",
+            name="review",
+            field=models.OneToOneField(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="linked_booking",
+                to="reviews.review",
+            ),
         ),
         migrations.AddField(
-            model_name='booking',
-            name='service',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='bookings', to='services.service', verbose_name='Услуга'),
+            model_name="booking",
+            name="service",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="bookings",
+                to="services.service",
+                verbose_name="Услуга",
+            ),
         ),
     ]

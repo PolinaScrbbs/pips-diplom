@@ -27,6 +27,7 @@ def services(request):
     }
     return render(request, "services/services.html", context)
 
+
 def load_more_services(request):
     page = request.GET.get("page", 1)
     per_page = 6
@@ -63,25 +64,25 @@ def service_detail(request, pk):
     Детальное описание услуги по её первичному ключу (ID).
     """
     service = get_object_or_404(Service, pk=pk)
-    return render(request, 'services/service_detail.html', {'service': service})
+    return render(request, "services/service_detail.html", {"service": service})
 
 
 @moderator_required
 def moderator_services_list(request):
-    search_query = request.GET.get('search', '')
-    min_price = request.GET.get('min_price', '')
-    max_price = request.GET.get('max_price', '')
-    sort_by = request.GET.get('sort', '-created_at')
-    
+    search_query = request.GET.get("search", "")
+    min_price = request.GET.get("min_price", "")
+    max_price = request.GET.get("max_price", "")
+    sort_by = request.GET.get("sort", "-created_at")
+
     # Новый параметр фильтра: all, visible (default), hidden
-    visibility = request.GET.get('visibility', 'visible')
+    visibility = request.GET.get("visibility", "visible")
 
     services = Service.objects.all().order_by(sort_by)
 
     # Фильтр по видимости
-    if visibility == 'visible':
+    if visibility == "visible":
         services = services.filter(is_hidden=False)
-    elif visibility == 'hidden':
+    elif visibility == "hidden":
         services = services.filter(is_hidden=True)
     # если 'all', то ничего не фильтруем
 
@@ -91,17 +92,21 @@ def moderator_services_list(request):
     # ... (логика с ценой из прошлых шагов) ...
 
     paginator = Paginator(services, 6)
-    page_obj = paginator.get_page(request.GET.get('page'))
+    page_obj = paginator.get_page(request.GET.get("page"))
 
-    return render(request, 'services/moderator_list.html', {
-        'page_obj': page_obj,
-        'search_query': search_query,
-        'min_price': min_price,
-        'max_price': max_price,
-        'sort': sort_by,
-        'visibility': visibility, # Не забудьте передать в контекст
-    })
-    
+    return render(
+        request,
+        "services/moderator_list.html",
+        {
+            "page_obj": page_obj,
+            "search_query": search_query,
+            "min_price": min_price,
+            "max_price": max_price,
+            "sort": sort_by,
+            "visibility": visibility,  # Не забудьте передать в контекст
+        },
+    )
+
 
 @moderator_required
 def service_create(request):
@@ -109,11 +114,13 @@ def service_create(request):
         form = ServiceForm(request.POST)
         if form.is_valid():
             service = form.save()
-            return JsonResponse({
-                "status": "success",
-                "message": "Услуга успешно создана!",
-                "service": {"id": service.id, "name": service.name}
-            })
+            return JsonResponse(
+                {
+                    "status": "success",
+                    "message": "Услуга успешно создана!",
+                    "service": {"id": service.id, "name": service.name},
+                }
+            )
         else:
             return JsonResponse({"status": "error", "errors": form.errors}, status=400)
     return JsonResponse({"status": "error", "message": "Invalid method"}, status=405)
@@ -122,14 +129,17 @@ def service_create(request):
 @moderator_required
 def service_detail_json(request, pk):
     service = get_object_or_404(Service, pk=pk)
-    return JsonResponse({
-        "id": service.id,
-        "name": service.name,
-        "price": service.price,
-        "duration": service.duration,
-        "short_description": service.short_description,
-        "description": service.description,
-    })
+    return JsonResponse(
+        {
+            "id": service.id,
+            "name": service.name,
+            "price": service.price,
+            "duration": service.duration,
+            "short_description": service.short_description,
+            "description": service.description,
+        }
+    )
+
 
 # Сохранение изменений
 @moderator_required
@@ -141,7 +151,8 @@ def service_update(request, pk):
             form.save()
             return JsonResponse({"status": "success"})
         return JsonResponse({"status": "error", "errors": form.errors}, status=400)
-    
+
+
 @moderator_required
 def service_toggle_visibility(request, pk):
     if request.method == "POST":
@@ -149,8 +160,9 @@ def service_toggle_visibility(request, pk):
         service.is_hidden = not service.is_hidden
         service.save()
         return JsonResponse({"status": "success", "is_hidden": service.is_hidden})
-    
-@moderator_required # Если у вас есть такой декоратор
+
+
+@moderator_required  # Если у вас есть такой декоратор
 def service_delete(request, pk):
     if request.method == "POST":
         service = get_object_or_404(Service, pk=pk)

@@ -4,6 +4,7 @@ from django.conf import settings
 from reviews.models import Review
 from services.models import Service
 
+
 class Booking(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -11,13 +12,13 @@ class Booking(models.Model):
         related_name="bookings",
         verbose_name="Пользователь",
         null=True,
-        blank=True
+        blank=True,
     )
     service = models.ForeignKey(
-        Service, 
-        on_delete=models.CASCADE, 
+        Service,
+        on_delete=models.CASCADE,
         verbose_name="Услуга",
-        related_name="bookings"
+        related_name="bookings",
     )
     child_name = models.CharField("Имя ребёнка", max_length=255)
     parent_name = models.CharField("Имя родителя", max_length=255)

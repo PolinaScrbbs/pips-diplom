@@ -89,9 +89,5 @@ class Command(BaseCommand):
             )
             added += 1
 
-        self.stdout.write(
-            self.style.SUCCESS(f"Добавлено {added} новых отзывов.")
-        )
-        self.stdout.write(
-            f"Общее количество отзывов в БД: {Review.objects.count()}"
-        )
+        self.stdout.write(self.style.SUCCESS(f"Добавлено {added} новых отзывов."))
+        self.stdout.write(f"Общее количество отзывов в БД: {Review.objects.count()}")

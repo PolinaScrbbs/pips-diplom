@@ -263,6 +263,7 @@ class Command(BaseCommand):
                 self.stdout.write(f"Услуга '{service.name}' уже была в базе.")
 
         self.stdout.write("Тестовый каталог услуг загружен.")
+
     help = "Загружает тестовые услуги (если ещё нет)"
 
     def add_arguments(self, parser):

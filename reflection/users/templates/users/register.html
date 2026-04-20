@@ -1,56 +1,176 @@
 {% extends "base.html" %}
 {% load static %}
-{% block title %}Регистрация{% endblock %}
-
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/auth.css' %}">
-{% endblock %}
+{% block title %}Создание аккаунта — Отражение{% endblock %}
 
 {% block content %}
-<section class="auth-section py-5">
-  <div class="container">
-    <div class="row justify-content-center">
-      <div class="col-12 col-md-6 col-lg-4">
-        <div class="card auth-card shadow-sm p-3 p-md-4">
-          <div class="card-body">
-            <div class="text-center mb-4">
-              <h3 class="fw-bold text-success">Регистрация</h3>
-            </div>
+<style>
+    :root {
+        --auth-bg: #f8faf9;
+        --input-focus: #198754;
+    }
 
-            <form method="post" novalidate class="auth-form">
-              {% csrf_token %}
-              {% for field in form %}
-                <div class="mb-3">
-                  <label class="django-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
-                  {{ field }}
-                  {% if field.errors %}
-                    <div class="text-danger small mt-1 px-2" style="font-size: 0.75rem;">{{ field.errors.as_text }}</div>
-                  {% endif %}
+    .auth-page-wrapper {
+        min-height: calc(100vh - 80px);
+        background: radial-gradient(circle at top right, #e8f5e9 0%, var(--auth-bg) 40%);
+        display: flex;
+        align-items: center;
+        padding: 40px 0;
+    }
+
+    .auth-card {
+        border: none;
+        border-radius: 28px;
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(10px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.05);
+    }
+
+    /* Floating Labels Custom Style */
+    .form-floating > .form-control {
+        border: 2px solid #edf2f0;
+        border-radius: 16px;
+        background-color: #fcfdfc;
+        transition: all 0.3s ease;
+    }
+
+    .form-floating > .form-control:focus {
+        border-color: var(--input-focus);
+        box-shadow: 0 0 0 4px rgba(25, 135, 84, 0.1);
+        background-color: #fff;
+    }
+
+    .form-floating > label {
+        padding-left: 1.25rem;
+        color: #6c757d;
+    }
+
+    /* Анимация кнопки */
+    .btn-auth-submit {
+        background: linear-gradient(135deg, #198754 0%, #12633d 100%);
+        color: white;
+        border: none;
+        border-radius: 16px;
+        padding: 14px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .btn-auth-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(25, 135, 84, 0.3);
+        color: white;
+    }
+
+    /* Валидация */
+    .invalid-feedback {
+        font-size: 0.75rem;
+        font-weight: 600;
+        margin-left: 1rem;
+    }
+
+    /* Стили для иконок */
+    .input-group-text {
+        border: none;
+        background: transparent;
+        color: #adb5bd;
+    }
+</style>
+
+<section class="auth-page-wrapper">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-8 col-lg-5 col-xl-4">
+                
+                <div class="card auth-card p-3 p-md-4" data-aos="zoom-in">
+                    <div class="card-body">
+                        <div class="text-center mb-5">
+                            <h2 class="fw-bold text-dark">Регистрация</h2>
+                            <p class="text-muted small">Присоединяйтесь к нашему сообществу</p>
+                        </div>
+
+                        <form method="post" id="registerForm" novalidate class="needs-validation">
+                            {% csrf_token %}
+
+                            <div class="form-floating mb-3">
+                                <input type="text" name="username" class="form-control {% if form.username.errors %}is-invalid{% endif %}" 
+                                       id="id_username" placeholder="Логин" required value="{{ form.username.value|default:'' }}">
+                                <label for="id_username"><i class="bi bi-person me-2"></i>Логин</label>
+                                <div class="invalid-feedback">{{ form.username.errors.as_text }}</div>
+                            </div>
+
+                            <div class="form-floating mb-3">
+                                <input type="email" name="email" class="form-control {% if form.email.errors %}is-invalid{% endif %}" 
+                                       id="id_email" placeholder="name@example.com" required value="{{ form.email.value|default:'' }}">
+                                <label for="id_email"><i class="bi bi-envelope me-2"></i>Email</label>
+                                <div class="invalid-feedback">Введите корректный email</div>
+                            </div>
+
+                            <div class="form-floating mb-3">
+                                <input type="password" name="password1" class="form-control {% if form.password1.errors %}is-invalid{% endif %}" 
+                                       id="id_password1" placeholder="Пароль" required>
+                                <label for="id_password1"><i class="bi bi-shield-lock me-2"></i>Пароль</label>
+                                <div class="invalid-feedback">Пароль слишком короткий</div>
+                            </div>
+
+                            <div class="form-floating mb-4">
+                                <input type="password" name="password2" class="form-control {% if form.password2.errors %}is-invalid{% endif %}" 
+                                       id="id_password2" placeholder="Повтор пароля" required>
+                                <label for="id_password2"><i class="bi bi-check2-circle me-2"></i>Подтверждение</label>
+                                <div class="invalid-feedback" id="passMatchError">Пароли должны совпадать</div>
+                            </div>
+
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-auth-submit shadow-sm">
+                                    Создать аккаунт <i class="bi bi-arrow-right-short ms-1"></i>
+                                </button>
+                            </div>
+
+                            <div class="text-center mt-4 pt-2">
+                                <p class="small text-muted">Уже есть аккаунт? 
+                                    <a href="{% url 'users:login' %}" class="text-success fw-bold text-decoration-none ms-1">Войти</a>
+                                </p>
+                            </div>
+                        </form>
+                    </div>
                 </div>
-              {% endfor %}
 
-              <div class="d-grid mt-4">
-                <button type="submit" class="btn btn-auth">Создать аккаунт</button>
-              </div>
-
-              <div class="text-center mt-4">
-                <a href="{% url 'users:login' %}" class="link-secondary small text-decoration-none">
-                  Уже есть аккаунт? <span class="text-success fw-bold">Войти</span>
-                </a>
-              </div>
-            </form>
-          </div>
+                <div class="text-center mt-4 small text-muted opacity-50">
+                    &copy; 2026 Центр развития «Отражение»
+                </div>
+            </div>
         </div>
-      </div>
     </div>
-  </div>
 </section>
 
 <script>
-  document.querySelectorAll('.auth-form input, .auth-form select').forEach(function(el) {
-    el.classList.add('form-control');
-    const label = document.querySelector(`label[for="${el.id}"]`);
-    if (label) el.setAttribute('placeholder', label.textContent);
-  });
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('registerForm');
+    const pass1 = document.getElementById('id_password1');
+    const pass2 = document.getElementById('id_password2');
+
+    // Валидация совпадения паролей "на лету"
+    function validatePasswords() {
+        if (pass1.value !== pass2.value && pass2.value !== "") {
+            pass2.setCustomValidity("Passwords do not match");
+            pass2.classList.add('is-invalid');
+        } else {
+            pass2.setCustomValidity("");
+            pass2.classList.remove('is-invalid');
+        }
+    }
+
+    pass1.addEventListener('change', validatePasswords);
+    pass2.addEventListener('keyup', validatePasswords);
+
+    // Bootstrap Validation
+    form.addEventListener('submit', function(event) {
+        if (!form.checkValidity()) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        form.classList.add('was-validated');
+    }, false);
+});
 </script>
 {% endblock %}

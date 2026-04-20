@@ -3,7 +3,7 @@
 {% block title %}Отзывы — Центр «Отражение»{% endblock %}
 
 {% block content %}
-<link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+<link href="{% static 'css/aos.css' %}" rel="stylesheet">
 
 <style>
     :root {
@@ -278,8 +278,8 @@
     </div>
 </div>
 
-<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
-<script src="https://unpkg.com/isotope-layout@3/dist/isotope.pkgd.min.js"></script>
+<script src="{% static 'js/aos.js' %}"></script>
+<script src="{% static 'js/isotope.pkgd.min.js' %}"></script>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {

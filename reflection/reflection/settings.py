@@ -46,10 +46,20 @@ INSTALLED_APPS = [
 
 AUTH_USER_MODEL = "users.User"
 
-STATIC_URL = "/static/"
+# Static files (CSS, JavaScript, Images)
+STATIC_URL = "static/"
+
+# Путь к папке статики в корне проекта
 STATICFILES_DIRS = [
     BASE_DIR / "static",
 ]
+
+# Папка, куда соберется вся статика при команде collectstatic (для сервера)
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
+# Media files (Загружаемые пользователем файлы: аватарки, фото услуг)
+MEDIA_URL = "media/"
+MEDIA_ROOT = BASE_DIR / "media"
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -67,7 +77,7 @@ TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
         "DIRS": [
-            BASE_DIR / "main" / "templates",      # здесь base.html
+            BASE_DIR / "main" / "templates",  # здесь base.html
             BASE_DIR / "services" / "templates",
             BASE_DIR / "reviews" / "templates",
             BASE_DIR / "booking" / "templates",
@@ -78,7 +88,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
-                'booking.context_processors.booking_form_context',
+                "booking.context_processors.booking_form_context",
             ],
         },
     },

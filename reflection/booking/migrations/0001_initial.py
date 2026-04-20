@@ -7,19 +7,40 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='Booking',
+            name="Booking",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('child_name', models.CharField(max_length=255, verbose_name='Имя ребёнка')),
-                ('parent_name', models.CharField(max_length=255, verbose_name='Имя родителя')),
-                ('phone', models.CharField(max_length=50, verbose_name='Телефон')),
-                ('comment', models.TextField(blank=True, null=True, verbose_name='Комментарий')),
-                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "child_name",
+                    models.CharField(max_length=255, verbose_name="Имя ребёнка"),
+                ),
+                (
+                    "parent_name",
+                    models.CharField(max_length=255, verbose_name="Имя родителя"),
+                ),
+                ("phone", models.CharField(max_length=50, verbose_name="Телефон")),
+                (
+                    "comment",
+                    models.TextField(blank=True, null=True, verbose_name="Комментарий"),
+                ),
+                (
+                    "created_at",
+                    models.DateTimeField(
+                        auto_now_add=True, verbose_name="Дата создания"
+                    ),
+                ),
             ],
         ),
     ]

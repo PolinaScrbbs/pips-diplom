@@ -1,220 +1,282 @@
 {% extends "base.html" %}
-{% block title %}Почему именно «Отражение» — детский центр{% endblock %}
+{% load static %}
+
+{% block title %}Почему именно «Отражение» — детский психологический центр{% endblock %}
 
 {% block content %}
 
-<section class="hero py-5 text-center text-success fw-semibold">
-  <div class="container">
-    <h1 class="mb-3">Почему именно «Отражение»? 🌱</h1>
-    <p class="lead">
-      Потому что мы не просто «ещё один центр», а команда, которая помогает детям и семьям
-      находить себя, понимать чувства и расти в атмосфере <strong>уважения и заботы</strong>.
-    </p>
-  </div>
+<link rel="stylesheet" href="{% static 'css/aos.css' %}" />
+
+<style>
+    :root {
+        --brand-green: #2ecc71;
+        --brand-dark: #1a5235;
+        --soft-bg: #f0f7f4;
+        --text-main: #2c3e50;
+    }
+
+    body {
+        font-family: 'Montserrat', sans-serif;
+        color: var(--text-main);
+        overflow-x: hidden;
+    }
+
+    /* Hero Section */
+    .hero-glass {
+        background: linear-gradient(135deg, rgba(46, 204, 113, 0.05) 0%, rgba(255, 255, 255, 1) 100%);
+        padding: 100px 0 60px;
+        position: relative;
+    }
+
+    .hero-badge {
+        background: var(--soft-bg);
+        color: var(--brand-green);
+        padding: 8px 20px;
+        border-radius: 50px;
+        font-weight: 700;
+        font-size: 0.9rem;
+        display: inline-block;
+        margin-bottom: 20px;
+    }
+
+    .text-gradient {
+        background: linear-gradient(135deg, var(--brand-green), var(--brand-dark));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    /* Image Styling */
+    .img-wrapper {
+        position: relative;
+        z-index: 1;
+    }
+
+    .img-wrapper::before {
+        content: '';
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border: 2px solid var(--brand-green);
+        border-radius: 30px;
+        top: 20px;
+        left: 20px;
+        z-index: -1;
+        opacity: 0.3;
+    }
+
+    .img-custom {
+        border-radius: 30px;
+        transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .img-custom:hover {
+        transform: scale(1.02);
+    }
+
+    /* Cards */
+    .feature-card {
+        border: none;
+        border-radius: 25px;
+        padding: 40px 30px;
+        background: #fff;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+
+    .feature-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 40px rgba(46, 204, 113, 0.1);
+    }
+
+    .icon-circle {
+        width: 70px;
+        height: 70px;
+        background: var(--soft-bg);
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 25px;
+        color: var(--brand-green);
+    }
+
+    /* Process steps */
+    .step-item {
+        position: relative;
+        padding-left: 50px;
+    }
+
+    .step-number {
+        position: absolute;
+        left: 0;
+        top: 0;
+        font-size: 3rem;
+        font-weight: 900;
+        color: var(--brand-green);
+        opacity: 0.15;
+        line-height: 1;
+    }
+
+    /* CTA Section */
+    .cta-box {
+        background: linear-gradient(135deg, var(--brand-dark) 0%, var(--brand-green) 100%);
+        border-radius: 40px;
+        padding: 60px;
+        color: #fff;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .cta-box::after {
+        content: '';
+        position: absolute;
+        width: 300px;
+        height: 300px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 50%;
+        top: -150px;
+        right: -150px;
+    }
+
+    .btn-white {
+        background: #fff;
+        color: var(--brand-dark);
+        border-radius: 50px;
+        padding: 15px 35px;
+        font-weight: 700;
+        transition: all 0.3s;
+    }
+
+    .btn-white:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        color: var(--brand-green);
+    }
+</style>
+
+<section class="hero-glass">
+    <div class="container text-center">
+        <div class="hero-badge" data-aos="fade-down">Почему выбирают нас</div>
+        <h1 class="display-3 fw-bold mb-4" data-aos="fade-up">
+            Здесь начинается <span class="text-gradient">гармония</span>
+        </h1>
+        <p class="lead text-muted mx-auto" style="max-width: 700px;" data-aos="fade-up" data-aos-delay="100">
+            Мы создали пространство, где ребёнок — это личность, а не набор симптомов. 
+            Помогаем родителям стать опорой, а детям — найти уверенность.
+        </p>
+    </div>
 </section>
 
 <section class="py-5">
-  <div class="container">
-    <div class="row align-items-center">
-      <div class="col-lg-6 mb-4 mb-lg-0">
-        <img
-          src="https://images.pexels.com/photos/6685851/pexels-photo-6685851.jpeg?auto=compress&cs=tinysrgb&h=400&w=600"
-          class="rounded-4 shadow"
-          alt="Спокойная психологическая консультация"
-          style="width: 100%; height: auto;"
-        />
-      </div>
-      <div class="col-lg-6">
-        <h2 class="mb-4 text-success">Мы — команда, а не «шаблон» 🤝</h2>
-        <p class="mb-3">
-          В «Отражении» за каждым ребёнком и каждой семьёй стоит живой человек, а не готовый
-          сценарий. Наши специалисты — квалифицированные психологи и педагоги, которые регулярно
-          учатся, участвуют в супервизиях и следят за современными подходами.
-        </p>
-        <p class="text-muted">
-          Мы не обещаем «чудес», но даём пространство, где можно <strong>медленно и безопасно</strong>
-          меняться.
-        </p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="py-5 bg-light">
-  <div class="container">
-    <div class="row mb-4">
-      <div class="col text-center">
-        <h2 class="text-success">Ключевые отличия 🌟</h2>
-      </div>
-    </div>
-
-    <div class="row g-4 align-items-center">
-      <div class="col-md-4 text-center">
-        <svg class="mb-3 text-success" width="60" height="60" fill="currentColor" viewBox="0 0 16 16">
-          <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-          <path d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14"/>
-        </svg>
-        <h4 class="text-success">Человечный подход</h4>
-        <p class="text-muted">
-          Мы видим ребёнка цельной личностью, а не «проблемой». Работаем с эмоциями, а не
-          только с симптомами.
-        </p>
-      </div>
-
-      <div class="col-md-4 text-center">
-        <svg class="mb-3 text-success" width="60" height="60" fill="currentColor" viewBox="0 0 16 16">
-          <path d="M1 8a7 7 0 1 0 14 0A7 7 0 0 0 1 8m0 0C2 4.5 5.5 2 8 2s6 2.5 7 6-2.5 6-6 6-6-2.5-7-6m.5 0a6.5 6.5 0 1 1 13 0A6.5 6.5 0 0 1 8.5 8"/>
-        </svg>
-        <h4 class="text-success">Безопасность и конфиденциальность</h4>
-        <p class="text-muted">
-          Ваши истории остаются только с вами и нашим специалистом. Никаких лишних историй
-          в маркетинге — только обобщённые примеры.
-        </p>
-      </div>
-
-      <div class="col-md-4 text-center">
-        <svg class="mb-3 text-success" width="60" height="60" fill="currentColor" viewBox="0 0 16 16">
-          <path d="M11.5 1a.5.5 0 0 1 .5.5v13a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-13a.5.5 0 0 1 .5-.5h11zm-8 1a.5.5 0 0 0-.5.5V11h1v1H7v1h3v-1h1v-1H9.5V2.5H3.5zm4 0a.5.5 0 0 1 .5.5V11H7v1h1v1.5H9v1h1v-1h1v-1.5zm.5-1h1v1.5h-1z"/>
-        </svg>
-        <h4 class="text-success">Развитие, а не только помощь</h4>
-        <p class="text-muted">
-          Мы помогаем ребёнку и родителям <strong>учиться</strong> — выражать чувства, устанавливать
-          границы, понимать себя и друг друга.
-        </p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="py-5">
-  <div class="container">
-    <div class="row align-items-center">
-      <div class="col-lg-6 order-1 order-lg-0">
-        <h3 class="mb-4 text-success">Почему нас выбирают конкретные семьи 🧑‍🤝‍🧑</h3>
-        <ul class="list-group list-group-flush mb-3">
-          <li class="list-group-item d-flex align-items-start">
-            <span class="me-2">&#x1F4B2;</span>
-            <p class="mb-0">
-              Семьи, которым важно не только «убрать проблему», но и понять причины и выработать
-              новые навыки.
-            </p>
-          </li>
-          <li class="list-group-item d-flex align-items-start">
-            <span class="me-2">&#x1F469;&#x200D;&#x1F469;&#x200D;&#x1F467;&#x200D;&#x1F467;</span>
-            <p class="mb-0">
-              Многодетные семьи и семьи с пережитыми переездами, потерями, болезнями, когда нужна
-              поддержка на долгий срок.
-            </p>
-          </li>
-          <li class="list-group-item d-flex align-items-start">
-            <span class="me-2">&#x1F680;</span>
-            <p class="mb-0">
-              Родители, которые хотят не «управлять» ребёнком, а научиться строить с ним
-              уважительные и поддерживающие отношения.
-            </p>
-          </li>
-        </ul>
-        <p class="text-muted mt-2">
-          Мы не собираем «однотипных клиентов», а работаем с тем, что важно <strong>именно вашей</strong>
-          семье.
-        </p>
-      </div>
-      <div class="col-lg-6 text-center mb-4 mb-lg-0">
-        <img
-          src="https://images.pexels.com/photos/5677015/pexels-photo-5677015.jpeg?auto=compress&cs=tinysrgb&h=400&w=600"
-          class="rounded-4 shadow"
-          alt="Семья и поддержка"
-          style="width: 100%; height: auto;"
-        />
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="py-5 bg-light">
-  <div class="container">
-    <h2 class="mb-4 text-success text-center">Процесс работы у нас ❇️</h2>
-    <div class="row g-4">
-      <div class="col-md-6">
-        <div class="card border-0 shadow-sm h-100">
-          <div class="card-body d-flex flex-column">
-            <h4 class="text-success mb-3">1. Знакомство и понимание запроса</h4>
-            <p class="mb-3">
-              На первой консультации мы слушаем, что тяжело в семье, какие ожидания и цели у
-              родителей и ребёнка.
-            </p>
-            <p class="text-muted small">
-              Это не «опрос‑анкета», а живой разговор, где вы можете говорить честно.
-            </p>
-          </div>
+    <div class="container">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-6" data-aos="fade-right">
+                <div class="img-wrapper">
+                    <img src="{% static 'images/pexels-photo-7163353.webp' %}" 
+                         class="img-fluid img-custom shadow-lg" alt="Консультация">
+                </div>
+            </div>
+            <div class="col-lg-6" data-aos="fade-left">
+                <h2 class="display-5 fw-bold mb-4">Мы — команда, а не <span class="text-success">шаблон</span> 🤝</h2>
+                <p class="fs-5 text-muted mb-4">
+                    В «Отражении» нет потоковых решений. Мы понимаем, что каждая семья — это уникальная экосистема со своей историей и правилами.
+                </p>
+                <div class="d-flex align-items-center mb-3">
+                    <div class="icon-circle me-3 mb-0" style="width: 50px; height: 50px;">
+                        <i class="bi bi-patch-check"></i>
+                    </div>
+                    <span class="fw-bold">Квалифицированная супервизия специалистов</span>
+                </div>
+                <div class="d-flex align-items-center mb-3">
+                    <div class="icon-circle me-3 mb-0" style="width: 50px; height: 50px;">
+                        <i class="bi bi-shield-lock"></i>
+                    </div>
+                    <span class="fw-bold">Полная эмоциональная безопасность</span>
+                </div>
+            </div>
         </div>
-      </div>
-      <div class="col-md-6">
-        <div class="card border-0 shadow-sm h-100">
-          <div class="card-body d-flex flex-column">
-            <h4 class="text-success mb-3">2. Формирование плана</h4>
-            <p class="mb-3">
-              Мы вместе с вами определяем формат (очно / онлайн), частоту сессий и основные
-              цели.
-            </p>
-            <p class="text-muted small">
-              План корректируется в процессе, если вы чувствуете, что нужно сместить акценты.
-            </p>
-          </div>
-        </div>
-      </div>
     </div>
-  </div>
+</section>
+
+<section class="py-5 bg-light-soft">
+    <div class="container">
+        <div class="text-center mb-5" data-aos="fade-up">
+            <h2 class="display-5 fw-bold">Ключевые отличия</h2>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="100">
+                <div class="feature-card">
+                    <div class="icon-circle"><i class="bi bi-heart-fill fs-2"></i></div>
+                    <h4 class="fw-bold">Человечный подход</h4>
+                    <p class="text-muted">Мы видим ребёнка цельной личностью. Работаем с эмоциями, а не только с внешним поведением.</p>
+                </div>
+            </div>
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="200">
+                <div class="feature-card">
+                    <div class="icon-circle"><i class="bi bi-incognito fs-2"></i></div>
+                    <h4 class="fw-bold">Конфиденциальность</h4>
+                    <p class="text-muted">Ваши истории остаются только в кабинете. Мы свято бережём право семьи на частную жизнь.</p>
+                </div>
+            </div>
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="300">
+                <div class="feature-card">
+                    <div class="icon-circle"><i class="bi bi-graph-up-arrow fs-2"></i></div>
+                    <h4 class="fw-bold">Реальное развитие</h4>
+                    <p class="text-muted">Мы даем инструменты родителям, чтобы они могли помогать своему ребенку самостоятельно.</p>
+                </div>
+            </div>
+        </div>
+    </div>
 </section>
 
 <section class="py-5">
-  <div class="container">
-    <div class="row align-items-center">
-      <div class="col-lg-6 mb-4 mb-lg-0">
-        <img
-          src="https://images.pexels.com/photos/3184287/pexels-photo-3184287.jpeg?auto=compress&cs=tinysrgb&h=400&w=600"
-          class="rounded-4 shadow"
-          alt="Доверие и уважение"
-          style="width: 100%; height: auto;"
-        />
-      </div>
-      <div class="col-lg-6">
-        <h3 class="mb-4 text-success">Почему доверие растёт именно с нами ⚖️</h3>
-        <p class="mb-3">
-          Мы не предлагаем «всё и сразу», а честно говорим, какие инструменты помогут, а какие
-          — нет. Мы не ставим оценок и не обвиняем, а показываем, <strong>где есть ресурсы</strong>.
-        </p>
-        <p class="mb-3">
-          Такой подход позволяет семьям <strong>чувствовать себя в безопасности</strong> и возвращаться
-          к нам снова, когда возникают новые этапы роста и новые вызовы.
-        </p>
-        <p class="text-muted">
-          «Отражение» — это не только про изменение ребёнка, но и про <strong>вашу</strong> способность
-          лучше понимать себя и близких.
-        </p>
-      </div>
+    <div class="container">
+        <div class="cta-box shadow-2xl" data-aos="zoom-in">
+            <div class="row align-items-center">
+                <div class="col-lg-7">
+                    <h2 class="display-5 fw-bold mb-4">Готовы найти свой путь вместе с нами? 🌿</h2>
+                    <p class="fs-5 opacity-75 mb-5">
+                        Напишите нам или позвоните. Мы вместе выберем специалиста, который лучше всего подойдет именно вашей ситуации.
+                    </p>
+                    <div class="d-flex flex-wrap gap-3">
+                        <a href="tel:+79611689798" class="btn btn-white btn-lg">
+                            <i class="bi bi-telephone-fill me-2"></i>Позвонить
+                        </a>
+                        <a href="https://vk.com/club_otragenie" class="btn btn-outline-light btn-lg rounded-pill px-4">
+                            Написать в VK
+                        </a>
+                    </div>
+                </div>
+                <div class="col-lg-5 d-none d-lg-block">
+                    <div class="p-4 bg-white bg-opacity-10 rounded-4 glass">
+                        <h5 class="fw-bold mb-3"><i class="bi bi-calendar-check me-2"></i>Как мы работаем:</h5>
+                        <div class="step-item mb-4">
+                            <div class="step-number">01</div>
+                            <h6 class="fw-bold mb-1">Знакомство</h6>
+                            <p class="small mb-0 opacity-75">Живой разговор о ваших целях и опасениях.</p>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number">02</div>
+                            <h6 class="fw-bold mb-1">План роста</h6>
+                            <p class="small mb-0 opacity-75">Индивидуальный график и формат встреч.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
 </section>
 
-<section class="py-5 bg-success text-white">
-  <div class="container text-center">
-    <h2 class="mb-3 display-6">Готовы найти свой путь вместе с нами? 🌿</h2>
-    <p class="mb-4">
-      Напишите нам или позвоните, и мы вместе выберем удобный формат приёма и подходящего
-      специалиста.
-    </p>
-    <div class="row g-3 justify-content-center">
-      <div class="col-auto">
-        <a href="tel:+79611689798" class="btn btn-light btn-lg">📞 Позвонить</a>
-      </div>
-      <div class="col-auto">
-        <a href="https://vk.com/club_otragenie" class="btn btn-outline-light btn-lg" target="_blank">
-          📲 Написать в VK
-        </a>
-      </div>
-    </div>
-  </div>
-</section>
+<script src="{% static 'js/aos.js' %}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        AOS.init({
+            duration: 1000,
+            once: true,
+            offset: 100
+        });
+    });
+</script>
 
 {% endblock %}

@@ -4,7 +4,7 @@
 {% block title %}Услуги — центр «Отражение»{% endblock %}
 
 {% block content %}
-<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+<link rel="stylesheet" href="{% static 'css/aos.css' %}" />
 
 <style>
     :root {
@@ -129,7 +129,7 @@
 </div>
             {% empty %}
             <div class="col-12 text-center py-5">
-                <img src="https://cdn-icons-png.flaticon.com/512/6134/6134065.png" width="80" class="opacity-25 mb-3">
+                <img src="{% static 'images/6134065.png' %}" width="80" class="opacity-25 mb-3">
                 <p class="text-muted fs-5">На данный момент услуг не найдено.</p>
             </div>
             {% endfor %}
@@ -150,7 +150,7 @@
     </div>
 </section>
 
-<script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+<script src="{% static 'js/aos.js' %}"></script>
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         AOS.init({ duration: 800, once: true });

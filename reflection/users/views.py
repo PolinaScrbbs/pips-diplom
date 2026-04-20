@@ -44,10 +44,11 @@ def logout_view(request):
     logout(request)
     return redirect("users:login")
 
-@login_required
+
+@login_required(login_url="users:login")
 def profile_view(request):
     # Благодаря related_name="bookings", мы можем получить записи через request.user.bookings.all()
     context = {
-        'review_form': ReviewCreateForm(),  # Добавляем пустую форму
+        "review_form": ReviewCreateForm(),  # Добавляем пустую форму
     }
-    return render(request, 'users/profile.html', context)
+    return render(request, "users/profile.html", context)
