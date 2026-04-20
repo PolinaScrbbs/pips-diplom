@@ -139,22 +139,28 @@ document.addEventListener('DOMContentLoaded', function() {
     const successContent = document.getElementById('bookingSuccess');
     const submitBtn = document.getElementById('bookingSubmitBtn');
     const phoneInput = document.getElementById('id_phone');
+    const modalHeader = document.querySelector('.modal-header');
 
-    // 1. Маска для телефона (красивый ввод + валидация длины)
+    // 1. Инициализация маски (только один раз)
     const phoneMask = IMask(phoneInput, {
         mask: '+{7} (000) 000-00-00'
     });
 
     if (bookingForm) {
+        // Убеждаемся, что обработчик только один
         bookingForm.addEventListener('submit', function(e) {
+            // ОСТАНАВЛИВАЕМ все стандартные действия сразу
             e.preventDefault();
+            e.stopPropagation();
             
-            // Сброс предыдущих ошибок
+            // Если кнопка уже отключена — выходим (защита от спам-кликов)
+            if (submitBtn.disabled) return;
+
+            // Сброс валидации
             this.classList.remove('was-validated');
             
-            // Кастомная проверка маски телефона
-            const isPhoneComplete = phoneMask.masked.isComplete;
-            if (!isPhoneComplete) {
+            // Проверка маски телефона
+            if (!phoneMask.masked.isComplete) {
                 phoneInput.setCustomValidity("Введите полный номер телефона");
                 phoneInput.classList.add('is-invalid');
             } else {
@@ -164,20 +170,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Нативная валидация Bootstrap
             if (!this.checkValidity()) {
-                e.stopPropagation();
                 this.classList.add('was-validated');
-                
-                // Эффект тряски при ошибке
                 const modalContent = this.closest('.modal-content');
                 modalContent.style.animation = 'shake 0.4s ease';
                 setTimeout(() => modalContent.style.animation = '', 400);
                 return;
             }
 
-            // AJAX отправка
+            // ПОДГОТОВКА К ОТПРАВКЕ
             const formData = new FormData(this);
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Обработка...';
+            submitBtn.disabled = true; // Блокируем кнопку
+            const originalBtnHtml = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Отправка...';
 
             fetch(this.getAttribute('action'), {
                 method: 'POST',
@@ -190,31 +194,26 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
+                    // Успех
                     bookingForm.classList.add('d-none');
+                    if (modalHeader) modalHeader.classList.add('d-none');
                     successContent.classList.remove('d-none');
-                    document.querySelector('.modal-header').classList.add('d-none');
                 } else {
-                    // Обработка серверных ошибок валидации
+                    // Серверные ошибки
                     submitBtn.disabled = false;
-                    submitBtn.innerHTML = 'Подтвердить запись';
-                    
-                    for (const [field, errors] of Object.entries(data.errors)) {
-                        const input = bookingForm.querySelector(`[name="${field}"]`);
-                        if (input) {
-                            input.classList.add('is-invalid');
-                            // Можно добавить вывод текста ошибки от Django
-                        }
-                    }
+                    submitBtn.innerHTML = originalBtnHtml;
+                    alert('Ошибка: ' + JSON.stringify(data.errors));
                 }
             })
             .catch(err => {
                 console.error(err);
                 submitBtn.disabled = false;
-                submitBtn.innerHTML = 'Подтвердить запись';
+                submitBtn.innerHTML = originalBtnHtml;
+                alert('Произошла ошибка при соединении с сервером');
             });
         });
 
-        // Очистка валидации при вводе
+        // Живая очистка ошибок при вводе
         bookingForm.querySelectorAll('input, select').forEach(el => {
             el.addEventListener('input', () => {
                 el.classList.remove('is-invalid');

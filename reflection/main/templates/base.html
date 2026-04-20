@@ -258,54 +258,5 @@
 <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
 
 
-<script>
-  // Профессиональная обработка формы с обратной связью
-  const bookingForm = document.getElementById("bookingForm");
-
-  if (bookingForm) {
-    bookingForm.addEventListener("submit", async function(e) {
-      e.preventDefault();
-      
-      const submitBtn = this.querySelector('button[type="submit"]');
-      const originalContent = submitBtn.innerHTML;
-      
-      // Визуальный лоадер
-      submitBtn.disabled = true;
-      submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>Отправка...`;
-
-      try {
-        const csrfToken = document.querySelector('[name="csrfmiddlewaretoken"]').value;
-        const formData = new FormData(this);
-
-        const response = await fetch("{% url 'booking:create_booking' %}", {
-          method: "POST",
-          headers: { "X-CSRFToken": csrfToken },
-          body: formData,
-        });
-
-        if (!response.ok) throw new Error();
-
-        // Успех
-        submitBtn.innerHTML = `<i class="bi bi-check-lg me-2"></i>Готово!`;
-        submitBtn.classList.replace('btn-sage', 'btn-success');
-
-        setTimeout(() => {
-          const modal = bootstrap.Modal.getInstance(document.getElementById("bookingModal"));
-          if (modal) modal.hide();
-          
-          this.reset();
-          submitBtn.disabled = false;
-          submitBtn.innerHTML = originalContent;
-          submitBtn.classList.replace('btn-success', 'btn-sage');
-        }, 1500);
-
-      } catch (err) {
-        alert("Произошла ошибка. Пожалуйста, попробуйте снова.");
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = originalContent;
-      }
-    });
-  }
-</script>
 </body>
 </html>

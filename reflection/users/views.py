@@ -3,6 +3,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout, authenticate
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
 
 from users.forms import LoginForm, RegisterForm
 from reviews.forms import ReviewCreateForm
@@ -47,8 +48,15 @@ def logout_view(request):
 
 @login_required(login_url="users:login")
 def profile_view(request):
-    # Благодаря related_name="bookings", мы можем получить записи через request.user.bookings.all()
+    bookings_list = request.user.bookings.all().order_by("-created_at")
+
+    # Пагинация: 5 записей на страницу
+    paginator = Paginator(bookings_list, 5)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
     context = {
-        "review_form": ReviewCreateForm(),  # Добавляем пустую форму
+        "page_obj": page_obj,
+        "review_form": ReviewCreateForm(),
     }
     return render(request, "users/profile.html", context)
