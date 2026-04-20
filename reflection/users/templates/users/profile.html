@@ -2,31 +2,115 @@
 {% block title %}Профиль — {{ user.username }}{% endblock %}
 
 {% block content %}
+<style>
+    :root {
+        --primary-green: #198754;
+        --soft-bg: #f8faf9;
+        --star-gray: #dee2e6;
+        --star-gold: #ffc107;
+    }
+
+    .profile-page-wrapper { 
+        display: flex; 
+        flex-direction: column; 
+        min-height: calc(100vh - 100px); 
+        background-color: #f8f9fa;
+    }
+
+    /* Карточки и общие элементы */
+    .card { border-radius: 20px; border: none; }
+    .nav-tabs .nav-link { color: #6c757d; transition: all 0.3s ease; border: none !important; }
+    .nav-tabs .nav-link.active { 
+        background: transparent !important; 
+        color: var(--primary-green) !important; 
+        border-bottom: 3px solid var(--primary-green) !important; 
+    }
+
+    /* --- СИСТЕМА РЕЙТИНГА (ЗВЕЗДЫ) --- */
+    .stars-group input { display: none; } /* Прячем стандартные радиокнопки */
+    
+    .stars-group label {
+        width: 45px;
+        height: 45px;
+        cursor: pointer;
+        background-color: var(--star-gray);
+        transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        
+        /* SVG Маска для идеальной звезды */
+        -webkit-mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>');
+        mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>');
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+    }
+
+    /* Логика закрашивания: при наведении/выборе красим текущую и все предыдущие (благодаря reverse) */
+    .stars-group label:hover,
+    .stars-group label:hover ~ label,
+    .stars-group input:checked ~ label {
+        background-color: var(--star-gold);
+    }
+
+    .stars-group label:hover {
+        transform: scale(1.2) translateY(-3px);
+        filter: drop-shadow(0 0 8px rgba(255, 193, 7, 0.3));
+    }
+
+    /* Кастомные поля ввода */
+    .custom-input {
+        border: 2px solid #f0f2f1 !important;
+        border-radius: 12px !important;
+        background-color: var(--soft-bg) !important;
+        transition: all 0.3s ease !important;
+    }
+    .custom-input:focus {
+        border-color: var(--primary-green) !important;
+        background-color: #fff !important;
+        box-shadow: 0 0 0 4px rgba(25, 135, 84, 0.1) !important;
+    }
+
+    .btn-success-gradient {
+        background: linear-gradient(135deg, #198754 0%, #12633d 100%);
+        color: white;
+        border: none;
+        transition: all 0.3s ease;
+    }
+    .btn-success-gradient:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(25, 135, 84, 0.3);
+        color: white;
+    }
+</style>
+
 <div class="profile-page-wrapper">
     <div class="container py-5 flex-grow-1">
         <div class="row g-4">
             <div class="col-lg-4">
-                <div class="card border-0 shadow-sm text-center p-4 h-100">
-                    <div class="mb-3">
-                        <div class="rounded-circle bg-success d-inline-flex align-items-center justify-content-center text-white shadow-sm" style="width: 100px; height: 100px; font-size: 2.5rem;">
+                <div class="card shadow-sm text-center p-4 h-100">
+                    <div class="mb-3 position-relative d-inline-block mx-auto">
+                        <div class="rounded-circle bg-success d-flex align-items-center justify-content-center text-white shadow-sm" style="width: 100px; height: 100px; font-size: 2.5rem;">
                             {{ user.username|slice:":1"|upper }}
                         </div>
                     </div>
                     <h4 class="fw-bold mb-1">{{ user.get_full_name|default:user.username }}</h4>
-                    <p class="text-muted small mb-3">{{ user.get_role_display }}</p>
-                    <div class="d-grid gap-2">
-                        <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#bookingModal">
-                            <i class="bi bi-plus-circle me-2"></i>Новая запись
-                        </button>
-                    </div>
-                    <hr class="my-4 text-secondary opacity-25">
+                    <p class="text-muted small mb-3">Обычный пользователь</p>
+                    
+                    <div class="d-grid gap-2 mb-4">
+    <button class="btn btn-success-gradient btn-sm rounded-pill py-2 shadow-sm" data-bs-toggle="modal" data-bs-target="#bookingModal">
+        <i class="bi bi-plus-circle me-2"></i>Новая запись
+    </button>
+</div>
+                    
+                    <hr class="opacity-25 mb-4">
+                    
                     <div class="text-start">
                         <h6 class="text-uppercase small fw-bold text-muted mb-3">Контакты</h6>
-                        <div class="d-flex align-items-center mb-2">
+                        <div class="d-flex align-items-center mb-3">
                             <i class="bi bi-envelope text-success me-3"></i>
-                            <span class="small">{{ user.email }}</span>
+                            <span class="small text-truncate">{{ user.email }}</span>
                         </div>
-                        <div class="d-flex align-items-center mb-2">
+                        <div class="d-flex align-items-center">
                             <i class="bi bi-calendar-check text-success me-3"></i>
                             <span class="small">С нами с {{ user.date_joined|date:"d.m.Y" }}</span>
                         </div>
@@ -37,34 +121,35 @@
             <div class="col-lg-8 d-flex flex-column">
                 <div class="row g-3 mb-4">
                     <div class="col-md-6">
-                        <div class="card border-0 shadow-sm p-3 bg-success text-white h-100">
+                        <div class="card shadow-sm p-4 bg-success text-white">
                             <div class="d-flex justify-content-between align-items-center">
-                                <div><h6 class="small mb-1">Записей</h6><h3 class="fw-bold mb-0">{{ user.bookings.count }}</h3></div>
+                                <div><h6 class="small mb-1 text-white-50">Записей</h6><h3 class="fw-bold mb-0">{{ user.bookings.count }}</h3></div>
                                 <i class="bi bi-journal-bookmark fs-1 opacity-50"></i>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-6">
-                        <div class="card border-0 shadow-sm p-3 h-100">
+                        <div class="card shadow-sm p-4">
                             <div class="d-flex justify-content-between align-items-center">
-                                <div><h6 class="small text-muted mb-1">Отзывов</h6><h3 class="fw-bold mb-0 text-success">{{ user.reviews_count }}</h3></div>
+                                <div><h6 class="small text-muted mb-1">Отзывов</h6><h3 class="fw-bold mb-0 text-success">{{ user.reviews_count|default:0 }}</h3></div>
                                 <i class="bi bi-star text-warning fs-1"></i>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="card border-0 shadow-sm flex-grow-1">
+                <div class="card shadow-sm flex-grow-1">
                     <div class="card-header bg-transparent border-0 pt-3">
-                        <ul class="nav nav-tabs nav-fill border-0" id="profileTabs">
+                        <ul class="nav nav-tabs nav-fill" id="profileTabs">
                             <li class="nav-item">
-                                <button class="nav-link active fw-bold text-success border-0" data-bs-toggle="tab" data-bs-target="#bookings">Мои записи</button>
+                                <button class="nav-link active fw-bold" data-bs-toggle="tab" data-bs-target="#bookings">Мои записи</button>
                             </li>
                             <li class="nav-item">
-                                <button class="nav-link fw-bold text-success border-0" data-bs-toggle="tab" data-bs-target="#settings">Настройки</button>
+                                <button class="nav-link fw-bold" data-bs-toggle="tab" data-bs-target="#settings">Настройки</button>
                             </li>
                         </ul>
                     </div>
+                    
                     <div class="card-body p-4">
                         <div class="tab-content">
                             <div class="tab-pane fade show active" id="bookings">
@@ -72,21 +157,28 @@
                                     <div class="table-responsive">
                                         <table class="table table-hover align-middle">
                                             <thead class="table-light">
-                                                <tr><th>Услуга</th><th class="text-center">Дата</th><th class="text-end">Действие</th></tr>
+                                                <tr>
+                                                    <th>Услуга</th>
+                                                    <th class="text-center">Дата</th>
+                                                    <th class="text-end">Действие</th>
+                                                </tr>
                                             </thead>
                                             <tbody>
                                                 {% for booking in user.bookings.all %}
                                                 <tr>
-                                                    <td><div class="fw-bold text-dark">{{ booking.service.name }}</div></td>
-                                                    <td class="text-center small text-muted">{{ booking.created_at|date:"d.m.Y" }}</td>
+                                                    <td>
+                                                        <div class="fw-bold text-dark">{{ booking.service.name }}</div>
+                                                        <div class="small text-muted">Ребенок: {{ booking.child_name }}</div>
+                                                    </td>
+                                                    <td class="text-center small">{{ booking.created_at|date:"d.m.Y" }}</td>
                                                     <td class="text-end">
-                                                        {% if not booking.review %}
-                                                            <button class="btn btn-sm btn-outline-success rounded-pill px-3 btn-review" 
+                                                        {% if not booking.review_link %}
+                                                            <button class="btn btn-sm btn-outline-success rounded-pill px-3" 
                                                                     data-bs-toggle="modal" 
                                                                     data-bs-target="#reviewFormModal" 
                                                                     data-booking-id="{{ booking.id }}">Отзыв</button>
                                                         {% else %}
-                                                            <span class="badge bg-light text-success border fw-normal">Оставлен</span>
+                                                            <span class="badge bg-light text-success border fw-normal px-3 py-2">Оставлен</span>
                                                         {% endif %}
                                                     </td>
                                                 </tr>
@@ -95,15 +187,24 @@
                                         </table>
                                     </div>
                                 {% else %}
-                                    <div class="text-center py-5"><p class="text-muted">Записей нет.</p></div>
+                                    <div class="text-center py-5">
+                                        <i class="bi bi-calendar-x fs-1 text-muted mb-3 d-block"></i>
+                                        <p class="text-muted">У вас пока нет записей на услуги.</p>
+                                    </div>
                                 {% endif %}
                             </div>
+
                             <div class="tab-pane fade" id="settings">
-                                <form method="post">{% csrf_token %}
+                                <form method="post" action="{% url 'users:profile' %}">
+                                    {% csrf_token %}
                                     <div class="row g-3">
-                                        <div class="col-md-6"><label class="form-label small fw-bold">Email</label>
-                                        <input type="email" class="form-control" name="email" value="{{ user.email }}"></div>
-                                        <div class="col-12 mt-3"><button type="submit" class="btn btn-success px-4 rounded-pill">Сохранить</button></div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold">Email</label>
+                                            <input type="email" class="form-control custom-input" name="email" value="{{ user.email }}">
+                                        </div>
+                                        <div class="col-12 mt-4 text-end">
+                                            <button type="submit" class="btn btn-success-gradient px-5 rounded-pill py-2">Сохранить</button>
+                                        </div>
                                     </div>
                                 </form>
                             </div>
@@ -116,57 +217,125 @@
 </div>
 
 <div class="modal fade" id="reviewFormModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content border-0 shadow">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 24px;">
             <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title fw-bold text-success">Ваш отзыв</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <div class="ps-2 pt-2">
+                    <h4 class="fw-bold text-dark mb-1">Ваш отзыв</h4>
+                    <p class="small text-muted mb-0">Оцените качество услуги</p>
+                </div>
+                <button type="button" class="btn-close me-2" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
+
+            <div class="modal-body p-4">
                 <form id="reviewCreateForm" method="post" data-url="{% url 'reviews:create_review' %}">
                     {% csrf_token %}
                     <input type="hidden" name="booking_id" id="modal_booking_id">
-                    {{ review_form.as_p }}
-                    <button type="submit" class="btn btn-success w-100 mt-2 rounded-pill py-2">Опубликовать</button>
+
+                    <div class="rating-system-wrapper text-center mb-4">
+                        <div class="mb-2">
+                            <span id="rating-label" class="badge rounded-pill bg-light text-dark px-3 py-2 fw-bold shadow-sm">
+                                Выберите оценку
+                            </span>
+                        </div>
+                        <div class="stars-group d-flex justify-content-center flex-row-reverse">
+                            <input type="radio" name="rating" value="5" id="star5" required><label for="star5" data-hint="Отлично!"></label>
+                            <input type="radio" name="rating" value="4" id="star4"><label for="star4" data-hint="Хорошо"></label>
+                            <input type="radio" name="rating" value="3" id="star3"><label for="star3" data-hint="Нормально"></label>
+                            <input type="radio" name="rating" value="2" id="star2"><label for="star2" data-hint="Плохо"></label>
+                            <input type="radio" name="rating" value="1" id="star1"><label for="star1" data-hint="Ужасно"></label>
+                        </div>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <input type="text" name="relation" class="form-control custom-input" id="id_relation" placeholder="Кто вы?" required>
+                        <label for="id_relation">Кем вы приходитесь ребенку?</label>
+                    </div>
+
+                    <div class="form-floating mb-4">
+                        <textarea name="text" class="form-control custom-input" id="id_text" placeholder="Ваш отзыв" style="height: 150px" required></textarea>
+                        <label for="id_text">Расскажите подробнее...</label>
+                    </div>
+
+                    <button type="submit" class="btn btn-success-gradient w-100 py-3 rounded-pill fw-bold shadow-sm">
+                        Опубликовать отзыв <i class="bi bi-send-fill ms-2"></i>
+                    </button>
                 </form>
             </div>
         </div>
     </div>
 </div>
 
-<style>
-    .profile-page-wrapper { display: flex; flex-direction: column; min-height: calc(100vh - 200px); }
-    body { background-color: #f8f9fa; }
-    .card { border-radius: 15px; }
-    .nav-tabs .nav-link.active { background: transparent !important; border-bottom: 3px solid #198754 !important; }
-</style>
-
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-    // 1. Передаем ID записи в модалку при клике
-    const reviewButtons = document.querySelectorAll('.btn-review');
-    reviewButtons.forEach(btn => {
-        btn.addEventListener('click', function() {
-            document.getElementById('modal_booking_id').value = this.getAttribute('data-booking-id');
+document.addEventListener('DOMContentLoaded', function() {
+    const reviewModal = document.getElementById('reviewFormModal');
+    const reviewForm = document.getElementById('reviewCreateForm');
+    const starsLabels = document.querySelectorAll('.stars-group label');
+    const ratingLabelHint = document.getElementById('rating-label');
+
+    // 1. ПЕРЕДАЧА ID БРОНИРОВАНИЯ В МОДАЛКУ
+    if (reviewModal) {
+        reviewModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            const bookingId = button.getAttribute('data-booking-id');
+            reviewModal.querySelector('#modal_booking_id').value = bookingId;
+        });
+    }
+
+    // 2. ИНТЕРАКТИВНЫЕ ПОДСКАЗКИ ДЛЯ ЗВЕЗД
+    starsLabels.forEach(label => {
+        label.addEventListener('mouseenter', () => {
+            ratingLabelHint.textContent = label.getAttribute('data-hint');
+            ratingLabelHint.classList.replace('bg-light', 'bg-success');
+            ratingLabelHint.classList.replace('text-dark', 'text-white');
+        });
+
+        label.addEventListener('mouseleave', () => {
+            const checked = document.querySelector('.stars-group input:checked');
+            if (checked) {
+                const checkedLabel = document.querySelector(`label[for="${checked.id}"]`);
+                ratingLabelHint.textContent = checkedLabel.getAttribute('data-hint');
+            } else {
+                ratingLabelHint.textContent = "Выберите оценку";
+                ratingLabelHint.classList.replace('bg-success', 'bg-light');
+                ratingLabelHint.classList.replace('text-white', 'text-dark');
+            }
         });
     });
 
-    // 2. Отправка формы через AJAX
-    const form = document.getElementById("reviewCreateForm");
-    form.addEventListener("submit", function (e) {
-        e.preventDefault();
-        const formData = new FormData(this);
-        fetch(this.getAttribute("data-url"), {
-            method: "POST",
-            body: formData,
-            headers: { "X-CSRFToken": formData.get('csrfmiddlewaretoken') }
-        })
-        .then(r => r.json())
-        .then(data => {
-            if (data.ok) { location.reload(); }
-            else { alert("Ошибка при сохранении."); }
+    // 3. AJAX ОТПРАВКА ОТЗЫВА
+    if (reviewForm) {
+        reviewForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const btn = this.querySelector('button[type="submit"]');
+            const originalText = btn.innerHTML;
+            
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Отправка...';
+
+            fetch(this.getAttribute('data-url'), {
+                method: 'POST',
+                body: new FormData(this),
+                headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.ok) {
+                    bootstrap.Modal.getInstance(reviewModal).hide();
+                    location.reload();
+                } else {
+                    alert('Ошибка: ' + JSON.stringify(data.errors));
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                }
+            })
+            .catch(() => {
+                alert('Произошла ошибка при отправке');
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            });
         });
-    });
+    }
 });
 </script>
 {% endblock %}

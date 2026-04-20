@@ -495,3 +495,53 @@ footer {
     width: 100%;
     max-width: 400px;
 }
+
+/* Выбор звезд (Reverse flex logic) */
+.stars-container {
+    font-size: 2.5rem;
+    color: #dee2e6;
+}
+.stars-container input { display: none; }
+.stars-container label {
+    cursor: pointer;
+    transition: color 0.2s, transform 0.2s;
+    padding: 0 5px;
+}
+.stars-container label:hover,
+.stars-container label:hover ~ label,
+.stars-container input:checked ~ label {
+    color: #ffc107;
+    transform: scale(1.1);
+}
+
+/* Кастомные поля ввода */
+.custom-input {
+    border: 2px solid #f0f2f1 !important;
+    border-radius: 12px !important;
+    background-color: #f8faf9 !important;
+    transition: all 0.3s ease !important;
+}
+.custom-input:focus {
+    border-color: #198754 !important;
+    background-color: #fff !important;
+    box-shadow: 0 0 0 4px rgba(25, 135, 84, 0.1) !important;
+}
+
+/* Кнопка с градиентом */
+.btn-success-gradient {
+    background: linear-gradient(135deg, #198754 0%, #12633d 100%);
+    color: white;
+    border: none;
+    transition: all 0.3s ease;
+}
+.btn-success-gradient:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(25, 135, 84, 0.3);
+    color: white;
+}
+
+/* Floating labels adjustment */
+.form-floating > label {
+    padding-left: 1rem;
+    color: #6c757d;
+}

@@ -3,196 +3,299 @@
 {% block title %}Отзывы — Центр «Отражение»{% endblock %}
 
 {% block content %}
-<section class="reviews-hero py-5">
-    <div class="container text-center">
-        <span class="badge rounded-pill bg-success-soft text-success mb-3 px-3 py-2">Голоса благодарности</span>
-        <h1 class="display-4 fw-bold text-dark mb-3">Отзывы наших клиентов</h1>
-        <p class="lead text-muted mx-auto" style="max-width: 600px;">
-            Реальные истории семей, которые доверили нам самое ценное. Мы гордимся результатами каждого ребенка.
+<link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+<style>
+    :root {
+        --glass-bg: rgba(255, 255, 255, 0.8);
+        --success-gradient: linear-gradient(135deg, #198754 0%, #12633d 100%);
+    }
+
+    body { background-color: #f8faf9; }
+
+    /* Hero Section с эффектом стекла */
+    .reviews-hero {
+        padding: 100px 0 60px;
+        background: radial-gradient(circle at top right, #e8f5e9 0%, transparent 40%);
+    }
+
+    /* Кастомные карточки (Glassmorphism elements) */
+    .review-card {
+        border-radius: 24px !important;
+        border: 1px solid rgba(0,0,0,0.03) !important;
+        transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+        background: white;
+    }
+    
+    .review-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.08) !important;
+    }
+
+    /* Звезды рейтинга */
+    .star-rating { color: #ffc107; font-size: 0.85rem; }
+    .star-rating .bi-star { color: #dee2e6; }
+
+    /* Фильтры в стиле Apple */
+    .filter-scroll-wrapper {
+        display: flex;
+        overflow-x: auto;
+        padding-bottom: 10px;
+        scrollbar-width: none; /* Firefox */
+    }
+    .filter-scroll-wrapper::-webkit-scrollbar { display: none; }
+
+    .btn-filter {
+        white-space: nowrap;
+        border: none;
+        background: #eee;
+        color: #555;
+        border-radius: 100px;
+        padding: 10px 24px;
+        font-weight: 600;
+        margin-right: 8px;
+        transition: 0.3s;
+    }
+    .btn-filter.active {
+        background: #198754;
+        color: white;
+        box-shadow: 0 8px 15px rgba(25, 135, 84, 0.2);
+    }
+
+    /* Аватары */
+    .author-avatar {
+        width: 48px;
+        height: 48px;
+        background: var(--success-gradient);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 16px;
+        font-weight: 700;
+        box-shadow: 0 4px 10px rgba(25, 135, 84, 0.15);
+    }
+
+    /* Бейдж услуги */
+    .service-tag {
+        background: #f0f4f2;
+        color: #198754;
+        font-size: 0.75rem;
+        font-weight: 700;
+        padding: 4px 12px;
+        border-radius: 6px;
+    }
+
+    /* --- СТИЛЬНАЯ ПАГИНАЦИЯ --- */
+.pagination-wrapper {
+    margin-top: 4rem;
+    padding: 10px;
+}
+
+.pagination {
+    gap: 8px; /* Расстояние между кнопками */
+}
+
+.pagination .page-item {
+    border: none;
+}
+
+.pagination .page-link {
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 16px !important; /* Мягкие квадраты */
+    border: none !important;
+    background: white;
+    color: #495057;
+    font-weight: 600;
+    font-size: 1rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+/* Эффект при наведении */
+.pagination .page-link:hover {
+    background: #f0f4f2;
+    color: #198754;
+    transform: translateY(-4px);
+    box-shadow: 0 10px 20px rgba(25, 135, 84, 0.1);
+}
+
+/* Активная страница (Градиент) */
+.pagination .page-item.active .page-link {
+    background: var(--success-gradient) !important;
+    color: white !important;
+    box-shadow: 0 8px 20px rgba(25, 135, 84, 0.3);
+}
+
+/* Стрелки навигации */
+.pagination .page-item:first-child .page-link,
+.pagination .page-item:last-child .page-link {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    font-size: 1.2rem;
+}
+
+/* Отключение неактивных кнопок */
+.pagination .page-item.disabled .page-link {
+    opacity: 0.4;
+    background: transparent;
+    box-shadow: none;
+    transform: none;
+}
+
+/* Адаптивность для мобильных */
+@media (max-width: 576px) {
+    .pagination .page-link {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px !important;
+    }
+}
+</style>
+
+<section class="reviews-hero">
+    <div class="container text-center" data-aos="fade-up">
+        <h1 class="display-3 fw-bold text-dark mb-4 small-caps">Истории успеха</h1>
+        <p class="lead text-muted mx-auto mb-5" style="max-width: 700px;">
+            Мы верим, что каждый ребенок уникален. Ваши отзывы помогают нам становиться лучше, а другим родителям — найти верный путь.
         </p>
+        
+        <div class="d-flex justify-content-center">
+            <div class="filter-scroll-wrapper p-2 bg-white rounded-pill shadow-sm">
+                <a href="?service=all" class="btn btn-filter {% if not current_service or current_service == 'all' %}active{% endif %}">
+                    Все отзывы
+                </a>
+                {% for service in popular_services %}
+                <a href="?service={{ service.id }}" 
+                   class="btn btn-filter {% if current_service == service.id|stringformat:'s' %}active{% endif %}">
+                    {{ service.name }}
+                </a>
+                {% endfor %}
+            </div>
+        </div>
     </div>
 </section>
 
-<div class="container mb-5">
-    <div class="filter-wrapper p-3 bg-white shadow-sm rounded-4 d-flex flex-wrap justify-content-center gap-2">
-        <a href="?service=all" 
-           class="btn btn-filter {% if not current_service or current_service == 'all' %}active{% endif %}">
-            Все отзывы
-        </a>
-
-        {% for service in popular_services %}
-            <a href="?service={{ service.id }}" 
-               class="btn btn-filter {% if current_service == service.id|stringformat:'s' %}active{% endif %}">
-                {{ service.name }}
-            </a>
-        {% endfor %}
-    </div>
-</div>  
-
-<section class="pb-5">
-    <div class="container">
-        <div class="row g-4" id="reviews-masonry">
-            {% for review in page_obj %}
-            <div class="col-md-6 col-lg-4 review-card-item">
-                <div class="card h-100 border-0 shadow-sm review-card">
-                    <div class="card-body p-4">
-                        <div class="quote-icon mb-3">
-                            <i class="bi bi-quote fs-1 text-success opacity-25"></i>
+<div class="container pb-5">
+    <div class="row g-4" id="reviews-container">
+        {% for review in page_obj %}
+        <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="{{ forloop.counter|add:100 }}">
+            <div class="card h-100 review-card p-2">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="star-rating">
+                            {% for i in "12345" %}
+                                {% if forloop.counter <= review.rating %}
+                                    <i class="bi bi-star-fill"></i>
+                                {% else %}
+                                    <i class="bi bi-star"></i>
+                                {% endif %}
+                            {% endfor %}
                         </div>
-                        <p class="review-text mb-4">"{{ review.content }}"</p>
-                        
-                        <div class="d-flex align-items-center mt-auto pt-3 border-top">
-                            <div class="avatar-circle bg-success-soft text-success me-3">
-                                {{ review.name|slice:":1"|upper }}
-                            </div>
-                            <div>
-                                <h6 class="mb-0 fw-bold">{{ review.name }}</h6>
-                                <div class="d-flex align-items-center">
-                                    <span class="small text-muted">{{ review.relation|default:"Клиент" }}</span>
-                                    {% if review.booking %}
-                                    <span class="dot-separator mx-2"></span>
-                                    <span class="badge bg-light text-success border-0 small fw-normal">
-                                        {{ review.booking.service.name }}
-                                    </span>
-                                    {% endif %}
-                                </div>
+                        <span class="text-muted small">{{ review.created_at|date:"d.m.Y" }}</span>
+                    </div>
+
+                    <p class="text-dark lh-base mb-4" style="font-size: 1.05rem;">
+                        "{{ review.text }}"
+                    </p>
+
+                    <div class="d-flex align-items-center mt-4 pt-3 border-top border-light">
+                        <div class="author-avatar me-3">
+                            {{ review.author.username|slice:":1"|upper }}
+                        </div>
+                        <div>
+                            <h6 class="mb-0 fw-bold">{{ review.author.username }}</h6>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="small text-muted">{{ review.relation|default:"Родитель" }}</span>
+                                {% if review.booking %}
+                                    <span class="service-tag">{{ review.booking.service.name }}</span>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            {% empty %}
-            <div class="text-center py-5">
-                <i class="bi bi-chat-dots fs-1 text-muted opacity-25"></i>
-                <p class="text-muted mt-3">Отзывов пока нет. Будьте первыми!</p>
-            </div>
-            {% endfor %}
         </div>
-
-        {% if page_obj.has_other_pages %}
-        <nav class="mt-5">
-            <ul class="pagination justify-content-center custom-pagination">
-                {% if page_obj.has_previous %}
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}"><i class="bi bi-chevron-left"></i></a>
-                </li>
-                {% endif %}
-
-                {% for num in page_obj.paginator.page_range %}
-                <li class="page-item {% if page_obj.number == num %}active{% endif %}">
-                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
-                </li>
-                {% endfor %}
-
-                {% if page_obj.has_next %}
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.next_page_number }}"><i class="bi bi-chevron-right"></i></a>
-                </li>
-                {% endif %}
-            </ul>
-        </nav>
-        {% endif %}
+        {% empty %}
+        <div class="col-12 text-center py-5">
+            <div class="display-1 opacity-10">
+                <i class="bi bi-chat-heart"></i>
+            </div>
+            <h3 class="text-muted mt-3">Здесь пока тихо...</h3>
+        </div>
+        {% endfor %}
     </div>
-</section>
 
-<section class="py-5 bg-success-dark text-white rounded-5 mx-2 mb-5 cta-section overflow-hidden position-relative">
-    <div class="container position-relative z-1 py-4 text-center">
-        <h2 class="fw-bold mb-3">Поделитесь вашим отзывом в VK</h2>
-        <p class="mb-4 opacity-75">Ваша история может стать вдохновением для других родителей.</p>
-        <a href="https://vk.com/club_otragenie" class="btn btn-light btn-lg px-5 rounded-pill fw-bold text-success shadow-lg" target="_blank">
-            <i class="bi bi-browser-safari me-2"></i>Перейти в сообщество
-        </a>
+    {% if page_obj.has_other_pages %}
+<div class="pagination-wrapper d-flex justify-content-center" data-aos="fade-up">
+    <nav aria-label="Навигация по отзывам">
+        <ul class="pagination pagination-lg mb-0">
+            
+            <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
+                <a class="page-link" href="{% if page_obj.has_previous %}?page={{ page_obj.previous_page_number }}&service={{ current_service|default:'all' }}{% else %}#{% endif %}" aria-label="Предыдущая">
+                    <i class="bi bi-chevron-left"></i>
+                </a>
+            </li>
+
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                    <li class="page-item active" aria-current="page">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}&service={{ current_service|default:'all' }}">{{ num }}</a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+
+            <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
+                <a class="page-link" href="{% if page_obj.has_next %}?page={{ page_obj.next_page_number }}&service={{ current_service|default:'all' }}{% else %}#{% endif %}" aria-label="Следующая">
+                    <i class="bi bi-chevron-right"></i>
+                </a>
+            </li>
+
+        </ul>
+    </nav>
+</div>
+{% endif %}
+</div>
+
+<div class="container mb-5">
+    <div class="p-5 text-center bg-dark text-white rounded-5 shadow-lg position-relative overflow-hidden">
+        <div class="position-relative z-index-1">
+            <h2 class="display-5 fw-bold mb-3">Ваше мнение важно для нас</h2>
+            <p class="lead opacity-75 mb-4">Напишите отзыв в VK, чтобы помочь другим семьям сделать правильный выбор.</p>
+            <a href="https://vk.com/club_otragenie" target="_blank" class="btn btn-success btn-lg px-5 py-3 rounded-pill fw-bold">
+                <i class="bi bi-vk me-2"></i> Написать отзыв
+            </a>
+        </div>
+        <div style="position:absolute; bottom: -20%; right: -5%; width: 300px; height: 300px; background: rgba(25,135,84,0.2); border-radius: 50%; filter: blur(50px);"></div>
     </div>
-    <div class="circles-decor"></div>
-</section>
+</div>
 
-<style>
-    /* CSS Переменные и кастомные стили */
-    :root {
-        --success-soft: #e8f5e9;
-        --success-dark: #198754;
-        --text-muted: #6c757d;
-    }
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<script src="https://unpkg.com/isotope-layout@3/dist/isotope.pkgd.min.js"></script>
 
-    .bg-success-soft { background-color: var(--success-soft); }
-    .bg-success-dark { background-color: var(--success-dark); }
-    .text-success { color: var(--success-dark) !important; }
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Инициализация анимаций
+        AOS.init({
+            duration: 800,
+            once: true,
+            offset: 50
+        });
 
-    /* Карточки отзывов */
-    .review-card {
-        transition: transform 0.3s ease, shadow 0.3s ease;
-        border-radius: 20px !important;
-    }
-    .review-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 1rem 3rem rgba(0,0,0,.1) !important;
-    }
-    .review-text {
-        font-style: italic;
-        color: #444;
-        line-height: 1.6;
-    }
-    .avatar-circle {
-        width: 45px;
-        height: 45px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 50%;
-        font-weight: bold;
-    }
-
-    /* Фильтры */
-    .btn-filter {
-        border: 1px solid #eee;
-        border-radius: 12px;
-        padding: 8px 20px;
-        color: var(--text-muted);
-        transition: all 0.2s;
-        background: white;
-    }
-    .btn-filter.active, .btn-filter:hover {
-        background: var(--success-dark);
-        color: white;
-        border-color: var(--success-dark);
-    }
-
-    /* Пагинация */
-    .custom-pagination .page-link {
-        border: none;
-        margin: 0 5px;
-        border-radius: 10px;
-        color: var(--success-dark);
-        font-weight: 600;
-        width: 40px;
-        height: 40px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    .custom-pagination .page-item.active .page-link {
-        background-color: var(--success-dark);
-        color: white;
-    }
-
-    /* Декор */
-    .dot-separator {
-        width: 4px;
-        height: 4px;
-        background: #ccc;
-        border-radius: 50%;
-    }
-    .cta-section {
-        background: linear-gradient(135deg, #198754 0%, #0d5a35 100%);
-    }
-    .circles-decor {
-        position: absolute;
-        top: -50px;
-        right: -50px;
-        width: 200px;
-        height: 200px;
-        background: rgba(255,255,255,0.1);
-        border-radius: 50%;
-    }
-</style>
+        // Инициализация Isotope сетки после загрузки всех изображений/шрифтов
+        var grid = document.querySelector('#reviews-container');
+        var iso = new Isotope(grid, {
+            itemSelector: '.col-md-6',
+            layoutMode: 'masonry'
+        });
+    });
+</script>
 {% endblock %}

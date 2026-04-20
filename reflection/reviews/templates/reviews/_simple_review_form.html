@@ -1,28 +1,43 @@
-<div
-  class="modal fade"
-  id="simpleReviewModal"
-  tabindex="-1"
-  aria-labelledby="simpleReviewModalLabel"
-  aria-hidden="true"
->
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title text-success" id="simpleReviewModalLabel">
-          Оставить отзыв
-        </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+<div class="modal fade" id="simpleReviewModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg" style="border-radius: 24px;">
+      <div class="modal-header border-0 pb-0">
+        <div class="ps-2">
+            <h4 class="fw-bold text-dark mb-1">Ваше мнение важно</h4>
+            <p class="small text-muted mb-0">Поделитесь впечатлениями о нашей работе</p>
+        </div>
+        <button type="button" class="btn-close me-2" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
 
-      <div class="modal-body">
-        <p class="small text-muted">
-          Вы можете оставить отзыв на сайт, не привязывая его к конкретному заказу.
-        </p>
-
-        <form id="simpleReviewForm" method="post" data-url="{% url 'reviews:create_simple_review' %}">
+      <div class="modal-body p-4">
+        <form id="simpleReviewForm" method="post" data-url="{% url 'reviews:create_simple_review' %}" class="needs-validation">
           {% csrf_token %}
-          {{ form.as_p }}
-          <button type="submit" class="btn btn-success btn-sm">Отправить отзыв</button>
+          
+          <div class="rating-selection text-center mb-4">
+            <div class="stars-container d-flex justify-content-center flex-row-reverse">
+                <input type="radio" name="rating" value="5" id="star5"><label for="star5">★</label>
+                <input type="radio" name="rating" value="4" id="star4"><label for="star4">★</label>
+                <input type="radio" name="rating" value="3" id="star3"><label for="star3">★</label>
+                <input type="radio" name="rating" value="2" id="star2"><label for="star2">★</label>
+                <input type="radio" name="rating" value="1" id="star1"><label for="star1">★</label>
+            </div>
+            <span class="small text-muted mt-2 d-block">Выберите оценку</span>
+          </div>
+
+          <div class="form-floating mb-3">
+            <input type="text" name="relation" class="form-control custom-input" id="id_relation" placeholder="Мама, Папа, Бабушка..." required>
+            <label for="id_relation">Кем вы приходитесь ребенку?</label>
+          </div>
+
+          <div class="form-floating mb-4">
+            <textarea name="text" class="form-control custom-input" id="id_text" placeholder="Ваш отзыв" style="height: 120px" required></textarea>
+            <label for="id_text">Ваш отзыв</label>
+          </div>
+
+          <button type="submit" class="btn btn-success-gradient w-100 py-3 rounded-pill fw-bold shadow-sm">
+            Опубликовать отзыв
+            <i class="bi bi-send-fill ms-2"></i>
+          </button>
         </form>
       </div>
     </div>

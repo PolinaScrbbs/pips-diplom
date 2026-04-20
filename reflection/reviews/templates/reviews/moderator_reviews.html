@@ -1,0 +1,215 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Управление отзывами — Панель модератора{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --mod-sage: #4a7c59;
+        --mod-bg: #f4f7f6;
+    }
+    body { background-color: var(--mod-bg); }
+
+    .mod-table-container {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+        overflow: hidden;
+        border: 1px solid rgba(0,0,0,0.05);
+    }
+
+    .search-bar {
+        background: #f8faf9;
+        border: 1px solid #e9ecef;
+        border-radius: 12px;
+        padding: 10px 20px;
+    }
+
+    .rating-star { color: #ffc107; font-size: 0.9rem; }
+    .review-text-preview {
+        max-width: 300px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: block;
+        color: #6c757d;
+    }
+
+    .table thead th {
+        background: #fdfdfd;
+        text-transform: uppercase;
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: #8898aa;
+        padding: 18px 25px;
+    }
+    
+    .review-row:hover { background-color: #f8fafb; cursor: pointer; }
+</style>
+
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark m-0">Отзывы клиентов</h2>
+            <p class="text-muted small m-0">Всего получено: {{ page_obj.paginator.count }}</p>
+        </div>
+        
+        <form method="get" class="d-flex gap-2">
+            <input type="text" name="search" class="form-control search-bar shadow-sm" 
+                   placeholder="Поиск по автору или тексту..." value="{{ search_query }}">
+            
+            <select name="rating" class="form-select search-bar shadow-sm" style="width: 150px;">
+                <option value="">Все оценки</option>
+                <option value="5" {% if rating_filter == "5" %}selected{% endif %}>5 звезд</option>
+                <option value="4" {% if rating_filter == "4" %}selected{% endif %}>4 звезды</option>
+                <option value="3" {% if rating_filter == "3" %}selected{% endif %}>3 звезды</option>
+                <option value="2" {% if rating_filter == "2" %}selected{% endif %}>2 звезды</option>
+                <option value="1" {% if rating_filter == "1" %}selected{% endif %}>1 звезда</option>
+            </select>
+            
+            <button type="submit" class="btn btn-dark rounded-pill px-4 shadow-sm">
+                <i class="bi bi-search"></i>
+            </button>
+        </form>
+    </div>
+
+    <div class="mod-table-container">
+        <div class="table-responsive">
+            <table class="table align-middle m-0">
+                <thead>
+                    <tr>
+                        <th>Дата</th>
+                        <th>Клиент</th>
+                        <th>Оценка</th>
+                        <th>Текст отзыва</th>
+                        <th class="text-end">Просмотр</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for review in page_obj %}
+                    <tr class="review-row" onclick="viewReview('{{ review.author }}', '{{ review.rating }}', '{{ review.text|escapejs }}', '{{ review.created_at|date:'d.m.Y H:i' }}')">
+                        <td class="text-muted small">{{ review.created_at|date:"d.m.Y" }}</td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-circle me-2 bg-light d-flex align-items-center justify-content-center rounded-circle" style="width: 32px; height: 32px;">
+                                    <i class="bi bi-person text-secondary"></i>
+                                </div>
+                                <span class="fw-bold">{{ review.author.username }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="d-flex">
+                                {% for i in "12345" %}
+                                    <i class="bi bi-star-fill {% if forloop.counter <= review.rating %}rating-star{% else %}text-light{% endif %}"></i>
+                                {% endfor %}
+                            </div>
+                        </td>
+                        <td>
+                            <span class="review-text-preview">{{ review.text }}</span>
+                        </td>
+                        <td class="text-end">
+                            <button class="btn btn-sm btn-outline-secondary rounded-pill px-3">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5 text-muted">Отзывов пока нет</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% if page_obj.has_other_pages %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% for num in page_obj.paginator.page_range %}
+                <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                    <a class="page-link border-0 shadow-sm rounded-3 mx-1 {% if page_obj.number == num %}bg-dark text-white{% else %}text-dark{% endif %}" 
+                       href="?page={{ num }}&search={{ search_query }}&rating={{ rating_filter }}">{{ num }}</a>
+                </li>
+            {% endfor %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+
+<div class="modal fade" id="reviewDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="fw-bold p-3 mb-0">Детали отзыва</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4 pt-0">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <span id="modal-author" class="fw-bold d-block fs-5"></span>
+                        <span id="modal-date" class="text-muted small"></span>
+                    </div>
+                    <div id="modal-rating" class="fs-5"></div>
+                </div>
+                <hr class="text-muted opacity-25">
+                <p id="modal-text" class="text-secondary lh-lg"></p>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-light rounded-pill px-4 w-100" data-bs-dismiss="modal">Закрыть</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Выносим функцию в глобальную область видимости ПЕРЕД инициализацией,
+// но саму логику внутри неё защищаем проверкой.
+let reviewModal;
+
+function viewReview(author, rating, text, date) {
+    // Если модалка еще не инициализирована, пробуем найти её
+    if (!reviewModal) {
+        const el = document.getElementById('reviewDetailModal');
+        if (el && typeof bootstrap !== 'undefined') {
+            reviewModal = new bootstrap.Modal(el);
+        } else {
+            console.error("Ошибка: Bootstrap или элемент модалки не найдены");
+            return;
+        }
+    }
+
+    document.getElementById('modal-author').innerText = author;
+    document.getElementById('modal-date').innerText = date;
+    document.getElementById('modal-text').innerText = text;
+    
+    // Генерация звезд
+    let starsHtml = '';
+    const r = parseInt(rating);
+    for (let i = 1; i <= 5; i++) {
+        starsHtml += `<i class="bi bi-star-fill ${i <= r ? 'text-warning' : 'text-light'}"></i>`;
+    }
+    document.getElementById('modal-rating').innerHTML = starsHtml;
+    
+    reviewModal.show();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Проверка наличия Bootstrap
+    if (typeof bootstrap === 'undefined') {
+        console.warn("Bootstrap JS не обнаружен. Ожидание...");
+        // Попытка принудительной инициализации через небольшую паузу
+        setTimeout(() => {
+            if (typeof bootstrap !== 'undefined' && !reviewModal) {
+                const el = document.getElementById('reviewDetailModal');
+                if (el) reviewModal = new bootstrap.Modal(el);
+            }
+        }, 500);
+    } else {
+        const el = document.getElementById('reviewDetailModal');
+        if (el) reviewModal = new bootstrap.Modal(el);
+    }
+});
+</script>
+{% endblock %}
