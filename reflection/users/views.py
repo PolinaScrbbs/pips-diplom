@@ -48,6 +48,23 @@ def logout_view(request):
 
 @login_required(login_url="users:login")
 def profile_view(request):
+    if request.method == "POST":
+        # 1. Получаем данные из формы
+        new_username = request.POST.get("username")
+        new_email = request.POST.get("email")
+        new_phone = request.POST.get("phone")
+
+        # 2. Обновляем поля пользователя напрямую
+        request.user.username = new_username
+        request.user.email = new_email
+        request.user.phone = new_phone  # Теперь это поле есть в самой модели User
+
+        # 3. Сохраняем изменения в базе данных
+        request.user.save()
+
+        # 4. Перенаправляем обратно в профиль
+        return redirect("users:profile")
+
     bookings_list = request.user.bookings.all().order_by("-created_at")
 
     # Пагинация: 5 записей на страницу

@@ -21,6 +21,8 @@ class User(AbstractUser):
         default=USER,
     )
 
+    phone = models.CharField("Номер телефона", max_length=20, blank=True, null=True)
+
     def is_user(self):
         return self.role == self.USER
 
