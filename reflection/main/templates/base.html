@@ -150,7 +150,7 @@
     }
   </style>
 </head>
-<body>
+<body class="d-flex flex-column min-vh-100">
 
 <header class="sticky-top">
   <nav class="navbar navbar-expand-lg">
@@ -175,6 +175,16 @@
                     <li><a class="dropdown-item" href="{% url 'services:moderator_list' %}">Управление услугами</a></li>
                     <li><a class="dropdown-item" href="{% url 'reviews:moderator_reviews' %}">Отзывы клиентов</a></li>
                 </ul>
+            </li>
+        {% endif %}
+    {% endif %}
+
+    {% if user.is_authenticated %}
+        {% if user.is_admin %}
+            <li class="nav-item">
+                <a class="nav-link text-danger fw-bold" href="{% url 'admin_panel:users_list' %}">
+                    <i class="bi bi-speedometer2 me-1"></i> Админ-панель
+                </a>
             </li>
         {% endif %}
     {% endif %}
@@ -218,11 +228,12 @@
   </nav>
 </header>
 
-<main class="content-fade">
+<main class="content-fade flex-grow-1">
   {% block content %}{% endblock %}
 </main>
 
-<footer>
+{% block footer %}
+<footer class="mt-auto">
   <div class="container">
     <div class="row g-4">
       <div class="col-md-4">
@@ -251,6 +262,7 @@
     </div>
   </div>
 </footer>
+{% endblock %}
 
 {% include "booking/_form_modal.html" %}
 

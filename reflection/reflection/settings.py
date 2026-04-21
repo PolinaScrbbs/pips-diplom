@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "main.apps.ServicesConfig",
+    "admin_panel.apps.AdminPanelConfig",
     "services",
     "reviews",
     "booking",

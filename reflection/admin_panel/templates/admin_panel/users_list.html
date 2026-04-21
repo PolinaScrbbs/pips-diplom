@@ -1,0 +1,254 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Пользователи — Панель администратора{% endblock %}
+
+{% block footer %}{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --admin-accent: #b42318;
+        --admin-bg: #f6f7fb;
+    }
+
+    body { background-color: var(--admin-bg); }
+
+    .admin-table-container {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+        overflow: hidden;
+        border: 1px solid rgba(0,0,0,0.05);
+    }
+
+    .search-bar {
+        background: #f8faf9;
+        border: 1px solid #e9ecef;
+        border-radius: 12px;
+        padding: 12px 20px;
+        transition: all 0.3s ease;
+    }
+
+    .search-bar:focus {
+        background: white;
+        border-color: var(--admin-accent);
+        box-shadow: 0 0 0 4px rgba(180, 35, 24, 0.08);
+    }
+
+    .table thead th {
+        background: #fdfdfd;
+        text-transform: uppercase;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 1px;
+        color: #8898aa;
+        padding: 18px 25px;
+        border-bottom: 1px solid #edf2f0;
+    }
+
+    .table tbody td {
+        padding: 18px 25px;
+        vertical-align: middle;
+        font-size: 0.95rem;
+    }
+
+    .row-inactive {
+        opacity: 0.65;
+        background-color: #fcfcfc;
+    }
+
+    .role-badge {
+        padding: 6px 12px;
+        border-radius: 999px;
+        font-weight: 700;
+        font-size: 0.8rem;
+        display: inline-block;
+    }
+    .role-user { background: #eef2ff; color: #3730a3; }
+    .role-moderator { background: #ecfdf3; color: #027a48; }
+    .role-admin { background: #fef3f2; color: #b42318; }
+
+    .filter-dot {
+        position: absolute;
+        top: -2px;
+        right: -2px;
+        width: 10px;
+        height: 10px;
+        background-color: #f5365c;
+        border: 2px solid white;
+        border-radius: 50%;
+    }
+</style>
+
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex align-items-center gap-3">
+            <div>
+                <h2 class="fw-bold text-dark m-0">Пользователи</h2>
+                <p class="text-muted small m-0">Найдено: {{ page_obj.paginator.count }} пользователей</p>
+            </div>
+
+            <button class="btn btn-outline-dark rounded-pill px-3 shadow-sm position-relative" data-bs-toggle="modal" data-bs-target="#filterModal">
+                <i class="bi bi-filter-left me-1"></i> Фильтры
+                {% if search_query or role != 'non_admin' or status != 'active' or date_from or date_to or sort != '-date_joined' %}
+                    <span class="filter-dot"></span>
+                {% endif %}
+            </button>
+        </div>
+    </div>
+
+    <form method="get" class="mb-3">
+        <div class="row g-2 align-items-center">
+            <div class="col-12 col-md-8">
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-0 shadow-sm" style="border-radius: 12px 0 0 12px;">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input type="text" name="search" value="{{ search_query|default:'' }}" class="form-control search-bar border-0 shadow-sm" style="border-radius: 0 12px 12px 0;" placeholder="Поиск: username / email / phone">
+                </div>
+            </div>
+            <div class="col-12 col-md-4 d-grid d-md-flex gap-2 justify-content-md-end">
+                <input type="hidden" name="role" value="{{ role|default:'non_admin' }}">
+                <input type="hidden" name="status" value="{{ status|default:'active' }}">
+                <input type="hidden" name="sort" value="{{ sort|default:'-date_joined' }}">
+                <input type="hidden" name="date_from" value="{{ date_from|default:'' }}">
+                <input type="hidden" name="date_to" value="{{ date_to|default:'' }}">
+                <button class="btn btn-dark rounded-pill px-4 shadow-sm" type="submit">Найти</button>
+                <a class="btn btn-light rounded-pill px-4" href="{% url 'admin_panel:users_list' %}">Сбросить</a>
+            </div>
+        </div>
+    </form>
+
+    <div class="admin-table-container">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle m-0">
+                <thead>
+                    <tr>
+                        <th>Пользователь</th>
+                        <th>Контакты</th>
+                        <th>Роль</th>
+                        <th>Статус</th>
+                        <th class="text-end">Дата регистрации</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in page_obj %}
+                    <tr class="{% if not u.is_active %}row-inactive{% endif %}">
+                        <td>
+                            <span class="fw-bold text-dark d-block">{{ u.username }}</span>
+                            <span class="text-muted small">ID: #{{ u.pk }}</span>
+                        </td>
+                        <td>
+                            <div class="text-dark">{{ u.email|default:"—" }}</div>
+                            <div class="text-muted small">{{ u.phone|default:"—" }}</div>
+                        </td>
+                        <td>
+                            <span class="role-badge {% if u.role == 'admin' %}role-admin{% elif u.role == 'moderator' %}role-moderator{% else %}role-user{% endif %}">
+                                {{ u.get_role_display }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge {% if u.is_active %}bg-success{% else %}bg-secondary{% endif %}">
+                                {% if u.is_active %}Активен{% else %}Выключен{% endif %}
+                            </span>
+                        </td>
+                        <td class="text-end">
+                            <div class="text-dark">{{ u.date_joined|date:"d.m.Y" }}</div>
+                            <div class="text-muted small">{{ u.date_joined|date:"H:i" }}</div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5 text-muted">Ничего не найдено</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% if page_obj.has_other_pages %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                    <li class="page-item active"><span class="page-link border-0 shadow-sm rounded-3 mx-1 bg-success">{{ num }}</span></li>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link border-0 shadow-sm rounded-3 mx-1 text-dark"
+                           href="?page={{ num }}&search={{ search_query|default:'' }}&role={{ role|default:'all' }}&status={{ status|default:'active' }}&sort={{ sort|default:'' }}&date_from={{ date_from|default:'' }}&date_to={{ date_to|default:'' }}">{{ num }}</a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+
+<div class="modal fade" id="filterModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="fw-bold px-3 pt-3">Фильтры пользователей</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="get">
+                <div class="modal-body p-4">
+                    <div class="mb-4">
+                        <label class="small fw-bold text-muted mb-2 text-uppercase">Дата регистрации</label>
+                        <div class="row g-2">
+                            <div class="col-12 col-md-6">
+                                <input type="date" name="date_from" class="form-control search-bar" value="{{ date_from|default:'' }}" placeholder="С">
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <input type="date" name="date_to" class="form-control search-bar" value="{{ date_to|default:'' }}" placeholder="По">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="small fw-bold text-muted mb-2 text-uppercase">Статус</label>
+                        <select name="status" class="form-select search-bar">
+                            <option value="active" {% if status == 'active' %}selected{% endif %}>Только активные</option>
+                            <option value="inactive" {% if status == 'inactive' %}selected{% endif %}>Только выключенные</option>
+                            <option value="all" {% if status == 'all' %}selected{% endif %}>Показать все</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="small fw-bold text-muted mb-2 text-uppercase">Роль</label>
+                        <select name="role" class="form-select search-bar">
+                            <option value="non_admin" {% if role == 'non_admin' %}selected{% endif %}>Пользователи и модераторы</option>
+                            <option value="all" {% if role == 'all' %}selected{% endif %}>Все роли (включая админов)</option>
+                            <option value="user" {% if role == 'user' %}selected{% endif %}>Обычный пользователь</option>
+                            <option value="moderator" {% if role == 'moderator' %}selected{% endif %}>Модератор</option>
+                            <option value="admin" {% if role == 'admin' %}selected{% endif %}>Администратор</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="small fw-bold text-muted mb-2 text-uppercase">Поиск</label>
+                        <input type="text" name="search" class="form-control search-bar" placeholder="username / email / phone" value="{{ search_query|default:'' }}">
+                    </div>
+
+                    <div class="mb-2">
+                        <label class="small fw-bold text-muted mb-2 text-uppercase">Сортировка</label>
+                        <select name="sort" class="form-select search-bar">
+                            <option value="-date_joined" {% if sort == '-date_joined' %}selected{% endif %}>Сначала новые</option>
+                            <option value="date_joined" {% if sort == 'date_joined' %}selected{% endif %}>Сначала старые</option>
+                            <option value="username" {% if sort == 'username' %}selected{% endif %}>По имени (A→Z)</option>
+                            <option value="-username" {% if sort == '-username' %}selected{% endif %}>По имени (Z→A)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-4 pt-0 justify-content-between">
+                    <a href="{% url 'admin_panel:users_list' %}" class="btn btn-light rounded-pill px-3">Сбросить</a>
+                    <button type="submit" class="btn btn-dark rounded-pill px-4">Применить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

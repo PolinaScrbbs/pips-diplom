@@ -9,6 +9,7 @@ urlpatterns = [
     path("reviews/", include("reviews.urls")),
     path("booking/", include("booking.urls")),
     path("users/", include("users.urls")),
+    path("admin-panel/", include("admin_panel.urls")),
     path("admin/", admin.site.urls),
 ]
 
