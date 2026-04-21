@@ -79,6 +79,37 @@
         border: 2px solid white;
         border-radius: 50%;
     }
+
+    /* Фиксация высоты таблицы без лишних отступов */
+    tr.placeholder-row td {
+        color: transparent;
+        user-select: none;
+    }
+    tr.placeholder-row:hover { background: transparent !important; }
+
+    .action-btn {
+        width: 38px;
+        height: 38px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        transition: all 0.2s;
+        border: 1px solid #eee;
+        background: white;
+        color: #525f7f;
+        text-decoration: none;
+        cursor: pointer;
+    }
+    .action-btn:hover {
+        background: #f8fafb;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+    }
+    .btn-edit:hover { color: #5e72e4; border-color: #5e72e4; }
+
+    .btn-active-toggle.is-active { color: #2e7d32; border-color: #2e7d32; }
+    .btn-active-toggle.is-inactive { color: #b42318; border-color: #b42318; }
 </style>
 
 <div class="container py-5">
@@ -96,6 +127,10 @@
                 {% endif %}
             </button>
         </div>
+
+        <button class="btn btn-success px-4 py-2 rounded-pill shadow-sm" data-bs-toggle="modal" data-bs-target="#createUserModal">
+            <i class="bi bi-plus-lg me-2"></i>Новый пользователь
+        </button>
     </div>
 
     <form method="get" class="mb-3">
@@ -128,8 +163,8 @@
                         <th>Пользователь</th>
                         <th>Контакты</th>
                         <th>Роль</th>
-                        <th>Статус</th>
                         <th class="text-end">Дата регистрации</th>
+                        <th class="text-end">Управление</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -148,19 +183,38 @@
                                 {{ u.get_role_display }}
                             </span>
                         </td>
-                        <td>
-                            <span class="badge {% if u.is_active %}bg-success{% else %}bg-secondary{% endif %}">
-                                {% if u.is_active %}Активен{% else %}Выключен{% endif %}
-                            </span>
-                        </td>
                         <td class="text-end">
                             <div class="text-dark">{{ u.date_joined|date:"d.m.Y" }}</div>
                             <div class="text-muted small">{{ u.date_joined|date:"H:i" }}</div>
+                        </td>
+                        <td class="text-end">
+                            {% if u.role == 'admin' and u.pk != request.user.pk %}
+                                <button class="action-btn" title="Нельзя редактировать другого администратора" disabled style="opacity: 0.5; cursor: not-allowed;">
+                                    <i class="bi bi-lock"></i>
+                                </button>
+                            {% else %}
+                                <button
+                                    class="action-btn btn-active-toggle {% if u.is_active %}is-active{% else %}is-inactive{% endif %} toggle-active-trigger"
+                                    data-id="{{ u.pk }}"
+                                    title="{% if u.is_active %}Деактивировать{% else %}Активировать{% endif %}"
+                                >
+                                    <i class="bi {% if u.is_active %}bi-toggle-on{% else %}bi-toggle-off{% endif %}"></i>
+                                </button>
+                                <button class="action-btn btn-edit edit-user-trigger" data-id="{{ u.pk }}" title="Редактировать">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                            {% endif %}
                         </td>
                     </tr>
                     {% empty %}
                     <tr>
                         <td colspan="5" class="text-center py-5 text-muted">Ничего не найдено</td>
+                    </tr>
+                    {% endfor %}
+
+                    {% for _ in empty_rows %}
+                    <tr class="placeholder-row">
+                        <td colspan="5">&nbsp;</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -184,6 +238,115 @@
         </ul>
     </nav>
     {% endif %}
+</div>
+
+<div class="modal fade" id="createUserModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="fw-bold px-3 pt-3">Добавить пользователя</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="create-user-form">
+                {% csrf_token %}
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="small fw-bold text-muted">Username</label>
+                            <input type="text" name="username" class="form-control rounded-3" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="small fw-bold text-muted">Роль</label>
+                            <select name="role" class="form-select rounded-3">
+                                <option value="user">Обычный пользователь</option>
+                                <option value="moderator">Модератор</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="small fw-bold text-muted">Email</label>
+                            <div class="text-muted small mb-1">Необязательно</div>
+                            <input type="email" name="email" class="form-control rounded-3">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="small fw-bold text-muted">Телефон</label>
+                            <div class="text-muted small mb-1">Необязательно</div>
+                            <input type="text" name="phone" class="form-control rounded-3">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="small fw-bold text-muted">Пароль</label>
+                            <input type="password" name="password1" class="form-control rounded-3" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="small fw-bold text-muted">Повторите пароль</label>
+                            <input type="password" name="password2" class="form-control rounded-3" required>
+                        </div>
+                        <div class="col-12">
+                            <div id="create-user-errors" class="text-danger small d-none"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-4 pt-0">
+                    <button type="submit" class="btn btn-success px-4 rounded-pill w-100 shadow-sm">Создать пользователя</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editUserModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="fw-bold px-3 pt-3">Редактировать пользователя</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="edit-user-form">
+                {% csrf_token %}
+                <input type="hidden" id="edit-user-id">
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="small fw-bold text-muted">Username</label>
+                            <input type="text" name="username" id="edit-username" class="form-control rounded-3" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="small fw-bold text-muted">Роль</label>
+                            <select name="role" id="edit-role" class="form-select rounded-3">
+                                <option value="user">Обычный пользователь</option>
+                                <option value="moderator">Модератор</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="small fw-bold text-muted">Email</label>
+                            <div class="text-muted small mb-1">Необязательно</div>
+                            <input type="email" name="email" id="edit-email" class="form-control rounded-3">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="small fw-bold text-muted">Телефон</label>
+                            <div class="text-muted small mb-1">Необязательно</div>
+                            <input type="text" name="phone" id="edit-phone" class="form-control rounded-3">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="small fw-bold text-muted">Новый пароль (необязательно)</label>
+                            <div class="text-muted small mb-1">Необязательно</div>
+                            <input type="password" name="password1" id="edit-password" class="form-control rounded-3">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="small fw-bold text-muted">Подтвердите новый пароль</label>
+                            <div class="text-muted small mb-1">Необязательно</div>
+                            <input type="password" name="password2" id="edit-password2" class="form-control rounded-3">
+                        </div>
+                        <div class="col-12">
+                            <div id="edit-user-errors" class="text-danger small d-none"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-4 pt-0">
+                    <button type="submit" class="btn btn-primary px-4 rounded-pill w-100 shadow-sm">Сохранить изменения</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 
 <div class="modal fade" id="filterModal" tabindex="-1" aria-hidden="true">
@@ -250,5 +413,143 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function showErrors(targetId, errors) {
+        const el = document.getElementById(targetId);
+        if (!el) return;
+        const parts = [];
+        for (const [field, msgs] of Object.entries(errors || {})) {
+            parts.push(`${field}: ${Array.isArray(msgs) ? msgs.join(', ') : msgs}`);
+        }
+        el.textContent = parts.join(' | ') || 'Ошибка валидации';
+        el.classList.remove('d-none');
+    }
+
+    const csrftoken = getCookie('csrftoken');
+
+    // Create
+    const createForm = document.getElementById('create-user-form');
+    if (createForm) {
+        createForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            document.getElementById('create-user-errors')?.classList.add('d-none');
+
+            const formData = new FormData(createForm);
+
+            const res = await fetch("{% url 'admin_panel:user_create' %}", {
+                method: 'POST',
+                headers: { 'X-CSRFToken': csrftoken },
+                body: formData
+            });
+            const data = await res.json();
+            if (!res.ok || data.status !== 'success') {
+                showErrors('create-user-errors', data.errors);
+                return;
+            }
+            window.location.reload();
+        });
+    }
+
+    // Edit open
+    const editModalEl = document.getElementById('editUserModal');
+    const editModal = editModalEl ? new bootstrap.Modal(editModalEl) : null;
+
+    // Toggle active
+    document.querySelectorAll('.toggle-active-trigger').forEach(btn => {
+        btn.addEventListener('click', async function() {
+            const uid = this.dataset.id;
+            const res = await fetch(`/admin-panel/users/${uid}/toggle-active/`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': csrftoken },
+            });
+            const data = await res.json();
+            if (!res.ok || data.status !== 'success') {
+                alert(data.message || 'Ошибка');
+                return;
+            }
+
+            const isActive = !!data.user?.is_active;
+            this.classList.toggle('is-active', isActive);
+            this.classList.toggle('is-inactive', !isActive);
+            this.title = isActive ? 'Деактивировать' : 'Активировать';
+
+            const icon = this.querySelector('i');
+            if (icon) {
+                icon.className = `bi ${isActive ? 'bi-toggle-on' : 'bi-toggle-off'}`;
+            }
+
+            const row = this.closest('tr');
+            if (row) {
+                row.classList.toggle('row-inactive', !isActive);
+            }
+        });
+    });
+
+    document.querySelectorAll('.edit-user-trigger').forEach(btn => {
+        btn.addEventListener('click', async function() {
+            const uid = this.dataset.id;
+            document.getElementById('edit-user-errors')?.classList.add('d-none');
+            document.getElementById('edit-user-id').value = uid;
+            document.getElementById('edit-password').value = '';
+            document.getElementById('edit-password2').value = '';
+
+            const res = await fetch(`/admin-panel/users/${uid}/json/`);
+            const data = await res.json();
+            if (!res.ok) {
+                showErrors('edit-user-errors', data.errors || {error: data.message || 'Ошибка'});
+                return;
+            }
+
+            document.getElementById('edit-username').value = data.username || '';
+            document.getElementById('edit-email').value = data.email || '';
+            document.getElementById('edit-phone').value = data.phone || '';
+            document.getElementById('edit-role').value = data.role || 'user';
+
+            editModal?.show();
+        });
+    });
+
+    // Edit submit
+    const editForm = document.getElementById('edit-user-form');
+    if (editForm) {
+        editForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            document.getElementById('edit-user-errors')?.classList.add('d-none');
+
+            const uid = document.getElementById('edit-user-id').value;
+            const formData = new FormData(editForm);
+
+            const res = await fetch(`/admin-panel/users/${uid}/update/`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': csrftoken },
+                body: formData
+            });
+            const data = await res.json();
+            if (!res.ok || data.status !== 'success') {
+                showErrors('edit-user-errors', data.errors || {error: data.message || 'Ошибка'});
+                return;
+            }
+            window.location.reload();
+        });
+    }
+});
+</script>
 {% endblock %}
 

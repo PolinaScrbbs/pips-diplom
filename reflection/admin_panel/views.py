@@ -1,11 +1,22 @@
 from django.core.paginator import Paginator
 from django.db.models import Q, Value
 from django.db.models.functions import Replace
-from django.shortcuts import render
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404, render
 from django.utils.dateparse import parse_date
 
 from admin_panel.decorators import admin_required
+from admin_panel.forms import UserCreateForm, UserUpdateForm
 from users.models import User
+
+
+def _deny_other_admin_editing(request, target_user: User):
+    if target_user.role == User.ADMIN and target_user.pk != request.user.pk:
+        return JsonResponse(
+            {"status": "error", "message": "Нельзя изменять других администраторов."},
+            status=403,
+        )
+    return None
 
 
 @admin_required
@@ -77,12 +88,15 @@ def users_list(request):
 
     paginator = Paginator(users_qs, 4)
     page_obj = paginator.get_page(request.GET.get("page"))
+    empty_rows = range(max(0, 4 - len(page_obj.object_list)))
 
     return render(
         request,
         "admin_panel/users_list.html",
         {
             "page_obj": page_obj,
+            "empty_rows": empty_rows,
+            "create_form": UserCreateForm(),
             "search_query": search_query,
             "role": role,
             "status": status,
@@ -90,4 +104,84 @@ def users_list(request):
             "date_from": date_from,
             "date_to": date_to,
         },
+    )
+
+
+@admin_required
+def user_create(request):
+    if request.method != "POST":
+        return JsonResponse({"status": "error", "message": "Invalid method"}, status=405)
+
+    form = UserCreateForm(request.POST)
+    if form.is_valid():
+        user = form.save()
+        return JsonResponse(
+            {
+                "status": "success",
+                "message": "Пользователь создан.",
+                "user": {"id": user.id, "username": user.username},
+            }
+        )
+
+    return JsonResponse({"status": "error", "errors": form.errors}, status=400)
+
+
+@admin_required
+def user_detail_json(request, pk: int):
+    user = get_object_or_404(User, pk=pk)
+    denied = _deny_other_admin_editing(request, user)
+    if denied:
+        return denied
+    return JsonResponse(
+        {
+            "id": user.id,
+            "username": user.username,
+            "email": user.email or "",
+            "phone": user.phone or "",
+            "role": user.role,
+        }
+    )
+
+
+@admin_required
+def user_update(request, pk: int):
+    if request.method != "POST":
+        return JsonResponse({"status": "error", "message": "Invalid method"}, status=405)
+
+    user = get_object_or_404(User, pk=pk)
+    denied = _deny_other_admin_editing(request, user)
+    if denied:
+        return denied
+    form = UserUpdateForm(request.POST, instance=user)
+    if form.is_valid():
+        saved = form.save()
+        return JsonResponse(
+            {
+                "status": "success",
+                "message": "Пользователь обновлён.",
+                "user": {"id": saved.id, "username": saved.username},
+            }
+        )
+
+    return JsonResponse({"status": "error", "errors": form.errors}, status=400)
+
+
+@admin_required
+def user_toggle_active(request, pk: int):
+    if request.method != "POST":
+        return JsonResponse({"status": "error", "message": "Invalid method"}, status=405)
+
+    user = get_object_or_404(User, pk=pk)
+    denied = _deny_other_admin_editing(request, user)
+    if denied:
+        return denied
+
+    user.is_active = not user.is_active
+    user.save(update_fields=["is_active"])
+
+    return JsonResponse(
+        {
+            "status": "success",
+            "user": {"id": user.id, "is_active": user.is_active},
+        }
     )
