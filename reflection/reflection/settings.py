@@ -80,6 +80,9 @@ MIDDLEWARE = [
     # Прокидывает request.user / IP / User-Agent в thread-local, чтобы
     # сигналы аудита могли атрибутировать действия конкретному админу.
     "admin_panel.middleware.AuditContextMiddleware",
+    # Логирует выполненные SQL-запросы в in-memory буфер для страницы БД
+    # в админке. Активен только на запросах авторизованного админа.
+    "admin_panel.middleware.QueryLogMiddleware",
 ]
 
 ROOT_URLCONF = "reflection.urls"

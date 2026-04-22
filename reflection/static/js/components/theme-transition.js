@@ -24,10 +24,14 @@
     const ZONE_PREFIXES = [
         { zone: 'dark',  prefix: '/admin-panel/logs' },
         { zone: 'stats', prefix: '/admin-panel/stats' },
+        { zone: 'db',    prefix: '/admin-panel/db' },
+        { zone: 'audit', prefix: '/admin-panel/audit' },
     ];
     const BODY_ZONE_CLASSES = [
         { cls: 'page-admin-logs',  zone: 'dark' },
         { cls: 'page-admin-stats', zone: 'stats' },
+        { cls: 'page-admin-db',    zone: 'db' },
+        { cls: 'page-admin-audit', zone: 'audit' },
     ];
 
     function zoneFromPath(href) {
@@ -64,6 +68,20 @@
                 '</span>' +
                 '<span class="tt-label-title">Аналитика</span>' +
                 '<span class="tt-label-subtitle">центр управления</span>' +
+            '</span>' +
+            '<span class="tt-label-db">' +
+                '<span class="tt-title-huge" aria-label="БД">' +
+                    '<span>Б</span><span>Д</span>' +
+                '</span>' +
+                '<span class="tt-accent-line" aria-hidden="true"></span>' +
+                '<span class="tt-label-subtitle">database · schema</span>' +
+            '</span>' +
+            '<span class="tt-label-audit">' +
+                '<span class="tt-title-huge" aria-label="Аудит">' +
+                    '<span>А</span><span>у</span><span>д</span><span>и</span><span>т</span>' +
+                '</span>' +
+                '<span class="tt-accent-line" aria-hidden="true"></span>' +
+                '<span class="tt-label-subtitle">audit · trail</span>' +
             '</span>'
         );
     }
@@ -134,8 +152,13 @@
         );
     }
 
+    function animationsDisabled() {
+        return document.documentElement.classList.contains('no-anim');
+    }
+
     function handleLinkClick(e) {
         if (e.defaultPrevented || isModifiedClick(e)) return;
+        if (animationsDisabled()) return;
         const link = e.target.closest('a');
         if (!link) return;
         if (link.target && link.target !== '_self' && link.target !== '') return;

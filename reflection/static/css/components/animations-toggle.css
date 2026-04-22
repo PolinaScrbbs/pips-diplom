@@ -1,0 +1,111 @@
+/* animations-toggle.css
+ *
+ * Компактный переключатель анимаций переходов в правой части навбара.
+ * «Включено» = зелёная молния, «выключено» = нейтральная серая.
+ * Состояние хранится в localStorage и применяется inline-скриптом в <head>
+ * ДО первой отрисовки — чтобы на F5 не мелькнула запрещённая анимация.
+ *
+ * Сами правила отключения анимаций живут рядом в theme-transition.css,
+ * под селектором `html.no-anim`.
+ */
+
+.anim-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.35rem 0.75rem;
+    height: 34px;
+    border: 1px solid rgba(74, 124, 89, 0.25);
+    background: rgba(255, 255, 255, 0.6);
+    color: var(--primary-sage, #4a7c59);
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    line-height: 1;
+    cursor: pointer;
+    transition:
+        background-color 0.25s ease,
+        border-color 0.25s ease,
+        color 0.25s ease,
+        box-shadow 0.25s ease,
+        transform 0.15s ease;
+    backdrop-filter: blur(6px);
+}
+
+.anim-toggle:hover {
+    background: rgba(94, 196, 130, 0.12);
+    border-color: rgba(74, 124, 89, 0.55);
+    box-shadow: 0 4px 14px rgba(74, 124, 89, 0.18);
+    transform: translateY(-1px);
+}
+
+.anim-toggle:active { transform: translateY(0); }
+
+.anim-toggle:focus-visible {
+    outline: 2px solid rgba(94, 196, 130, 0.6);
+    outline-offset: 2px;
+}
+
+.anim-toggle-icon {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    font-size: 1rem;
+}
+.anim-toggle-icon i {
+    position: absolute;
+    inset: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.anim-toggle .anim-toggle-on  { opacity: 1;  transform: scale(1);    color: var(--primary-sage, #4a7c59); }
+.anim-toggle .anim-toggle-off { opacity: 0;  transform: scale(0.6);  color: #8a9699; }
+
+/* Нажатое состояние = анимации ВЫКЛЮЧЕНЫ */
+.anim-toggle[aria-pressed="true"] {
+    background: rgba(138, 150, 153, 0.12);
+    border-color: rgba(138, 150, 153, 0.45);
+    color: #6c757d;
+}
+.anim-toggle[aria-pressed="true"] .anim-toggle-on  { opacity: 0;  transform: scale(0.6); }
+.anim-toggle[aria-pressed="true"] .anim-toggle-off { opacity: 1;  transform: scale(1); }
+
+/* На мобильном остаётся только иконка */
+@media (max-width: 768px) {
+    .anim-toggle-label { display: none; }
+    .anim-toggle {
+        width: 34px;
+        height: 34px;
+        padding: 0;
+        justify-content: center;
+    }
+}
+
+/* Цветовые темы админских страниц — перекрашиваем тумблер в их палитру */
+.page-admin-logs .anim-toggle {
+    background: rgba(94, 196, 130, 0.08);
+    border-color: rgba(94, 196, 130, 0.35);
+    color: #5ec482;
+}
+.page-admin-logs .anim-toggle:hover {
+    background: rgba(94, 196, 130, 0.18);
+    border-color: rgba(94, 196, 130, 0.65);
+}
+.page-admin-logs .anim-toggle .anim-toggle-on { color: #5ec482; }
+.page-admin-logs .anim-toggle[aria-pressed="true"] {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.65);
+}
+
+.page-admin-stats .anim-toggle,
+.page-admin-db    .anim-toggle,
+.page-admin-audit .anim-toggle {
+    background: rgba(255, 255, 255, 0.7);
+}

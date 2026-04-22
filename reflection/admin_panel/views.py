@@ -17,9 +17,11 @@ from booking.models import Booking
 from reviews.models import Review
 from services.models import Service
 
+from admin_panel.db_inspector import get_schema_overview
 from admin_panel.decorators import admin_required
 from admin_panel.forms import UserCreateForm, UserUpdateForm
 from admin_panel.models import AuditLog
+from admin_panel.query_log import query_log
 from admin_panel.signals import write_manual as audit_write
 from users.models import User
 
@@ -895,3 +897,42 @@ def stop_impersonation(request):
         "Admin %s stopped impersonation (was %s)", original.username, original_username or was_as
     )
     return redirect("admin_panel:users_list")
+
+
+# ---------------------------------------------------------------------------
+# DB Inspector — структура БД + последние SQL-запросы.
+# ---------------------------------------------------------------------------
+@admin_required
+def db_page(request):
+    return render(request, "admin_panel/db.html")
+
+
+@admin_required
+def db_schema(request):
+    return JsonResponse(get_schema_overview())
+
+
+@admin_required
+def db_queries(request):
+    try:
+        since_id = int(request.GET.get("since", "")) if request.GET.get("since") else None
+    except ValueError:
+        since_id = None
+    try:
+        limit = max(1, min(int(request.GET.get("limit", 200)), 500))
+    except (TypeError, ValueError):
+        limit = 200
+    items = query_log.recent(since_id=since_id, limit=limit)
+    return JsonResponse({
+        "queries": items,
+        "stats": query_log.stats(),
+    })
+
+
+@admin_required
+def db_queries_clear(request):
+    if request.method != "POST":
+        return JsonResponse({"status": "error", "message": "Only POST allowed."}, status=405)
+    query_log.clear()
+    logger.info("Admin %s cleared query log", request.user.username)
+    return JsonResponse({"status": "success"})

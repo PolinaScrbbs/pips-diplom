@@ -18,6 +18,19 @@
   <link rel="stylesheet" href="{% static 'css/components/booking-modal.css' %}">
   <link rel="stylesheet" href="{% static 'css/components/theme-transition.css' %}">
   <link rel="stylesheet" href="{% static 'css/components/impersonation-banner.css' %}">
+  <link rel="stylesheet" href="{% static 'css/components/animations-toggle.css' %}">
+
+  <script>
+  /* Применяем пользовательский выбор «без анимаций» ДО первой отрисовки,
+   * чтобы избежать даже краткого проигрывания анимации на F5. */
+  (function () {
+      try {
+          if (localStorage.getItem('reflection.animations') === 'off') {
+              document.documentElement.classList.add('no-anim');
+          }
+      } catch (_) { /* no-op */ }
+  })();
+  </script>
 
   {% block extra_css %}{% endblock %}
 </head>
@@ -44,20 +57,32 @@
 <script>
 /* Inline-bootstrap для анимации смены темы.
  * Создаёт overlay ДО первой отрисовки, чтобы новая страница не мигала.
- * Зоны: light (по умолчанию), dark (логи), stats (статистика). */
+ * Зоны: light, dark (логи), stats, db (схема БД), audit (журнал аудита). */
 (function () {
     try {
+        if (document.documentElement.classList.contains('no-anim')) {
+            sessionStorage.removeItem('reflection.themeTransition');
+            return;
+        }
         var raw = sessionStorage.getItem('reflection.themeTransition');
         if (!raw) return;
         sessionStorage.removeItem('reflection.themeTransition');
         var data = JSON.parse(raw);
         if (!data) return;
-        var VALID = { 'to-light': 'light', 'to-dark': 'dark', 'to-stats': 'stats' };
+        var VALID = {
+            'to-light': 'light',
+            'to-dark':  'dark',
+            'to-stats': 'stats',
+            'to-db':    'db',
+            'to-audit': 'audit'
+        };
         var wantedZone = VALID[data.direction];
         if (!wantedZone) return;
         var bodyZone = 'light';
         if (document.body.classList.contains('page-admin-logs'))  bodyZone = 'dark';
         if (document.body.classList.contains('page-admin-stats')) bodyZone = 'stats';
+        if (document.body.classList.contains('page-admin-db'))    bodyZone = 'db';
+        if (document.body.classList.contains('page-admin-audit')) bodyZone = 'audit';
         if (bodyZone !== wantedZone) return;
         var x = (typeof data.x === 'number' ? data.x : 0.5) * window.innerWidth;
         var y = (typeof data.y === 'number' ? data.y : 0.5) * window.innerHeight;
@@ -84,6 +109,20 @@
                         '</span>' +
                         '<span class="tt-label-title">Аналитика</span>' +
                         '<span class="tt-label-subtitle">центр управления</span>' +
+                    '</span>' +
+                    '<span class="tt-label-db">' +
+                        '<span class="tt-title-huge" aria-label="БД">' +
+                            '<span>Б</span><span>Д</span>' +
+                        '</span>' +
+                        '<span class="tt-accent-line" aria-hidden="true"></span>' +
+                        '<span class="tt-label-subtitle">database · schema</span>' +
+                    '</span>' +
+                    '<span class="tt-label-audit">' +
+                        '<span class="tt-title-huge" aria-label="Аудит">' +
+                            '<span>А</span><span>у</span><span>д</span><span>и</span><span>т</span>' +
+                        '</span>' +
+                        '<span class="tt-accent-line" aria-hidden="true"></span>' +
+                        '<span class="tt-label-subtitle">audit · trail</span>' +
                     '</span>';
             }
             ov.appendChild(n);
@@ -148,6 +187,18 @@
         </ul>
 
         <div class="d-flex align-items-center gap-3">
+          <button type="button"
+                  class="anim-toggle"
+                  data-role="anim-toggle"
+                  aria-pressed="false"
+                  aria-label="Переключить анимации"
+                  title="Анимации переходов: включены">
+              <span class="anim-toggle-icon" aria-hidden="true">
+                  <i class="bi bi-lightning-charge-fill anim-toggle-on"></i>
+                  <i class="bi bi-lightning-charge anim-toggle-off"></i>
+              </span>
+              <span class="anim-toggle-label">Анимации</span>
+          </button>
           {% if user.is_authenticated %}
             {% if user.is_user %}
               <a href="{% url 'users:profile' %}" class="text-decoration-none d-flex align-items-center me-2">
@@ -217,6 +268,7 @@
 <script src="{% static 'vendor/imask/imask.min.js' %}"></script>
 <script src="{% static 'js/components/booking-modal.js' %}"></script>
 <script src="{% static 'js/components/theme-transition.js' %}"></script>
+<script src="{% static 'js/components/animations-toggle.js' %}"></script>
 
 {% block extra_js %}{% endblock %}
 

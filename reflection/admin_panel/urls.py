@@ -29,4 +29,9 @@ urlpatterns = [
 
     path("users/<int:pk>/impersonate/", views.impersonate_user, name="impersonate"),
     path("stop-impersonation/", views.stop_impersonation, name="stop_impersonation"),
+
+    path("db/", views.db_page, name="db"),
+    path("db/schema/", views.db_schema, name="db_schema"),
+    path("db/queries/", views.db_queries, name="db_queries"),
+    path("db/queries/clear/", views.db_queries_clear, name="db_queries_clear"),
 ]

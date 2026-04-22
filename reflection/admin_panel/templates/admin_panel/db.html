@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}База данных — Панель администратора{% endblock %}
+
+{% block body_class %}page-admin-db{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/components/admin-subnav.css' %}">
+<link rel="stylesheet" href="{% static 'css/pages/admin-db.css' %}">
+{% endblock %}
+
+{% block content %}
+<div id="admin-db-root"
+     class="db-page"
+     data-schema-url="{% url 'admin_panel:db_schema' %}"
+     data-queries-url="{% url 'admin_panel:db_queries' %}"
+     data-clear-url="{% url 'admin_panel:db_queries_clear' %}">
+
+    {% include "admin_panel/_nav.html" with active='db' %}
+
+    <header class="db-heading">
+        <div>
+            <h1>База данных</h1>
+            <p class="db-subtitle">
+                Живая интроспекция схемы и поток SQL-запросов в реальном времени.
+                Данные собираются через Django ORM и <code>force_debug_cursor</code>.
+            </p>
+        </div>
+        <div class="db-meta" data-role="db-meta">
+            <span class="db-badge"><i class="bi bi-hdd-stack"></i> <span data-role="engine">—</span></span>
+            <span class="db-badge" data-role="database">—</span>
+        </div>
+    </header>
+
+    <nav class="db-tabs" role="tablist" aria-label="Разделы">
+        <button type="button" class="db-tab active" data-tab="schema" role="tab" aria-selected="true">
+            <i class="bi bi-diagram-3"></i> Схема
+        </button>
+        <button type="button" class="db-tab" data-tab="queries" role="tab" aria-selected="false">
+            <i class="bi bi-activity"></i> Последние запросы
+            <span class="db-tab-count" data-role="queries-count">0</span>
+        </button>
+    </nav>
+
+    <!-- ============================================================= -->
+    <!-- Tab: Schema (ERD)                                              -->
+    <!-- ============================================================= -->
+    <section class="db-tab-panel active" data-panel="schema" role="tabpanel">
+        <div class="db-kpi">
+            <div class="db-kpi-card">
+                <span class="db-kpi-label">Таблиц</span>
+                <strong class="db-kpi-value" data-role="kpi-tables">—</strong>
+            </div>
+            <div class="db-kpi-card">
+                <span class="db-kpi-label">Записей всего</span>
+                <strong class="db-kpi-value" data-role="kpi-rows">—</strong>
+            </div>
+            <div class="db-kpi-card">
+                <span class="db-kpi-label">Связей (FK / M2M)</span>
+                <strong class="db-kpi-value" data-role="kpi-relations">—</strong>
+            </div>
+            <div class="db-kpi-card">
+                <span class="db-kpi-label">Приложений</span>
+                <strong class="db-kpi-value" data-role="kpi-apps">—</strong>
+            </div>
+        </div>
+
+        <div class="erd-wrap" data-role="erd-wrap">
+            <!-- Toolbar -->
+            <div class="erd-toolbar">
+                <input type="search" class="erd-search" placeholder="Найти таблицу или поле…" data-role="schema-search" autocomplete="off">
+                <div class="erd-app-filter" data-role="app-filter"></div>
+                <div class="erd-actions">
+                    <button type="button" class="erd-btn" data-role="erd-fit" title="Вписать в экран"><i class="bi bi-arrows-angle-expand"></i></button>
+                    <button type="button" class="erd-btn" data-role="erd-zoom-out" title="Уменьшить"><i class="bi bi-zoom-out"></i></button>
+                    <button type="button" class="erd-btn" data-role="erd-zoom-in" title="Увеличить"><i class="bi bi-zoom-in"></i></button>
+                    <button type="button" class="erd-btn" data-role="erd-reset" title="Сбросить расположение"><i class="bi bi-arrow-counterclockwise"></i></button>
+                </div>
+            </div>
+
+            <!-- Canvas -->
+            <div class="erd-canvas" data-role="erd-canvas">
+                <svg class="erd-svg" data-role="erd-svg" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <marker id="erd-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+                            <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/>
+                        </marker>
+                    </defs>
+                    <g data-role="erd-viewport">
+                        <g data-role="erd-edges"></g>
+                        <g data-role="erd-nodes"></g>
+                    </g>
+                </svg>
+
+                <div class="erd-empty" data-role="erd-empty">
+                    <div class="db-schema-placeholder">Загружаем структуру…</div>
+                </div>
+
+                <div class="erd-hud">
+                    <span data-role="erd-zoom">100%</span>
+                    <span class="erd-hud-tip"><i class="bi bi-mouse"></i> колесо — масштаб · перетащите таблицу</span>
+                </div>
+            </div>
+
+            <!-- Details side-panel (pgAdmin-like) -->
+            <aside class="erd-details" data-role="erd-details" hidden>
+                <header class="erd-details-head">
+                    <div>
+                        <h2 class="erd-details-title" data-role="d-title">Таблица</h2>
+                        <span class="erd-details-sub" data-role="d-sub">—</span>
+                    </div>
+                    <button type="button" class="erd-details-x" data-role="d-close" aria-label="Закрыть">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </header>
+
+                <div class="erd-details-body">
+                    <div class="erd-details-stats">
+                        <div class="erd-stat">
+                            <span class="erd-stat-label">Записей</span>
+                            <strong class="erd-stat-value" data-role="d-rows">—</strong>
+                        </div>
+                        <div class="erd-stat">
+                            <span class="erd-stat-label">Полей</span>
+                            <strong class="erd-stat-value" data-role="d-fields">—</strong>
+                        </div>
+                        <div class="erd-stat">
+                            <span class="erd-stat-label">Managed</span>
+                            <strong class="erd-stat-value" data-role="d-managed">—</strong>
+                        </div>
+                    </div>
+
+                    <h3 class="erd-section-title"><i class="bi bi-columns-gap"></i> Поля</h3>
+                    <ul class="erd-field-list" data-role="d-fields-list"></ul>
+
+                    <h3 class="erd-section-title"><i class="bi bi-share"></i> Связи</h3>
+                    <ul class="erd-rel-list" data-role="d-rels-list"></ul>
+                </div>
+            </aside>
+        </div>
+    </section>
+
+    <!-- ============================================================= -->
+    <!-- Tab: Queries                                                   -->
+    <!-- ============================================================= -->
+    <section class="db-tab-panel" data-panel="queries" role="tabpanel" hidden>
+        <div class="db-kpi">
+            <div class="db-kpi-card">
+                <span class="db-kpi-label">В буфере</span>
+                <strong class="db-kpi-value" data-role="q-buffer">—</strong>
+                <span class="db-kpi-hint">из последних 500</span>
+            </div>
+            <div class="db-kpi-card">
+                <span class="db-kpi-label">Средн. время</span>
+                <strong class="db-kpi-value" data-role="q-avg">—</strong>
+                <span class="db-kpi-hint">мс</span>
+            </div>
+            <div class="db-kpi-card">
+                <span class="db-kpi-label">Макс. время</span>
+                <strong class="db-kpi-value" data-role="q-max">—</strong>
+                <span class="db-kpi-hint">мс</span>
+            </div>
+            <div class="db-kpi-card">
+                <span class="db-kpi-label">Медленных (≥50мс)</span>
+                <strong class="db-kpi-value" data-role="q-slow">—</strong>
+            </div>
+        </div>
+
+        <div class="db-queries-toolbar">
+            <div class="db-queries-filters" role="tablist" aria-label="Тип запроса">
+                <button type="button" class="db-op-chip active" data-op-filter="ALL">Все</button>
+                <button type="button" class="db-op-chip" data-op-filter="SELECT">SELECT</button>
+                <button type="button" class="db-op-chip" data-op-filter="INSERT">INSERT</button>
+                <button type="button" class="db-op-chip" data-op-filter="UPDATE">UPDATE</button>
+                <button type="button" class="db-op-chip" data-op-filter="DELETE">DELETE</button>
+                <button type="button" class="db-op-chip" data-op-filter="OTHER">Другое</button>
+            </div>
+            <input type="search" class="db-search" placeholder="Поиск по SQL…" data-role="queries-search" autocomplete="off">
+            <div class="db-queries-controls">
+                <button type="button" class="db-btn" data-role="pause" title="Пауза/Возобновить">
+                    <i class="bi bi-pause-fill"></i> <span>Live</span>
+                </button>
+                <button type="button" class="db-btn" data-role="clear" title="Очистить буфер">
+                    <i class="bi bi-trash"></i> Очистить
+                </button>
+            </div>
+        </div>
+
+        <div class="db-queries-wrap">
+            <div class="db-chart-card">
+                <header class="db-chart-head">
+                    <h3>Распределение</h3>
+                    <span class="db-muted">последние 100, мс</span>
+                </header>
+                <div class="db-chart-canvas-wrap">
+                    <canvas data-role="q-chart"></canvas>
+                </div>
+            </div>
+
+            <div class="db-queries-list-wrap">
+                <ol class="db-queries-list" data-role="queries-list" data-op-filter="ALL" data-has-search="0" aria-live="polite"></ol>
+                <div class="db-queries-empty" data-role="queries-empty">
+                    <i class="bi bi-activity"></i>
+                    <p>Пока запросов нет. Походите по админке — они появятся здесь.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- Modal для деталей SQL -->
+<div class="db-modal" data-role="modal" hidden aria-hidden="true">
+    <div class="db-modal-backdrop" data-role="modal-close"></div>
+    <div class="db-modal-card" role="dialog" aria-modal="true">
+        <header class="db-modal-head">
+            <h2>SQL-запрос</h2>
+            <button type="button" class="db-modal-x" data-role="modal-close" aria-label="Закрыть">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </header>
+        <div class="db-modal-body" data-role="modal-body"></div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'vendor/chartjs/chart.umd.js' %}"></script>
+<script defer src="{% static 'js/pages/admin-db.js' %}"></script>
+{% endblock %}
