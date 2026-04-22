@@ -19,7 +19,8 @@
      data-toggle-url="{% url 'admin_panel:user_toggle' 0 %}"
      data-json-url="{% url 'admin_panel:user_json' 0 %}"
      data-update-url="{% url 'admin_panel:user_update' 0 %}"
-     data-delete-url="{% url 'admin_panel:user_delete' 0 %}">
+     data-delete-url="{% url 'admin_panel:user_delete' 0 %}"
+     data-impersonate-url="{% url 'admin_panel:impersonate' 0 %}">
 
     {% include "admin_panel/_nav.html" with active='users' %}
 
@@ -114,6 +115,12 @@
                                     <i class="bi bi-pencil"></i>
                                 </button>
                                 {% if u.role != 'admin' and u.pk != request.user.pk %}
+                                    <button class="action-btn btn-impersonate impersonate-user-trigger"
+                                            data-id="{{ u.pk }}"
+                                            data-name="{{ u.username }}"
+                                            title="Войти от имени пользователя">
+                                        <i class="bi bi-incognito"></i>
+                                    </button>
                                     <button class="action-btn btn-delete delete-user-trigger"
                                             data-id="{{ u.pk }}"
                                             data-name="{{ u.username }}"
@@ -280,6 +287,27 @@
                 <div class="d-flex gap-2 mt-4">
                     <button type="button" class="btn btn-light w-100 rounded-pill" data-bs-dismiss="modal">Отмена</button>
                     <button type="button" id="confirm-delete-user-btn" class="btn btn-danger w-100 rounded-pill">Удалить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="impersonateUserModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content border-0 shadow-lg admin-modal-card">
+            <div class="modal-body p-4 text-center">
+                <div class="text-dark mb-3">
+                    <i class="bi bi-incognito admin-modal-icon"></i>
+                </div>
+                <h5 class="fw-bold">Войти от имени пользователя?</h5>
+                <p class="text-muted small mb-0">Сейчас вы начнёте сессию от имени «<span id="impersonate-user-name" class="fw-semibold text-dark"></span>». Сверху будет виден баннер, действие логируется в аудите.</p>
+                <div id="impersonate-user-errors" class="text-danger small mt-3 d-none"></div>
+                <div class="d-flex gap-2 mt-4">
+                    <button type="button" class="btn btn-light w-100 rounded-pill" data-bs-dismiss="modal">Отмена</button>
+                    <button type="button" id="confirm-impersonate-user-btn" class="btn btn-dark w-100 rounded-pill">
+                        <i class="bi bi-box-arrow-in-right me-1"></i> Войти
+                    </button>
                 </div>
             </div>
         </div>

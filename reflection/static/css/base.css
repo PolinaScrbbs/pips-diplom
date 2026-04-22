@@ -53,6 +53,83 @@ h1, h2, h3, .navbar-brand {
     color: var(--primary-sage) !important;
 }
 
+/* --- Активный пункт в обычном навбаре (клиентский режим) --- */
+.navbar-nav .nav-link.active {
+    color: var(--primary-sage) !important;
+    font-weight: 600;
+}
+
+/* --- Admin brand: «Отражение · Админ-панель» — одна ссылка, ведёт на админку --- */
+.navbar-brand-admin {
+    gap: 0;
+}
+.navbar-brand-admin .brand-divider {
+    margin: 0 10px;
+    color: #b7c4bc;
+    font-weight: 300;
+    font-size: 1.35rem;
+    line-height: 1;
+}
+.navbar-brand-admin .brand-admin-label {
+    font-weight: 500;
+    font-size: 0.95rem;
+    color: #2f6b3f;
+    padding: 3px 12px;
+    background: rgba(64, 145, 87, 0.1);
+    border-radius: 999px;
+    letter-spacing: 0.01em;
+    transition: var(--transition);
+}
+.navbar-brand-admin:hover .brand-admin-label {
+    background: rgba(64, 145, 87, 0.18);
+    color: #245633;
+}
+
+@media (max-width: 575.98px) {
+    .navbar-brand-admin .brand-divider { display: none; }
+    .navbar-brand-admin .brand-admin-label {
+        display: none;
+    }
+}
+
+/* --- Админ-навигация: четыре развёрнутые ссылки вместо дропдауна.
+   Визуально чуть отличается от клиентских пунктов, чтобы админ видел,
+   что находится в «рабочем» режиме. --- */
+.navbar-nav .admin-nav-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 0.45rem 0.95rem !important;
+    margin: 0 4px;
+    border-radius: 999px;
+    color: #2f6b3f !important;
+    transition: background 0.18s ease, color 0.18s ease, transform 0.15s ease;
+}
+.navbar-nav .admin-nav-link:hover {
+    background: rgba(64, 145, 87, 0.1);
+    color: #245633 !important;
+    transform: translateY(-1px);
+}
+.navbar-nav .admin-nav-link.active {
+    background: #2f6b3f;
+    color: #fff !important;
+    box-shadow: 0 6px 16px rgba(47, 107, 63, 0.25);
+    font-weight: 600;
+}
+.navbar-nav .admin-nav-link.active:hover {
+    background: #245633;
+    color: #fff !important;
+}
+
+@media (max-width: 991.98px) {
+    /* В мобильном развёрнутом меню — ссылки в столбик, без пилюлей */
+    .navbar-nav .admin-nav-link {
+        border-radius: 10px;
+        margin: 2px 0;
+        padding: 0.55rem 0.9rem !important;
+    }
+}
+
 /* Кнопки в стиле Soft UI */
 .btn-sage {
     background-color: var(--primary-sage);

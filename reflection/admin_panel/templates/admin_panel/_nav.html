@@ -1,10 +1,13 @@
-{# Таб-навигация для админ-панели. В шаблоне задайте {% with active='users' %}, 'stats' или 'logs'. #}
+{# Таб-навигация для админ-панели. В шаблоне задайте {% with active='users' %}, 'stats', 'logs' или 'audit'. #}
 <nav class="admin-subnav" aria-label="Admin navigation">
     <a href="{% url 'admin_panel:users_list' %}" class="{% if active == 'users' %}active{% endif %}">
         <i class="bi bi-people"></i> Пользователи
     </a>
     <a href="{% url 'admin_panel:stats' %}" class="{% if active == 'stats' %}active{% endif %}">
         <i class="bi bi-bar-chart-line"></i> Статистика
+    </a>
+    <a href="{% url 'admin_panel:audit' %}" class="{% if active == 'audit' %}active{% endif %}">
+        <i class="bi bi-shield-check"></i> Аудит
     </a>
     <a href="{% url 'admin_panel:logs' %}" class="{% if active == 'logs' %}active{% endif %}">
         <i class="bi bi-terminal"></i> Системные логи

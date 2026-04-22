@@ -6,10 +6,12 @@ from django.conf import settings
 from django.core.paginator import Paginator
 from django.db.models import Avg, Count, Q, Sum, Value
 from django.db.models.functions import Replace, TruncDate
+from django.contrib.auth import login
 from django.http import FileResponse, Http404, JsonResponse
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
-from django.utils.dateparse import parse_date
+from django.utils.dateparse import parse_date, parse_datetime
 
 from booking.models import Booking
 from reviews.models import Review
@@ -17,6 +19,8 @@ from services.models import Service
 
 from admin_panel.decorators import admin_required
 from admin_panel.forms import UserCreateForm, UserUpdateForm
+from admin_panel.models import AuditLog
+from admin_panel.signals import write_manual as audit_write
 from users.models import User
 
 logger = logging.getLogger("app.admin")
@@ -652,3 +656,242 @@ def stats_data(request):
         "hour_counts": hour_counts,
         "top_clients": top_clients,
     })
+
+
+# ---------------------------------------------------------------------------
+# Аудит-журнал — лента действий персонала над ключевыми сущностями.
+# ---------------------------------------------------------------------------
+_AUDIT_PAGE_SIZE = 30
+_ENTITY_LABELS = {
+    "user": "Пользователь",
+    "service": "Услуга",
+    "review": "Отзыв",
+    "booking": "Запись",
+}
+
+
+def _serialize_audit(row: AuditLog) -> dict:
+    return {
+        "id": row.id,
+        "created_at": timezone.localtime(row.created_at).isoformat(timespec="seconds"),
+        "actor": row.actor_username or "system",
+        "actor_role": row.actor_role or "",
+        "action": row.action,
+        "entity_type": row.entity_type,
+        "entity_label": _ENTITY_LABELS.get(row.entity_type, row.entity_type),
+        "entity_id": row.entity_id,
+        "entity_repr": row.entity_repr,
+        "ip_address": row.ip_address or "",
+        "changed_fields": sorted(list((row.changes or {}).keys())),
+    }
+
+
+@admin_required
+def audit_page(request):
+    return render(request, "admin_panel/audit.html")
+
+
+def _page_range_window(current: int, total: int, side: int = 2) -> list:
+    """
+    Возвращает список номеров страниц + сентинелов-многоточий для компактной
+    пагинации вида: 1 … 4 5 [6] 7 8 … 20.
+    Сентинел для «…» = 0 (в шаблоне просто не-ссылка).
+    """
+    if total <= 1:
+        return [1] if total == 1 else []
+
+    pages = set()
+    pages.add(1)
+    pages.add(total)
+    for p in range(current - side, current + side + 1):
+        if 1 <= p <= total:
+            pages.add(p)
+
+    ordered = sorted(pages)
+    result = []
+    prev = 0
+    for p in ordered:
+        if prev and p - prev > 1:
+            result.append(0)  # ellipsis
+        result.append(p)
+        prev = p
+    return result
+
+
+@admin_required
+def audit_data(request):
+    """Возвращает страницу аудита с применением фильтров."""
+    qs = AuditLog.objects.all().select_related("actor")
+
+    action = (request.GET.get("action") or "").strip()
+    if action and action != "ALL":
+        qs = qs.filter(action=action)
+
+    entity = (request.GET.get("entity") or "").strip()
+    if entity and entity != "ALL":
+        qs = qs.filter(entity_type=entity)
+
+    actor = (request.GET.get("actor") or "").strip()
+    if actor:
+        qs = qs.filter(actor_username__icontains=actor)
+
+    q = (request.GET.get("q") or "").strip()
+    if q:
+        qs = qs.filter(Q(entity_repr__icontains=q) | Q(actor_username__icontains=q))
+
+    date_from = request.GET.get("from")
+    if date_from:
+        d = parse_date(date_from) or parse_datetime(date_from)
+        if d:
+            qs = qs.filter(created_at__date__gte=d if hasattr(d, "date") is False else d.date())
+
+    date_to = request.GET.get("to")
+    if date_to:
+        d = parse_date(date_to) or parse_datetime(date_to)
+        if d:
+            qs = qs.filter(created_at__date__lte=d if hasattr(d, "date") is False else d.date())
+
+    paginator = Paginator(qs, _AUDIT_PAGE_SIZE)
+    try:
+        page_num = max(int(request.GET.get("page", 1)), 1)
+    except (TypeError, ValueError):
+        page_num = 1
+    page_num = min(page_num, paginator.num_pages or 1)
+    page = paginator.page(page_num) if paginator.count else None
+
+    rows = list(page.object_list) if page else []
+    return JsonResponse({
+        "entries": [_serialize_audit(r) for r in rows],
+        "page": page_num,
+        "page_size": _AUDIT_PAGE_SIZE,
+        "total_pages": paginator.num_pages if paginator.count else 0,
+        "total": paginator.count,
+        "has_prev": bool(page and page.has_previous()),
+        "has_next": bool(page and page.has_next()),
+        "page_range": _page_range_window(page_num, paginator.num_pages if paginator.count else 0),
+        "index_from": ((page_num - 1) * _AUDIT_PAGE_SIZE + 1) if paginator.count else 0,
+        "index_to": ((page_num - 1) * _AUDIT_PAGE_SIZE + len(rows)) if paginator.count else 0,
+    })
+
+
+@admin_required
+def audit_detail(request, pk: int):
+    row = get_object_or_404(AuditLog, pk=pk)
+    data = _serialize_audit(row)
+    data["changes"] = row.changes or {}
+    data["user_agent"] = row.user_agent or ""
+    return JsonResponse(data)
+
+
+@admin_required
+def audit_filters(request):
+    """Справочники для выпадаек: уникальные акторы и типы сущностей."""
+    actors = list(
+        AuditLog.objects.exclude(actor_username="")
+        .order_by("actor_username")
+        .values_list("actor_username", flat=True)
+        .distinct()[:50]
+    )
+    entities = list(
+        AuditLog.objects.exclude(entity_type="")
+        .order_by()
+        .values_list("entity_type", flat=True)
+        .distinct()
+    )
+    entities = [{"value": e, "label": _ENTITY_LABELS.get(e, e)} for e in sorted(entities)]
+    return JsonResponse({
+        "actors": actors,
+        "entities": entities,
+        "actions": [{"value": code, "label": label} for code, label in AuditLog.ACTION_CHOICES],
+    })
+
+
+# ---------------------------------------------------------------------------
+# Impersonation — «войти за пользователя».
+# ---------------------------------------------------------------------------
+_IMPERSONATE_KEY = "impersonator_id"
+
+
+@admin_required
+def impersonate_user(request, pk: int):
+    """
+    Начинает сессию impersonation: админ логинится как другой пользователь.
+    Ограничения: админ не может impersonate самого себя или другого админа.
+    """
+    if request.method != "POST":
+        return JsonResponse({"status": "error", "message": "Only POST allowed."}, status=405)
+
+    target = get_object_or_404(User, pk=pk)
+    if target.pk == request.user.pk:
+        return JsonResponse({"status": "error", "message": "Нельзя impersonate самого себя."}, status=400)
+    if target.role == User.ADMIN:
+        return JsonResponse({"status": "error", "message": "Нельзя impersonate администратора."}, status=403)
+    if not target.is_active:
+        return JsonResponse({"status": "error", "message": "Пользователь деактивирован."}, status=400)
+
+    original_id = request.user.pk
+    original_username = request.user.username
+    original_role = request.user.role
+
+    audit_write(
+        AuditLog.ACTION_IMPERSONATE,
+        actor=request.user,
+        entity_type="user",
+        entity_id=target.pk,
+        entity_repr=f"{target.username} ({target.get_role_display()})",
+        changes={"target": target.username, "from_user": original_username},
+        request=request,
+    )
+
+    login(request, target)
+    request.session[_IMPERSONATE_KEY] = original_id
+    request.session["impersonator_username"] = original_username
+    request.session["impersonator_role"] = original_role
+
+    logger.warning(
+        "Admin %s started impersonation of %s", original_username, target.username
+    )
+
+    redirect_to = reverse("main:index")
+    if target.is_user():
+        redirect_to = reverse("users:profile")
+    elif target.is_moderator():
+        redirect_to = reverse("services:moderator_list")
+
+    return JsonResponse({"status": "success", "redirect": redirect_to})
+
+
+def stop_impersonation(request):
+    """
+    Выход из режима impersonation. Доступен любому авторизованному, если в
+    сессии есть impersonator_id — потому что «перевоплощённый» пользователь
+    сейчас технически и есть request.user.
+    """
+    original_id = request.session.pop(_IMPERSONATE_KEY, None)
+    original_username = request.session.pop("impersonator_username", None)
+    request.session.pop("impersonator_role", None)
+
+    if not original_id:
+        return redirect("main:index")
+
+    try:
+        original = User.objects.get(pk=original_id, is_active=True)
+    except User.DoesNotExist:
+        return redirect("main:index")
+
+    was_as = request.user.username if request.user.is_authenticated else "?"
+    audit_write(
+        AuditLog.ACTION_STOP_IMPERSONATE,
+        actor=original,
+        entity_type="user",
+        entity_id=request.user.pk if request.user.is_authenticated else None,
+        entity_repr=f"{was_as}",
+        changes={"from_user": was_as, "back_to": original.username},
+        request=request,
+    )
+
+    login(request, original)
+    logger.warning(
+        "Admin %s stopped impersonation (was %s)", original.username, original_username or was_as
+    )
+    return redirect("admin_panel:users_list")

@@ -77,6 +77,9 @@ MIDDLEWARE = [
     # Логирует переходы пользователей по страницам в системный лог.
     # Должен идти после AuthenticationMiddleware, чтобы был доступен request.user.
     "main.middleware.NavigationLoggingMiddleware",
+    # Прокидывает request.user / IP / User-Agent в thread-local, чтобы
+    # сигналы аудита могли атрибутировать действия конкретному админу.
+    "admin_panel.middleware.AuditContextMiddleware",
 ]
 
 ROOT_URLCONF = "reflection.urls"
@@ -97,6 +100,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "booking.context_processors.booking_form_context",
+                "admin_panel.context_processors.impersonation",
             ],
         },
     },

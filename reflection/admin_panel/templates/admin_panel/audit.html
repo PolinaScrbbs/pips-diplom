@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Аудит действий — Панель администратора{% endblock %}
+
+{% block body_class %}page-admin-audit{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/components/admin-subnav.css' %}">
+<link rel="stylesheet" href="{% static 'css/pages/admin-audit.css' %}">
+{% endblock %}
+
+{% block content %}
+<div id="admin-audit-root"
+     class="audit-page"
+     data-data-url="{% url 'admin_panel:audit_data' %}"
+     data-filters-url="{% url 'admin_panel:audit_filters' %}"
+     data-detail-url="{% url 'admin_panel:audit_detail' 0 %}">
+
+    {% include "admin_panel/_nav.html" with active='audit' %}
+
+    <header class="audit-heading">
+        <div>
+            <h1>Аудит действий</h1>
+            <p class="audit-subtitle">
+                Автоматический журнал CRUD-операций и impersonation-сессий
+                персонала. Запись неизменяема.
+            </p>
+        </div>
+        <div class="audit-kpi">
+            <div class="audit-kpi-card">
+                <span class="audit-kpi-label">Всего событий</span>
+                <strong class="audit-kpi-value" data-role="total">—</strong>
+            </div>
+            <div class="audit-kpi-card">
+                <span class="audit-kpi-label">За сегодня</span>
+                <strong class="audit-kpi-value" data-role="today">—</strong>
+            </div>
+        </div>
+    </header>
+
+    <section class="audit-filters" aria-label="Фильтры">
+        <div class="audit-filter-row">
+            <div class="audit-chips" role="tablist" aria-label="Тип действия">
+                <button type="button" class="audit-chip active" data-action-filter="ALL">Все</button>
+                <button type="button" class="audit-chip" data-action-filter="create"><i class="bi bi-plus-circle"></i> Создание</button>
+                <button type="button" class="audit-chip" data-action-filter="update"><i class="bi bi-pencil"></i> Изменение</button>
+                <button type="button" class="audit-chip" data-action-filter="delete"><i class="bi bi-trash"></i> Удаление</button>
+                <button type="button" class="audit-chip" data-action-filter="impersonate"><i class="bi bi-incognito"></i> Impersonation</button>
+            </div>
+        </div>
+
+        <div class="audit-filter-row">
+            <label class="audit-field">
+                <span>Сущность</span>
+                <select data-role="entity">
+                    <option value="ALL">Все</option>
+                </select>
+            </label>
+            <label class="audit-field">
+                <span>Инициатор</span>
+                <input type="text" data-role="actor" list="audit-actors-list" placeholder="логин">
+                <datalist id="audit-actors-list"></datalist>
+            </label>
+            <label class="audit-field audit-field-wide">
+                <span>Поиск</span>
+                <input type="search" data-role="query" placeholder="описание объекта или логин" autocomplete="off">
+            </label>
+            <label class="audit-field">
+                <span>С</span>
+                <input type="date" data-role="from">
+            </label>
+            <label class="audit-field">
+                <span>По</span>
+                <input type="date" data-role="to">
+            </label>
+            <button type="button" class="audit-reset" data-role="reset">
+                <i class="bi bi-arrow-counterclockwise"></i> Сбросить
+            </button>
+        </div>
+    </section>
+
+    <section class="audit-timeline-wrap">
+        <ol class="audit-timeline" data-role="timeline" aria-live="polite"></ol>
+        <div class="audit-empty" data-role="empty" hidden>
+            <i class="bi bi-clipboard-x"></i>
+            <p>По заданным фильтрам событий не найдено.</p>
+        </div>
+        <div class="audit-pagination-wrap">
+            <span class="audit-status" data-role="status"></span>
+            <nav class="audit-pagination" data-role="pagination" aria-label="Пагинация"></nav>
+        </div>
+    </section>
+</div>
+
+<div class="audit-modal" data-role="modal" hidden aria-hidden="true">
+    <div class="audit-modal-backdrop" data-role="modal-close"></div>
+    <div class="audit-modal-card" role="dialog" aria-modal="true" aria-labelledby="audit-modal-title">
+        <header class="audit-modal-header">
+            <h2 id="audit-modal-title">Событие аудита</h2>
+            <button type="button" class="audit-modal-x" data-role="modal-close" aria-label="Закрыть">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </header>
+        <div class="audit-modal-body" data-role="modal-body">
+            <div class="audit-meta" data-role="modal-meta"></div>
+            <h3>Изменения</h3>
+            <div class="audit-diff" data-role="modal-diff"></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script defer src="{% static 'js/pages/admin-audit.js' %}"></script>
+{% endblock %}

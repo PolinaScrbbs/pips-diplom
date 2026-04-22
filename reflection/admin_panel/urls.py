@@ -21,4 +21,12 @@ urlpatterns = [
 
     path("stats/", views.stats_page, name="stats"),
     path("stats/data/", views.stats_data, name="stats_data"),
+
+    path("audit/", views.audit_page, name="audit"),
+    path("audit/data/", views.audit_data, name="audit_data"),
+    path("audit/filters/", views.audit_filters, name="audit_filters"),
+    path("audit/<int:pk>/", views.audit_detail, name="audit_detail"),
+
+    path("users/<int:pk>/impersonate/", views.impersonate_user, name="impersonate"),
+    path("stop-impersonation/", views.stop_impersonation, name="stop_impersonation"),
 ]

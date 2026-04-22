@@ -17,10 +17,29 @@
   <link rel="stylesheet" href="{% static 'css/base.css' %}">
   <link rel="stylesheet" href="{% static 'css/components/booking-modal.css' %}">
   <link rel="stylesheet" href="{% static 'css/components/theme-transition.css' %}">
+  <link rel="stylesheet" href="{% static 'css/components/impersonation-banner.css' %}">
 
   {% block extra_css %}{% endblock %}
 </head>
 <body class="d-flex flex-column min-vh-100 {% block body_class %}{% endblock %}">
+
+{% if is_impersonating %}
+<div class="impersonation-banner" role="alert">
+    <div class="impersonation-banner-inner">
+        <span class="impersonation-dot" aria-hidden="true"></span>
+        <span class="impersonation-text">
+            Вы действуете от имени <strong>{{ user.username }}</strong>
+            (оригинальный админ: <strong>{{ impersonator_username }}</strong>)
+        </span>
+        <form method="post" action="{% url 'admin_panel:stop_impersonation' %}" class="impersonation-form">
+            {% csrf_token %}
+            <button type="submit" class="impersonation-exit">
+                <i class="bi bi-box-arrow-right"></i> Выйти из режима
+            </button>
+        </form>
+    </div>
+</div>
+{% endif %}
 
 <script>
 /* Inline-bootstrap для анимации смены темы.
@@ -80,9 +99,17 @@
 <header class="sticky-top">
   <nav class="navbar navbar-expand-lg">
     <div class="container">
-      <a class="navbar-brand d-flex align-items-center" href="{% url 'main:index' %}">
-        <i class="bi bi-flower1 me-2"></i>Отражение
-      </a>
+      {% if user.is_admin %}
+        <a class="navbar-brand navbar-brand-admin d-flex align-items-center" href="{% url 'admin_panel:users_list' %}">
+          <i class="bi bi-flower1 me-2"></i>Отражение
+          <span class="brand-divider" aria-hidden="true">·</span>
+          <span class="brand-admin-label">Админ-панель</span>
+        </a>
+      {% else %}
+        <a class="navbar-brand d-flex align-items-center" href="{% url 'main:index' %}">
+          <i class="bi bi-flower1 me-2"></i>Отражение
+        </a>
+      {% endif %}
 
       <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar">
         <span class="bi bi-list fs-2 text-dark"></span>
@@ -90,44 +117,34 @@
 
       <div class="collapse navbar-collapse" id="mainNavbar">
         <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
-          {% if user.is_authenticated %}
-            {% if user.is_moderator %}
-              <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle text-warning fw-bold" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                  <i class="bi bi-shield-lock me-1"></i> Панель модератора
-                </a>
-                <ul class="dropdown-menu border-0 shadow-sm" aria-labelledby="adminDropdown">
-                  <li><a class="dropdown-item" href="{% url 'services:moderator_list' %}">Управление услугами</a></li>
-                  <li><a class="dropdown-item" href="{% url 'reviews:moderator_reviews' %}">Отзывы клиентов</a></li>
-                </ul>
-              </li>
-            {% endif %}
-            {% if user.is_admin %}
-              <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle text-danger fw-bold" href="#" id="adminPanelDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                  <i class="bi bi-speedometer2 me-1"></i> Админ-панель
-                </a>
-                <ul class="dropdown-menu border-0 shadow-sm" aria-labelledby="adminPanelDropdown">
-                  <li><a class="dropdown-item" href="{% url 'admin_panel:users_list' %}"><i class="bi bi-people me-2"></i>Пользователи</a></li>
-                  <li><a class="dropdown-item" href="{% url 'admin_panel:stats' %}"><i class="bi bi-bar-chart-line me-2"></i>Статистика</a></li>
-                  <li><a class="dropdown-item" href="{% url 'admin_panel:logs' %}"><i class="bi bi-terminal me-2"></i>Системные логи</a></li>
-                </ul>
-              </li>
-            {% endif %}
-          {% endif %}
-
-          {% if not user.is_moderator %}
+          {% if user.is_admin %}
+          {% elif user.is_moderator %}
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle text-warning fw-bold" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-shield-lock me-1"></i> Панель модератора
+              </a>
+              <ul class="dropdown-menu border-0 shadow-sm" aria-labelledby="adminDropdown">
+                <li><a class="dropdown-item" href="{% url 'services:moderator_list' %}">Управление услугами</a></li>
+                <li><a class="dropdown-item" href="{% url 'reviews:moderator_reviews' %}">Отзывы клиентов</a></li>
+              </ul>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link {% if request.resolver_match.url_name == 'services' %}active{% endif %}" href="{% url 'services:services' %}">Услуги</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link {% if request.resolver_match.url_name == 'reviews' %}active{% endif %}" href="{% url 'reviews:reviews' %}">Отзывы</a>
+            </li>
+          {% else %}
             <li class="nav-item">
               <a class="nav-link {% if request.resolver_match.url_name == 'why_us' %}active{% endif %}" href="{% url 'main:why_us' %}">Почему мы</a>
             </li>
+            <li class="nav-item">
+              <a class="nav-link {% if request.resolver_match.url_name == 'services' %}active{% endif %}" href="{% url 'services:services' %}">Услуги</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link {% if request.resolver_match.url_name == 'reviews' %}active{% endif %}" href="{% url 'reviews:reviews' %}">Отзывы</a>
+            </li>
           {% endif %}
-
-          <li class="nav-item">
-            <a class="nav-link {% if request.resolver_match.url_name == 'services' %}active{% endif %}" href="{% url 'services:services' %}">Услуги</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link {% if request.resolver_match.url_name == 'reviews' %}active{% endif %}" href="{% url 'reviews:reviews' %}">Отзывы</a>
-          </li>
         </ul>
 
         <div class="d-flex align-items-center gap-3">
@@ -160,6 +177,7 @@
 </main>
 
 {% block footer %}
+{% if not user.is_admin %}
 <footer class="mt-auto">
   <div class="container">
     <div class="row g-4">
@@ -190,6 +208,7 @@
     </div>
   </div>
 </footer>
+{% endif %}
 {% endblock %}
 
 {% include "booking/_form_modal.html" %}

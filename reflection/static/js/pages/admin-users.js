@@ -41,6 +41,7 @@
             jsonUrl: root.dataset.jsonUrl || '',
             updateUrl: root.dataset.updateUrl || '',
             deleteUrl: root.dataset.deleteUrl || '',
+            impersonateUrl: root.dataset.impersonateUrl || '',
         };
     }
 
@@ -207,6 +208,52 @@
                     }
                 } finally {
                     confirmDeleteBtn.disabled = false;
+                }
+            });
+        }
+
+        // --- Impersonation -----------------------------------------------
+        const impersonateModalEl = document.getElementById('impersonateUserModal');
+        const impersonateModal = impersonateModalEl && typeof bootstrap !== 'undefined'
+            ? new bootstrap.Modal(impersonateModalEl)
+            : null;
+        const impersonateNameEl = document.getElementById('impersonate-user-name');
+        const impersonateErrorsEl = document.getElementById('impersonate-user-errors');
+        const confirmImpersonateBtn = document.getElementById('confirm-impersonate-user-btn');
+        let userIdToImpersonate = null;
+
+        document.querySelectorAll('.impersonate-user-trigger').forEach((btn) => {
+            btn.addEventListener('click', function () {
+                userIdToImpersonate = this.dataset.id;
+                if (impersonateNameEl) impersonateNameEl.textContent = this.dataset.name || '';
+                impersonateErrorsEl?.classList.add('d-none');
+                impersonateModal?.show();
+            });
+        });
+
+        if (confirmImpersonateBtn) {
+            confirmImpersonateBtn.addEventListener('click', async function () {
+                if (!userIdToImpersonate || !cfg.impersonateUrl) return;
+                confirmImpersonateBtn.disabled = true;
+                try {
+                    const res = await fetch(buildUrl(cfg.impersonateUrl, userIdToImpersonate), {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': csrftoken,
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                    });
+                    const data = await res.json();
+                    if (!res.ok || data.status !== 'success') {
+                        if (impersonateErrorsEl) {
+                            impersonateErrorsEl.textContent = data.message || 'Ошибка при попытке войти';
+                            impersonateErrorsEl.classList.remove('d-none');
+                        }
+                        return;
+                    }
+                    window.location.href = data.redirect || '/';
+                } finally {
+                    confirmImpersonateBtn.disabled = false;
                 }
             });
         }
