@@ -1,3 +1,5 @@
+import logging
+
 from django.db import models
 from django.db.models import Count
 from django.shortcuts import render, get_object_or_404
@@ -10,6 +12,8 @@ from .models import Review
 from .forms import ReviewCreateForm
 from services.models import Service
 from booking.models import Booking
+
+logger = logging.getLogger("app.reviews")
 
 
 def reviews(request):
@@ -77,6 +81,10 @@ def create_review(request):
             review.author = request.user  # Привязываем автора из сессии
             review.booking = booking  # Привязываем к конкретной записи
             review.save()
+            logger.info(
+                "User %s left review (rating=%s) on booking_id=%s",
+                request.user.username, review.rating, booking.id,
+            )
 
             return JsonResponse(
                 {"ok": True, "message": "Спасибо! Ваш отзыв опубликован."}

@@ -74,6 +74,9 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    # Логирует переходы пользователей по страницам в системный лог.
+    # Должен идти после AuthenticationMiddleware, чтобы был доступен request.user.
+    "main.middleware.NavigationLoggingMiddleware",
 ]
 
 ROOT_URLCONF = "reflection.urls"
@@ -153,3 +156,65 @@ STATIC_URL = "static/"
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+
+# ---------------------------------------------------------------------------
+# LOGGING
+# Логи складываются в media/logs/YYYY-MM/DD.log — по одной папке на месяц,
+# по одному файлу на день. Это даёт:
+#   * лёгкий архив по датам;
+#   * простую выгрузку истории в админке;
+#   * отсутствие огромных файлов.
+# ---------------------------------------------------------------------------
+APP_LOG_DIR = MEDIA_ROOT / "logs"
+APP_LOG_DIR.mkdir(parents=True, exist_ok=True)
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "app": {
+            "format": "{asctime} | {levelname:<7} | {name:<18} | {message}",
+            "style": "{",
+            "datefmt": "%Y-%m-%d %H:%M:%S",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "app",
+        },
+        "app_file": {
+            "()": "main.log_handler.DailyFolderFileHandler",
+            "base_dir": str(APP_LOG_DIR),
+            "formatter": "app",
+        },
+    },
+    "loggers": {
+        "app": {
+            "handlers": ["console", "app_file"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "django": {
+            "handlers": ["console", "app_file"],
+            "level": "WARNING",  # чтобы не тонуть в служебных сообщениях
+            "propagate": False,
+        },
+        # Access-log dev-сервера дублирует то, что пишет наш NavigationLoggingMiddleware.
+        # Поэтому в файл его не гоним — только в консоль для разработчика.
+        "django.server": {
+            "handlers": ["console"],
+            "level": "ERROR",
+            "propagate": False,
+        },
+        # 403/404 уже красиво логируются через app.nav с пользователем и страницей,
+        # поэтому дублирующие "Forbidden:/Not Found:" от django.request не нужны —
+        # оставляем только реальные ошибки (5xx).
+        "django.request": {
+            "handlers": ["console", "app_file"],
+            "level": "ERROR",
+            "propagate": False,
+        },
+    },
+}

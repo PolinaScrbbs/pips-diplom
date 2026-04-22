@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Системные логи — Панель администратора{% endblock %}
+
+{% block body_class %}page-admin-logs{% endblock %}
+
+{% block footer %}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/components/admin-subnav.css' %}">
+<link rel="stylesheet" href="{% static 'css/pages/admin-logs.css' %}">
+{% endblock %}
+
+{% block content %}
+<div id="admin-logs-root"
+     class="logs-page"
+     data-stream-url="{% url 'admin_panel:logs_stream' %}"
+     data-dates-url="{% url 'admin_panel:logs_dates' %}"
+     data-users-url="{% url 'admin_panel:logs_users' %}"
+     data-clear-url="{% url 'admin_panel:logs_clear' %}"
+     data-download-url="{% url 'admin_panel:logs_download' %}"
+     data-today="{{ today }}">
+
+    {% include "admin_panel/_nav.html" with active='logs' %}
+
+    <header class="logs-heading">
+        <div>
+            <h1>Системные логи</h1>
+            <p class="logs-subtitle">media/logs/YYYY-MM/DD.log · терминал показывает последние 100 строк</p>
+        </div>
+    </header>
+
+    <div class="logs-toolbar">
+        <div class="logs-filters">
+            <button type="button" class="logs-level-btn active" data-level="ALL">
+                <i class="bi bi-asterisk"></i> Все
+            </button>
+            <button type="button" class="logs-level-btn" data-level="INFO">
+                <i class="bi bi-info-circle"></i> INFO
+            </button>
+            <button type="button" class="logs-level-btn" data-level="WARNING">
+                <i class="bi bi-exclamation-triangle"></i> WARN
+            </button>
+            <button type="button" class="logs-level-btn" data-level="ERROR">
+                <i class="bi bi-x-octagon"></i> ERROR
+            </button>
+            <button type="button" class="logs-level-btn" data-level="DEBUG">
+                <i class="bi bi-bug"></i> DEBUG
+            </button>
+
+            <div class="logs-search">
+                <i class="bi bi-search"></i>
+                <input id="logs-search-input" type="text" placeholder="Поиск по сообщению или источнику…" autocomplete="off">
+            </div>
+        </div>
+
+        <div class="logs-actions">
+            <button type="button" id="logs-live-btn" class="logs-action-btn is-live" title="Автообновление каждые 2 с">
+                <span class="live-dot"></span> LIVE
+            </button>
+            <button type="button" id="logs-refresh-btn" class="logs-action-btn" title="Обновить сейчас">
+                <i class="bi bi-arrow-clockwise"></i>
+            </button>
+            <a id="logs-download-link" href="{% url 'admin_panel:logs_download' %}" class="logs-action-btn" title="Скачать лог за выбранную дату">
+                <i class="bi bi-download"></i>
+            </a>
+            <button type="button" id="logs-clear-btn" class="logs-action-btn danger" title="Очистить лог за выбранную дату"
+                    data-bs-toggle="modal" data-bs-target="#logsClearModal">
+                <i class="bi bi-trash"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="logs-filter-row">
+        <label class="logs-field">
+            <span><i class="bi bi-calendar3"></i> Дата</span>
+            <input type="date" id="logs-date" value="{{ today }}" max="{{ today }}">
+        </label>
+
+        <div class="logs-field logs-field-user">
+            <span><i class="bi bi-person"></i> Пользователь</span>
+            <div class="logs-combobox">
+                <input type="text" id="logs-user" placeholder="все пользователи" autocomplete="off" spellcheck="false">
+                <button type="button" id="logs-user-clear" class="logs-combobox-clear" title="Очистить" aria-label="Очистить">
+                    <i class="bi bi-x"></i>
+                </button>
+                <div class="logs-combobox-list" id="logs-user-list" role="listbox" hidden></div>
+            </div>
+        </div>
+
+        <label class="logs-field logs-field-time">
+            <span><i class="bi bi-clock"></i> С</span>
+            <input type="time" id="logs-from-time" step="1">
+        </label>
+
+        <label class="logs-field logs-field-time">
+            <span><i class="bi bi-clock-history"></i> До</span>
+            <input type="time" id="logs-to-time" step="1">
+        </label>
+
+        <button type="button" id="logs-reset-filters" class="logs-action-btn" title="Сбросить все фильтры">
+            <i class="bi bi-x-circle"></i> Сбросить
+        </button>
+    </div>
+
+    <div class="logs-terminal" role="log" aria-live="polite">
+        <div class="logs-terminal-header">
+            <span class="term-dots" aria-hidden="true"><span></span><span></span><span></span></span>
+            <span class="term-title">bash — <strong>reflection@app</strong> — tail -f <span id="term-file-title">media/logs/…</span></span>
+            <span class="term-meta" id="logs-meta">—</span>
+        </div>
+        <div class="logs-terminal-body" id="logs-body">
+            <div class="logs-empty" id="logs-empty">
+                <i class="bi bi-hourglass-split"></i> Загрузка логов…
+                <span class="term-cursor" aria-hidden="true"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="logs-footer">
+        <div>
+            <span class="dot on" id="logs-status-dot"></span>
+            <span id="logs-status-text">Подключение…</span>
+        </div>
+        <div id="logs-count-block">
+            <span id="logs-count">0 строк</span>
+            <button type="button" id="logs-show-all" class="logs-inline-btn" hidden>
+                показать всё <span id="logs-total-inline"></span>
+            </button>
+        </div>
+    </div>
+
+</div>
+
+<!-- Модалка подтверждения очистки -->
+<div class="modal fade" id="logsClearModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content logs-modal-card">
+            <div class="modal-header border-0">
+                <h5 class="modal-title"><i class="bi bi-exclamation-triangle text-warning me-2"></i> Очистить лог?</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Будут удалены все записи за <strong id="logs-clear-date">сегодня</strong>.
+                В лог добавится запись о том, кто выполнил очистку.
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="logs-action-btn" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="logs-action-btn danger" id="logs-confirm-clear">
+                    <i class="bi bi-trash"></i> Да, очистить
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/pages/admin-logs.js' %}"></script>
+{% endblock %}

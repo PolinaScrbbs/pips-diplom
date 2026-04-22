@@ -8,6 +8,7 @@
 {% block footer %}{% endblock %}
 
 {% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/components/admin-subnav.css' %}">
 <link rel="stylesheet" href="{% static 'css/pages/admin-users.css' %}">
 {% endblock %}
 
@@ -19,6 +20,8 @@
      data-json-url="{% url 'admin_panel:user_json' 0 %}"
      data-update-url="{% url 'admin_panel:user_update' 0 %}"
      data-delete-url="{% url 'admin_panel:user_delete' 0 %}">
+
+    {% include "admin_panel/_nav.html" with active='users' %}
 
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div class="d-flex align-items-center gap-3">

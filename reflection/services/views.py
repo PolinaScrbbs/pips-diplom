@@ -1,3 +1,5 @@
+import logging
+
 from django.http import JsonResponse
 from django.db import connection
 from django.db.models import Q
@@ -7,6 +9,8 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from main.utils import moderator_required
 from services.forms import ServiceForm
 from .models import Service
+
+logger = logging.getLogger("app.services")
 
 
 def services(request):
@@ -121,6 +125,10 @@ def service_create(request):
         form = ServiceForm(request.POST)
         if form.is_valid():
             service = form.save()
+            logger.info(
+                "Moderator %s created service '%s' (id=%s)",
+                request.user.username, service.name, service.id,
+            )
             return JsonResponse(
                 {
                     "status": "success",
@@ -156,6 +164,10 @@ def service_update(request, pk):
         form = ServiceForm(request.POST, instance=service)
         if form.is_valid():
             form.save()
+            logger.info(
+                "Moderator %s updated service '%s' (id=%s)",
+                request.user.username, service.name, service.id,
+            )
             return JsonResponse({"status": "success"})
         return JsonResponse({"status": "error", "errors": form.errors}, status=400)
 
@@ -166,6 +178,12 @@ def service_toggle_visibility(request, pk):
         service = get_object_or_404(Service, pk=pk)
         service.is_hidden = not service.is_hidden
         service.save()
+        logger.info(
+            "Moderator %s %s service '%s' (id=%s)",
+            request.user.username,
+            "hid" if service.is_hidden else "unhid",
+            service.name, service.id,
+        )
         return JsonResponse({"status": "success", "is_hidden": service.is_hidden})
 
 
@@ -173,6 +191,11 @@ def service_toggle_visibility(request, pk):
 def service_delete(request, pk):
     if request.method == "POST":
         service = get_object_or_404(Service, pk=pk)
+        name = service.name
         service.delete()
+        logger.warning(
+            "Moderator %s deleted service '%s' (id=%s)",
+            request.user.username, name, pk,
+        )
         return JsonResponse({"status": "success"})
     return JsonResponse({"status": "error"}, status=400)

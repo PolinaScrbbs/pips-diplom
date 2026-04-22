@@ -1,4 +1,6 @@
 # booking/views.py
+import logging
+
 from django.shortcuts import redirect
 from django.http import JsonResponse
 from django.utils import timezone
@@ -7,6 +9,8 @@ from datetime import timedelta
 from main.utils import user_required
 from .forms import BookingForm
 from .models import Booking
+
+logger = logging.getLogger("app.booking")
 
 
 @user_required
@@ -41,6 +45,12 @@ def create_booking(request):
                 request.user.save(update_fields=["phone"])
 
             booking.save()
+            logger.info(
+                "User %s booked service '%s' (booking_id=%s)",
+                request.user.username,
+                getattr(booking.service, "name", "?"),
+                booking.id,
+            )
 
             # Ответ для AJAX-запроса (fetch)
             if request.headers.get("x-requested-with") == "XMLHttpRequest":

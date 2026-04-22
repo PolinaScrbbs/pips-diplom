@@ -1,0 +1,9 @@
+{# Таб-навигация для админ-панели. В шаблоне задайте {% with active='users' %} или 'logs'. #}
+<nav class="admin-subnav" aria-label="Admin navigation">
+    <a href="{% url 'admin_panel:users_list' %}" class="{% if active == 'users' %}active{% endif %}">
+        <i class="bi bi-people"></i> Пользователи
+    </a>
+    <a href="{% url 'admin_panel:logs' %}" class="{% if active == 'logs' %}active{% endif %}">
+        <i class="bi bi-terminal"></i> Системные логи
+    </a>
+</nav>

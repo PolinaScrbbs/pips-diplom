@@ -1,4 +1,6 @@
 # users/views.py
+import logging
+
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout, authenticate
 from django.contrib import messages
@@ -8,12 +10,15 @@ from main.utils import user_required
 from users.forms import LoginForm, RegisterForm
 from reviews.forms import ReviewCreateForm
 
+logger = logging.getLogger("app.users")
+
 
 def register(request):
     if request.method == "POST":
         form = RegisterForm(request.POST)
         if form.is_valid():
             user = form.save()
+            logger.info("New user registered: %s", user.username)
             messages.success(request, "Вы успешно зарегистрировались.")
             return redirect("users:login")
     else:
@@ -31,6 +36,7 @@ def login_view(request):
             user = authenticate(username=username, password=password)
             if user:
                 login(request, user)
+                logger.info("User %s logged in (role=%s)", user.username, user.role)
                 messages.success(request, "Добро пожаловать!")
                 # Если фронт передал ?next=..., — уважаем его; иначе редиректим
                 # по роли на подходящую посадочную страницу.
@@ -43,6 +49,10 @@ def login_view(request):
                     return redirect("services:moderator_list")
                 return redirect("main:index")
             else:
+                logger.warning(
+                    "Failed login attempt for username='%s'",
+                    form.cleaned_data.get("username", ""),
+                )
                 messages.error(request, "Неверный логин или пароль.")
     else:
         form = LoginForm()
@@ -51,6 +61,8 @@ def login_view(request):
 
 
 def logout_view(request):
+    if request.user.is_authenticated:
+        logger.info("User %s logged out", request.user.username)
     logout(request)
     return redirect("users:login")
 
