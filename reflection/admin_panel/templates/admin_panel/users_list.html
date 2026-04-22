@@ -3,116 +3,22 @@
 
 {% block title %}Пользователи — Панель администратора{% endblock %}
 
+{% block body_class %}page-admin-users{% endblock %}
+
 {% block footer %}{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/pages/admin-users.css' %}">
+{% endblock %}
+
 {% block content %}
-<style>
-    :root {
-        --admin-accent: #b42318;
-        --admin-bg: #f6f7fb;
-    }
+<div id="admin-users-root"
+     class="container py-5"
+     data-create-url="{% url 'admin_panel:user_create' %}"
+     data-toggle-url="{% url 'admin_panel:user_toggle' 0 %}"
+     data-json-url="{% url 'admin_panel:user_json' 0 %}"
+     data-update-url="{% url 'admin_panel:user_update' 0 %}">
 
-    body { background-color: var(--admin-bg); }
-
-    .admin-table-container {
-        background: white;
-        border-radius: 20px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.03);
-        overflow: hidden;
-        border: 1px solid rgba(0,0,0,0.05);
-    }
-
-    .search-bar {
-        background: #f8faf9;
-        border: 1px solid #e9ecef;
-        border-radius: 12px;
-        padding: 12px 20px;
-        transition: all 0.3s ease;
-    }
-
-    .search-bar:focus {
-        background: white;
-        border-color: var(--admin-accent);
-        box-shadow: 0 0 0 4px rgba(180, 35, 24, 0.08);
-    }
-
-    .table thead th {
-        background: #fdfdfd;
-        text-transform: uppercase;
-        font-size: 0.7rem;
-        font-weight: 700;
-        letter-spacing: 1px;
-        color: #8898aa;
-        padding: 18px 25px;
-        border-bottom: 1px solid #edf2f0;
-    }
-
-    .table tbody td {
-        padding: 18px 25px;
-        vertical-align: middle;
-        font-size: 0.95rem;
-    }
-
-    .row-inactive {
-        opacity: 0.65;
-        background-color: #fcfcfc;
-    }
-
-    .role-badge {
-        padding: 6px 12px;
-        border-radius: 999px;
-        font-weight: 700;
-        font-size: 0.8rem;
-        display: inline-block;
-    }
-    .role-user { background: #eef2ff; color: #3730a3; }
-    .role-moderator { background: #ecfdf3; color: #027a48; }
-    .role-admin { background: #fef3f2; color: #b42318; }
-
-    .filter-dot {
-        position: absolute;
-        top: -2px;
-        right: -2px;
-        width: 10px;
-        height: 10px;
-        background-color: #f5365c;
-        border: 2px solid white;
-        border-radius: 50%;
-    }
-
-    /* Фиксация высоты таблицы без лишних отступов */
-    tr.placeholder-row td {
-        color: transparent;
-        user-select: none;
-    }
-    tr.placeholder-row:hover { background: transparent !important; }
-
-    .action-btn {
-        width: 38px;
-        height: 38px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 10px;
-        transition: all 0.2s;
-        border: 1px solid #eee;
-        background: white;
-        color: #525f7f;
-        text-decoration: none;
-        cursor: pointer;
-    }
-    .action-btn:hover {
-        background: #f8fafb;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.05);
-    }
-    .btn-edit:hover { color: #5e72e4; border-color: #5e72e4; }
-
-    .btn-active-toggle.is-active { color: #2e7d32; border-color: #2e7d32; }
-    .btn-active-toggle.is-inactive { color: #b42318; border-color: #b42318; }
-</style>
-
-<div class="container py-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div class="d-flex align-items-center gap-3">
             <div>
@@ -136,11 +42,11 @@
     <form method="get" class="mb-3">
         <div class="row g-2 align-items-center">
             <div class="col-12 col-md-8">
-                <div class="input-group">
-                    <span class="input-group-text bg-white border-0 shadow-sm" style="border-radius: 12px 0 0 12px;">
+                <div class="input-group admin-search-input">
+                    <span class="input-group-text bg-white border-0 shadow-sm">
                         <i class="bi bi-search"></i>
                     </span>
-                    <input type="text" name="search" value="{{ search_query|default:'' }}" class="form-control search-bar border-0 shadow-sm" style="border-radius: 0 12px 12px 0;" placeholder="Поиск: username / email / phone">
+                    <input type="text" name="search" value="{{ search_query|default:'' }}" class="form-control search-bar border-0 shadow-sm" placeholder="Поиск: username / email / phone">
                 </div>
             </div>
             <div class="col-12 col-md-4 d-grid d-md-flex gap-2 justify-content-md-end">
@@ -189,7 +95,7 @@
                         </td>
                         <td class="text-end">
                             {% if u.role == 'admin' and u.pk != request.user.pk %}
-                                <button class="action-btn" title="Нельзя редактировать другого администратора" disabled style="opacity: 0.5; cursor: not-allowed;">
+                                <button class="action-btn action-btn-locked" title="Нельзя редактировать другого администратора" disabled>
                                     <i class="bi bi-lock"></i>
                                 </button>
                             {% else %}
@@ -242,7 +148,7 @@
 
 <div class="modal fade" id="createUserModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
+        <div class="modal-content border-0 shadow-lg admin-modal-card">
             <div class="modal-header border-0 pb-0">
                 <h5 class="fw-bold px-3 pt-3">Добавить пользователя</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -295,7 +201,7 @@
 
 <div class="modal fade" id="editUserModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
+        <div class="modal-content border-0 shadow-lg admin-modal-card">
             <div class="modal-header border-0 pb-0">
                 <h5 class="fw-bold px-3 pt-3">Редактировать пользователя</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -351,7 +257,7 @@
 
 <div class="modal fade" id="filterModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
+        <div class="modal-content border-0 shadow-lg admin-modal-card">
             <div class="modal-header border-0 pb-0">
                 <h5 class="fw-bold px-3 pt-3">Фильтры пользователей</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -413,143 +319,8 @@
         </div>
     </div>
 </div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
-
-    function showErrors(targetId, errors) {
-        const el = document.getElementById(targetId);
-        if (!el) return;
-        const parts = [];
-        for (const [field, msgs] of Object.entries(errors || {})) {
-            parts.push(`${field}: ${Array.isArray(msgs) ? msgs.join(', ') : msgs}`);
-        }
-        el.textContent = parts.join(' | ') || 'Ошибка валидации';
-        el.classList.remove('d-none');
-    }
-
-    const csrftoken = getCookie('csrftoken');
-
-    // Create
-    const createForm = document.getElementById('create-user-form');
-    if (createForm) {
-        createForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            document.getElementById('create-user-errors')?.classList.add('d-none');
-
-            const formData = new FormData(createForm);
-
-            const res = await fetch("{% url 'admin_panel:user_create' %}", {
-                method: 'POST',
-                headers: { 'X-CSRFToken': csrftoken },
-                body: formData
-            });
-            const data = await res.json();
-            if (!res.ok || data.status !== 'success') {
-                showErrors('create-user-errors', data.errors);
-                return;
-            }
-            window.location.reload();
-        });
-    }
-
-    // Edit open
-    const editModalEl = document.getElementById('editUserModal');
-    const editModal = editModalEl ? new bootstrap.Modal(editModalEl) : null;
-
-    // Toggle active
-    document.querySelectorAll('.toggle-active-trigger').forEach(btn => {
-        btn.addEventListener('click', async function() {
-            const uid = this.dataset.id;
-            const res = await fetch(`/admin-panel/users/${uid}/toggle-active/`, {
-                method: 'POST',
-                headers: { 'X-CSRFToken': csrftoken },
-            });
-            const data = await res.json();
-            if (!res.ok || data.status !== 'success') {
-                alert(data.message || 'Ошибка');
-                return;
-            }
-
-            const isActive = !!data.user?.is_active;
-            this.classList.toggle('is-active', isActive);
-            this.classList.toggle('is-inactive', !isActive);
-            this.title = isActive ? 'Деактивировать' : 'Активировать';
-
-            const icon = this.querySelector('i');
-            if (icon) {
-                icon.className = `bi ${isActive ? 'bi-toggle-on' : 'bi-toggle-off'}`;
-            }
-
-            const row = this.closest('tr');
-            if (row) {
-                row.classList.toggle('row-inactive', !isActive);
-            }
-        });
-    });
-
-    document.querySelectorAll('.edit-user-trigger').forEach(btn => {
-        btn.addEventListener('click', async function() {
-            const uid = this.dataset.id;
-            document.getElementById('edit-user-errors')?.classList.add('d-none');
-            document.getElementById('edit-user-id').value = uid;
-            document.getElementById('edit-password').value = '';
-            document.getElementById('edit-password2').value = '';
-
-            const res = await fetch(`/admin-panel/users/${uid}/json/`);
-            const data = await res.json();
-            if (!res.ok) {
-                showErrors('edit-user-errors', data.errors || {error: data.message || 'Ошибка'});
-                return;
-            }
-
-            document.getElementById('edit-username').value = data.username || '';
-            document.getElementById('edit-email').value = data.email || '';
-            document.getElementById('edit-phone').value = data.phone || '';
-            document.getElementById('edit-role').value = data.role || 'user';
-
-            editModal?.show();
-        });
-    });
-
-    // Edit submit
-    const editForm = document.getElementById('edit-user-form');
-    if (editForm) {
-        editForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            document.getElementById('edit-user-errors')?.classList.add('d-none');
-
-            const uid = document.getElementById('edit-user-id').value;
-            const formData = new FormData(editForm);
-
-            const res = await fetch(`/admin-panel/users/${uid}/update/`, {
-                method: 'POST',
-                headers: { 'X-CSRFToken': csrftoken },
-                body: formData
-            });
-            const data = await res.json();
-            if (!res.ok || data.status !== 'success') {
-                showErrors('edit-user-errors', data.errors || {error: data.message || 'Ошибка'});
-                return;
-            }
-            window.location.reload();
-        });
-    }
-});
-</script>
 {% endblock %}
 
+{% block extra_js %}
+<script src="{% static 'js/pages/admin-users.js' %}"></script>
+{% endblock %}

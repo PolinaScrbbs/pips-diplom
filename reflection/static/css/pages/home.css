@@ -1,0 +1,103 @@
+/* ==========================================================================
+   home.css
+   Главная страница (main/index.html).
+   ========================================================================== */
+
+:root {
+    --success-gradient: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+    --success-soft: #e8f5e9;
+    --radius: 24px;
+    --dark-bg: #1a1a1a;
+}
+
+.page-home body {
+    font-family: 'Montserrat', sans-serif;
+    background-color: #fff;
+    overflow-x: hidden;
+}
+
+.py-10 { padding-top: 6rem; padding-bottom: 6rem; }
+.bg-light-soft { background-color: #f8fbf9; }
+.bg-white-10 { background: rgba(255, 255, 255, 0.1); }
+
+.text-success-gradient {
+    background: var(--success-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.btn-success-gradient {
+    background: var(--success-gradient);
+    color: #fff;
+    border: none;
+    transition: all 0.3s;
+}
+
+.btn-success-gradient:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px rgba(46, 204, 113, 0.3);
+    color: #fff;
+}
+
+.bg-success-soft { background-color: var(--success-soft); }
+.text-success { color: #27ae60 !important; }
+
+.service-card {
+    transition: all 0.3s;
+    border-radius: var(--radius) !important;
+}
+
+.service-card:hover {
+    transform: translateY(-10px);
+    background: #fff;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05) !important;
+}
+
+.icon-box {
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 18px;
+}
+
+.icon-circle {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+.hero-wrap { min-height: 90vh; }
+
+.bg-shape-1 {
+    position: absolute;
+    top: -10%;
+    right: -5%;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(46, 204, 113, 0.1) 0%, rgba(255, 255, 255, 0) 70%);
+    z-index: 1;
+}
+
+.glass {
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.rounded-t-5 {
+    border-top-left-radius: 60px;
+    border-top-right-radius: 60px;
+}
+
+.stat-card { border: 1px solid rgba(255, 255, 255, 0.1); }
+
+.form-control:focus,
+.form-select:focus {
+    box-shadow: none;
+    border-color: #2ecc71;
+    background-color: #fff !important;
+}

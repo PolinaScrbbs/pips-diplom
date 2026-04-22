@@ -3,10 +3,14 @@
 
 {% block title %}«Отражение» — Центр детской психологии в Курске{% endblock %}
 
-{% block content %}
-<link rel="stylesheet" href="{% static 'css/aos.css' %}" />
-<link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap-icons.css' %}">
+{% block body_class %}page-home{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'vendor/aos/aos.css' %}">
+<link rel="stylesheet" href="{% static 'css/pages/home.css' %}">
+{% endblock %}
+
+{% block content %}
 <section class="hero-wrap d-flex align-items-center position-relative overflow-hidden">
     <div class="container position-relative z-3">
         <div class="row align-items-center min-vh-100">
@@ -19,18 +23,18 @@
                     Создаём безопасное пространство для разговоров, понимания и роста. Помогаем детям и родителям находить общий язык уже более 10 лет.
                 </p>
                 <div class="d-flex flex-wrap gap-3">
-                    <button type="button" 
-        class="btn btn-success-gradient btn-lg px-5 py-3 rounded-pill shadow-lg hover-up"
-        {% if user.is_authenticated %}
-            data-bs-toggle="modal" 
-            data-bs-target="#bookingModal"
-        {% else %}
-            data-login-url="{% url 'users:login' %}"
-            onclick="window.location.href=this.dataset.loginUrl"
-        {% endif %}>
-    Записаться на приём
-</button>
-                    <a href="https://vk.com/club_otragenie" target="_blank" 
+                    <button type="button"
+                        class="btn btn-success-gradient btn-lg px-5 py-3 rounded-pill shadow-lg hover-up"
+                        {% if user.is_authenticated %}
+                            data-bs-toggle="modal"
+                            data-bs-target="#bookingModal"
+                        {% else %}
+                            data-login-url="{% url 'users:login' %}"
+                            onclick="window.location.href=this.dataset.loginUrl"
+                        {% endif %}>
+                        Записаться на приём
+                    </button>
+                    <a href="https://vk.com/club_otragenie" target="_blank"
                        class="btn btn-outline-success btn-lg px-5 py-3 rounded-pill hover-up">
                         <i class="bi bi-chat-dots me-2"></i>Написать в VK
                     </a>
@@ -39,7 +43,7 @@
             <div class="col-lg-5 d-none d-lg-block" data-aos="zoom-in" data-aos-delay="200">
                 <div class="hero-image-wrapper">
                     <div class="hero-abstract-shape"></div>
-                    <img src="{% static 'images/child-psychologist-working-with-boy_23-2149153163.avif' %}" 
+                    <img src="{% static 'images/child-psychologist-working-with-boy_23-2149153163.avif' %}"
                          alt="Психолог с ребенком" class="img-fluid rounded-5 shadow-2xl position-relative z-1">
                 </div>
             </div>
@@ -54,7 +58,7 @@
             <h2 class="display-5 fw-bold mb-3">Наши направления</h2>
             <p class="text-muted mx-auto" style="max-width: 600px;">Профессиональная поддержка на каждом этапе взросления вашего ребенка</p>
         </div>
-        
+
         <div class="row g-4">
             {% for s in services_list %}
             <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="{% cycle '100' '200' '300' %}">
@@ -130,154 +134,97 @@
                     </div>
                 </div>
             </div>
-            
+
             <div class="col-lg-6" data-aos="fade-up" data-aos-delay="200">
-    <div class="card border-0 p-4 p-md-5 rounded-5 shadow-lg bg-white text-dark position-relative overflow-hidden">
-        <div style="position:absolute; top: -50px; right: -50px; width: 150px; height: 150px; background: rgba(25,135,84,0.05); border-radius: 50%;"></div>
-        
-        <div class="position-relative">
-            <h3 class="fw-bold mb-2">Оставить заявку</h3>
-            <p class="text-muted small mb-4">Мы свяжемся с вами в течение 15 минут для уточнения деталей</p>
-            
-            <form id="heroBookingForm" method="post" action="{% url 'booking:create_booking' %}" novalidate class="needs-validation">
-                {% csrf_token %}
-                <input type="hidden" name="next" value="{{ request.path }}">
-                
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <div class="form-floating">
-                            <input type="text" name="child_name" class="form-control custom-input" id="hero_child_name" 
-                                   placeholder="Имя ребёнка" required 
-                                   value="{% if last_booking %}{{ last_booking.child_name }}{% endif %}">
-                            <label for="hero_child_name"><i class="bi bi-person me-2"></i>Имя ребёнка</label>
-                            <div class="invalid-feedback">Как зовут ребенка?</div>
-                        </div>
-                    </div>
-                    
-                    <div class="col-md-6">
-                        <div class="form-floating">
-                            <input type="text" name="parent_name" class="form-control custom-input" id="hero_parent_name" 
-                                   placeholder="Ваше имя" required 
-                                   value="{% if request.user.is_authenticated %}{% if last_booking %}{{ last_booking.parent_name }}{% else %}{{ request.user.username }}{% endif %}{% endif %}">
-                            <label for="hero_parent_name"><i class="bi bi-person-check me-2"></i>Ваше имя</label>
-                            <div class="invalid-feedback">Введите ваше имя</div>
-                        </div>
-                    </div>
+                <div class="card border-0 p-4 p-md-5 rounded-5 shadow-lg bg-white text-dark position-relative overflow-hidden">
+                    <div style="position:absolute; top: -50px; right: -50px; width: 150px; height: 150px; background: rgba(25,135,84,0.05); border-radius: 50%;"></div>
 
-                    <div class="col-12">
-                        <div class="form-floating">
-                            <input type="tel" name="phone" class="form-control custom-input" id="hero_phone" 
-                                   placeholder="Телефон" required 
-                                   value="{% if last_booking %}{{ last_booking.phone }}{% endif %}">
-                            <label for="hero_phone"><i class="bi bi-telephone me-2"></i>Телефон</label>
-                            <div class="invalid-feedback">Номер телефона обязателен</div>
-                        </div>
-                    </div>
+                    <div class="position-relative">
+                        <h3 class="fw-bold mb-2">Оставить заявку</h3>
+                        <p class="text-muted small mb-4">Мы свяжемся с вами в течение 15 минут для уточнения деталей</p>
 
-                    <div class="col-12">
-                        <div class="form-floating">
-                            <select name="service" class="form-select custom-input" id="hero_service" required>
-                                <option value="" selected disabled>Выберите услугу...</option>
-                                {% for service in services %}
-                                    <option value="{{ service.id }}">{{ service.name }} — {{ service.price }} ₽</option>
-                                {% empty %}
-                                    <option value="" disabled>Услуги временно недоступны</option>
-                                {% endfor %}
-                            </select>
-                            <label for="hero_service"><i class="bi bi-briefcase me-2"></i>Направление</label>
-                            <div class="invalid-feedback">Пожалуйста, выберите интересующую услугу</div>
-                        </div>
-                    </div>
+                        <form id="heroBookingForm" method="post" action="{% url 'booking:create_booking' %}" novalidate class="needs-validation">
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="{{ request.path }}">
 
-                    <div class="col-12">
-                        <div class="form-floating">
-                            <textarea name="comment" class="form-control custom-input" id="hero_comment" placeholder="Кратко опишите ситуацию" style="height: 100px"></textarea>
-                            <label for="hero_comment">Кратко опишите ситуацию</label>
-                        </div>
-                    </div>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input type="text" name="child_name" class="form-control custom-input" id="hero_child_name"
+                                               placeholder="Имя ребёнка" required
+                                               value="{% if last_booking %}{{ last_booking.child_name }}{% endif %}">
+                                        <label for="hero_child_name"><i class="bi bi-person me-2"></i>Имя ребёнка</label>
+                                        <div class="invalid-feedback">Как зовут ребенка?</div>
+                                    </div>
+                                </div>
 
-                    <div class="col-12">
-                        <button type="submit" id="heroSubmitBtn" class="btn btn-success-gradient w-100 btn-lg py-3 rounded-pill fw-bold shadow-sm mt-2">
-                            Отправить данные <i class="bi bi-send ms-2"></i>
-                        </button>
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input type="text" name="parent_name" class="form-control custom-input" id="hero_parent_name"
+                                               placeholder="Ваше имя" required
+                                               value="{% if request.user.is_authenticated %}{% if last_booking %}{{ last_booking.parent_name }}{% else %}{{ request.user.username }}{% endif %}{% endif %}">
+                                        <label for="hero_parent_name"><i class="bi bi-person-check me-2"></i>Ваше имя</label>
+                                        <div class="invalid-feedback">Введите ваше имя</div>
+                                    </div>
+                                </div>
+
+                                <div class="col-12">
+                                    <div class="form-floating">
+                                        <input type="tel" name="phone" class="form-control custom-input" id="hero_phone"
+                                               placeholder="Телефон" required
+                                               value="{% if last_booking %}{{ last_booking.phone }}{% endif %}">
+                                        <label for="hero_phone"><i class="bi bi-telephone me-2"></i>Телефон</label>
+                                        <div class="invalid-feedback">Номер телефона обязателен</div>
+                                    </div>
+                                </div>
+
+                                <div class="col-12">
+                                    <div class="form-floating">
+                                        <select name="service" class="form-select custom-input" id="hero_service" required>
+                                            <option value="" selected disabled>Выберите услугу...</option>
+                                            {% for service in services %}
+                                                <option value="{{ service.id }}">{{ service.name }} — {{ service.price }} ₽</option>
+                                            {% empty %}
+                                                <option value="" disabled>Услуги временно недоступны</option>
+                                            {% endfor %}
+                                        </select>
+                                        <label for="hero_service"><i class="bi bi-briefcase me-2"></i>Направление</label>
+                                        <div class="invalid-feedback">Пожалуйста, выберите интересующую услугу</div>
+                                    </div>
+                                </div>
+
+                                <div class="col-12">
+                                    <div class="form-floating">
+                                        <textarea name="comment" class="form-control custom-input" id="hero_comment" placeholder="Кратко опишите ситуацию" style="height: 100px"></textarea>
+                                        <label for="hero_comment">Кратко опишите ситуацию</label>
+                                    </div>
+                                </div>
+
+                                <div class="col-12">
+                                    <button type="submit" id="heroSubmitBtn" class="btn btn-success-gradient w-100 btn-lg py-3 rounded-pill fw-bold shadow-sm mt-2">
+                                        Отправить данные <i class="bi bi-send ms-2"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+
+                        <div id="heroSuccessMessage" class="text-center py-4 d-none">
+                            <div class="mb-3">
+                                <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
+                            </div>
+                            <h4 class="fw-bold">Заявка принята!</h4>
+                            <p class="text-muted">Мы перезвоним вам в ближайшее время.</p>
+                            <button type="button" class="btn btn-light rounded-pill px-4" onclick="location.reload()">Отправить еще одну</button>
+                        </div>
                     </div>
                 </div>
-            </form>
-
-            <div id="heroSuccessMessage" class="text-center py-4 d-none">
-                <div class="mb-3">
-                    <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
-                </div>
-                <h4 class="fw-bold">Заявка принята!</h4>
-                <p class="text-muted">Мы перезвоним вам в ближайшее время.</p>
-                <button type="button" class="btn btn-light rounded-pill px-4" onclick="location.reload()">Отправить еще одну</button>
             </div>
         </div>
     </div>
-</div>
-        </div>
-    </div>
 </section>
+{% endblock %}
 
-<script src="{% static 'js/aos.js' %}"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        AOS.init({ duration: 800, once: true });
-    });
-</script>
-
-<style>
-    @import url('{% static "fonts/montserrat.css" %}');
-
-    :root {
-        --success-gradient: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
-        --success-soft: #e8f5e9;
-        --radius: 24px;
-        --dark-bg: #1a1a1a;
-    }
-
-    body { font-family: 'Montserrat', sans-serif; background-color: #fff; overflow-x: hidden; }
-
-    .py-10 { padding-top: 6rem; padding-bottom: 6rem; }
-    .bg-light-soft { background-color: #f8fbf9; }
-    .bg-white-10 { background: rgba(255,255,255,0.1); }
-    
-    .text-success-gradient {
-        background: var(--success-gradient);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-    }
-
-    .btn-success-gradient {
-        background: var(--success-gradient);
-        color: #fff; border: none; transition: all 0.3s;
-    }
-    .btn-success-gradient:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(46, 204, 113, 0.3); color: #fff; }
-    
-    .bg-success-soft { background-color: var(--success-soft); }
-    .text-success { color: #27ae60 !important; }
-
-    .service-card { transition: all 0.3s; border-radius: var(--radius) !important; }
-    .service-card:hover { transform: translateY(-10px); background: #fff; box-shadow: 0 20px 40px rgba(0,0,0,0.05) !important; }
-    
-    .icon-box { width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 18px; }
-    .icon-circle { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
-
-    .hero-wrap { min-height: 90vh; }
-    .bg-shape-1 {
-        position: absolute; top: -10%; right: -5%;
-        width: 600px; height: 600px;
-        background: radial-gradient(circle, rgba(46, 204, 113, 0.1) 0%, rgba(255,255,255,0) 70%);
-        z-index: 1;
-    }
-
-    .glass { backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
-    .rounded-t-5 { border-top-left-radius: 60px; border-top-right-radius: 60px; }
-    
-    .stat-card { border: 1px solid rgba(255,255,255,0.1); }
-
-    .form-control:focus, .form-select:focus {
-        box-shadow: none; border-color: #2ecc71; background-color: #fff !important;
-    }
-</style>
+{% block extra_js %}
+<script src="{% static 'vendor/aos/aos.js' %}"></script>
+<script src="{% static 'js/pages/home.js' %}"></script>
 {% endblock %}

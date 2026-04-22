@@ -1,0 +1,137 @@
+/* ==========================================================================
+   base.css
+   Общие стили сайта (header, footer, навигация, типографика, утилиты).
+   Подключается в base.html до блока extra_css.
+   ========================================================================== */
+
+:root {
+    --primary-sage: #4a7c59;
+    --accent-soft: #8fc0a9;
+    --bg-light: #f8faf9;
+    --glass: rgba(255, 255, 255, 0.85);
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-light);
+    color: #2d3436;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+h1, h2, h3, .navbar-brand {
+    font-family: 'Montserrat', sans-serif;
+}
+
+/* Современный стеклянный навигатор */
+.navbar {
+    background: var(--glass) !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    padding: 0.8rem 0;
+}
+
+.navbar-brand {
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: var(--primary-sage) !important;
+    font-size: 1.4rem;
+}
+
+.nav-link {
+    font-weight: 500;
+    color: #576574 !important;
+    margin: 0 10px;
+    transition: var(--transition);
+    position: relative;
+}
+
+.nav-link:hover {
+    color: var(--primary-sage) !important;
+}
+
+/* Кнопки в стиле Soft UI */
+.btn-sage {
+    background-color: var(--primary-sage);
+    color: white;
+    border-radius: 50px;
+    padding: 0.6rem 1.6rem;
+    border: none;
+    transition: var(--transition);
+    font-weight: 500;
+}
+
+.btn-sage:hover {
+    background-color: #3d664a;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(74, 124, 89, 0.2);
+    color: white;
+}
+
+.btn-outline-sage {
+    border: 2px solid var(--primary-sage);
+    color: var(--primary-sage);
+    border-radius: 50px;
+    padding: 0.6rem 1.6rem;
+    font-weight: 500;
+    transition: var(--transition);
+}
+
+.btn-outline-sage:hover {
+    background-color: var(--primary-sage);
+    color: white;
+}
+
+/* Профиль пользователя (в шапке) */
+.user-avatar {
+    width: 38px;
+    height: 38px;
+    background: linear-gradient(135deg, var(--primary-sage), var(--accent-soft));
+    color: white;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    box-shadow: 0 4px 12px rgba(74, 124, 89, 0.15);
+}
+
+main {
+    flex: 1;
+}
+
+/* Элегантный футер */
+footer {
+    background: white;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    padding: 3rem 0;
+}
+
+.footer-title {
+    font-weight: 700;
+    color: var(--primary-sage);
+    margin-bottom: 1rem;
+}
+
+.footer-link {
+    color: #636e72;
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+.footer-link:hover {
+    color: var(--primary-sage);
+}
+
+/* Анимация появления основного контента */
+.content-fade {
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+}

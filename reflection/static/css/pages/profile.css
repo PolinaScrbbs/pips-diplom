@@ -1,0 +1,180 @@
+/* ==========================================================================
+   profile.css — личный кабинет пользователя.
+   Зелёные акценты, мягкие анимации, уважает prefers-reduced-motion.
+   ========================================================================== */
+
+:root {
+    --primary-green: #198754;
+    --primary-green-2: #0f8a5f;
+    --emerald-ink: #0b3b2a;
+    --soft-bg: #f8faf9;
+    --soft-bg-2: #f3fbf6;
+    --star-gray: #dee2e6;
+    --star-gold: #ffc107;
+    --card-border: rgba(25, 135, 84, 0.18);
+    --card-border-strong: rgba(25, 135, 84, 0.35);
+    --shadow-soft: 0 10px 30px rgba(15, 23, 42, 0.08);
+    --shadow-lift: 0 18px 50px rgba(15, 23, 42, 0.14);
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.profile-page-wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100vh - 100px);
+    background:
+        radial-gradient(1200px 500px at 20% 0%,  rgba(25, 135, 84, 0.12), transparent 60%),
+        radial-gradient(900px 420px at 80% 10%,  rgba(16, 185, 129, 0.10), transparent 55%),
+        linear-gradient(180deg, #f7fbf8 0%, #ffffff 45%, #f7fbf8 100%);
+}
+
+.profile-page-wrapper .card {
+    border-radius: 22px;
+    border: 1px solid var(--card-border);
+    box-shadow: var(--shadow-soft);
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    transition: transform 350ms var(--ease-out),
+                box-shadow 350ms var(--ease-out),
+                border-color 350ms var(--ease-out);
+}
+
+.profile-page-wrapper .card.card-accent {
+    border-left: 4px solid rgba(25, 135, 84, 0.45);
+}
+
+.profile-page-wrapper .card.profile-stat-primary {
+    border-color: rgba(255, 255, 255, 0.22);
+    border-left: 4px solid rgba(255, 255, 255, 0.45);
+}
+
+.profile-page-wrapper .card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lift);
+    border-color: var(--card-border-strong);
+}
+
+@keyframes profileFadeUp {
+    from { opacity: 0; transform: translateY(14px); filter: blur(2px); }
+    to   { opacity: 1; transform: translateY(0);    filter: blur(0); }
+}
+
+.profile-animate         { animation: profileFadeUp 600ms var(--ease-out) both; }
+.profile-animate.delay-1 { animation-delay:  60ms; }
+.profile-animate.delay-2 { animation-delay: 120ms; }
+.profile-animate.delay-3 { animation-delay: 180ms; }
+.profile-animate.delay-4 { animation-delay: 240ms; }
+
+.profile-avatar { position: relative; isolation: isolate; }
+
+.profile-avatar:after {
+    content: "";
+    position: absolute;
+    inset: -10px;
+    border-radius: 999px;
+    background: radial-gradient(circle, rgba(25, 135, 84, 0.22), transparent 62%);
+    z-index: -1;
+    opacity: 0.9;
+    transform: scale(0.95);
+    transition: transform 350ms var(--ease-out), opacity 350ms var(--ease-out);
+}
+
+.profile-avatar:hover:after { opacity: 1; transform: scale(1); }
+
+.nav-tabs           { border-bottom: 1px solid rgba(25, 135, 84, 0.14); gap: 8px; }
+.nav-tabs .nav-link {
+    color: #6c757d;
+    transition: all 0.3s ease;
+    border: none !important;
+    border-radius: 14px;
+    padding: 0.85rem 1rem;
+}
+.nav-tabs .nav-link.active {
+    background: transparent !important;
+    color: var(--primary-green) !important;
+    border-bottom: 3px solid var(--primary-green) !important;
+}
+.nav-tabs .nav-link:not(.active):hover {
+    background: rgba(25, 135, 84, 0.06);
+    color: var(--emerald-ink) !important;
+}
+
+.profile-page-wrapper .table thead th {
+    color: rgba(15, 23, 42, 0.75);
+    font-weight: 700;
+    letter-spacing: 0.2px;
+}
+
+.profile-page-wrapper .table tbody tr {
+    transition: background-color 220ms var(--ease-out), transform 220ms var(--ease-out);
+}
+
+.profile-page-wrapper .table tbody tr:hover {
+    background: rgba(25, 135, 84, 0.06);
+    transform: translateX(2px);
+}
+
+/* Рейтинг: звёзды */
+.stars-group input { display: none; }
+
+.stars-group label {
+    width: 45px;
+    height: 45px;
+    cursor: pointer;
+    background-color: var(--star-gray);
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    -webkit-mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>');
+            mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>');
+    -webkit-mask-repeat: no-repeat;
+            mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+            mask-position: center;
+}
+
+.stars-group label:hover,
+.stars-group label:hover ~ label,
+.stars-group input:checked ~ label {
+    background-color: var(--star-gold);
+}
+
+.custom-input {
+    border: 2px solid rgba(25, 135, 84, 0.14) !important;
+    border-radius: 12px !important;
+    background-color: var(--soft-bg-2) !important;
+    transition: all 0.3s ease !important;
+}
+
+.custom-input:focus {
+    border-color: var(--primary-green) !important;
+    background-color: #fff !important;
+    box-shadow: 0 0 0 4px rgba(25, 135, 84, 0.1) !important;
+}
+
+.btn-success-gradient {
+    background: linear-gradient(135deg, #198754 0%, #12633d 100%);
+    color: white;
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.btn-success-gradient:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(25, 135, 84, 0.3);
+    color: white;
+}
+
+.pagination .page-link              { color: var(--primary-green); border: none; border-radius: 8px; margin: 0 2px; }
+.pagination .page-item.active .page-link {
+    background-color: var(--primary-green);
+    color: white;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .profile-animate                                 { animation: none !important; }
+    .profile-page-wrapper .card,
+    .profile-page-wrapper .table tbody tr,
+    .btn-success-gradient                            { transition: none !important; }
+    .profile-page-wrapper .card:hover                { transform: none !important; }
+    .profile-page-wrapper .table tbody tr:hover      { transform: none !important; }
+}

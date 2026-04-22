@@ -1,176 +1,30 @@
 {% extends "base.html" %}
 {% load static %}
+
 {% block title %}Отзывы — Центр «Отражение»{% endblock %}
 
+{% block body_class %}page-reviews-list{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'vendor/aos/aos.css' %}">
+<link rel="stylesheet" href="{% static 'css/pages/reviews-list.css' %}">
+{% endblock %}
+
 {% block content %}
-<link href="{% static 'css/aos.css' %}" rel="stylesheet">
-
-<style>
-    :root {
-        --glass-bg: rgba(255, 255, 255, 0.8);
-        --success-gradient: linear-gradient(135deg, #198754 0%, #12633d 100%);
-    }
-
-    body { background-color: #f8faf9; }
-
-    /* Hero Section с эффектом стекла */
-    .reviews-hero {
-        padding: 100px 0 60px;
-        background: radial-gradient(circle at top right, #e8f5e9 0%, transparent 40%);
-    }
-
-    /* Кастомные карточки (Glassmorphism elements) */
-    .review-card {
-        border-radius: 24px !important;
-        border: 1px solid rgba(0,0,0,0.03) !important;
-        transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
-        background: white;
-    }
-    
-    .review-card:hover {
-        transform: translateY(-10px);
-        box-shadow: 0 20px 40px rgba(0,0,0,0.08) !important;
-    }
-
-    /* Звезды рейтинга */
-    .star-rating { color: #ffc107; font-size: 0.85rem; }
-    .star-rating .bi-star { color: #dee2e6; }
-
-    /* Фильтры в стиле Apple */
-    .filter-scroll-wrapper {
-        display: flex;
-        overflow-x: auto;
-        padding-bottom: 10px;
-        scrollbar-width: none; /* Firefox */
-    }
-    .filter-scroll-wrapper::-webkit-scrollbar { display: none; }
-
-    .btn-filter {
-        white-space: nowrap;
-        border: none;
-        background: #eee;
-        color: #555;
-        border-radius: 100px;
-        padding: 10px 24px;
-        font-weight: 600;
-        margin-right: 8px;
-        transition: 0.3s;
-    }
-    .btn-filter.active {
-        background: #198754;
-        color: white;
-        box-shadow: 0 8px 15px rgba(25, 135, 84, 0.2);
-    }
-
-    /* Аватары */
-    .author-avatar {
-        width: 48px;
-        height: 48px;
-        background: var(--success-gradient);
-        color: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 16px;
-        font-weight: 700;
-        box-shadow: 0 4px 10px rgba(25, 135, 84, 0.15);
-    }
-
-    /* Бейдж услуги */
-    .service-tag {
-        background: #f0f4f2;
-        color: #198754;
-        font-size: 0.75rem;
-        font-weight: 700;
-        padding: 4px 12px;
-        border-radius: 6px;
-    }
-
-    /* --- СТИЛЬНАЯ ПАГИНАЦИЯ --- */
-.pagination-wrapper {
-    margin-top: 4rem;
-    padding: 10px;
-}
-
-.pagination {
-    gap: 8px; /* Расстояние между кнопками */
-}
-
-.pagination .page-item {
-    border: none;
-}
-
-.pagination .page-link {
-    width: 50px;
-    height: 50px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 16px !important; /* Мягкие квадраты */
-    border: none !important;
-    background: white;
-    color: #495057;
-    font-weight: 600;
-    font-size: 1rem;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.03);
-    transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
-}
-
-/* Эффект при наведении */
-.pagination .page-link:hover {
-    background: #f0f4f2;
-    color: #198754;
-    transform: translateY(-4px);
-    box-shadow: 0 10px 20px rgba(25, 135, 84, 0.1);
-}
-
-/* Активная страница (Градиент) */
-.pagination .page-item.active .page-link {
-    background: var(--success-gradient) !important;
-    color: white !important;
-    box-shadow: 0 8px 20px rgba(25, 135, 84, 0.3);
-}
-
-/* Стрелки навигации */
-.pagination .page-item:first-child .page-link,
-.pagination .page-item:last-child .page-link {
-    background: rgba(255, 255, 255, 0.8);
-    backdrop-filter: blur(10px);
-    font-size: 1.2rem;
-}
-
-/* Отключение неактивных кнопок */
-.pagination .page-item.disabled .page-link {
-    opacity: 0.4;
-    background: transparent;
-    box-shadow: none;
-    transform: none;
-}
-
-/* Адаптивность для мобильных */
-@media (max-width: 576px) {
-    .pagination .page-link {
-        width: 40px;
-        height: 40px;
-        border-radius: 12px !important;
-    }
-}
-</style>
-
 <section class="reviews-hero">
     <div class="container text-center" data-aos="fade-up">
         <h1 class="display-3 fw-bold text-dark mb-4 small-caps">Истории успеха</h1>
         <p class="lead text-muted mx-auto mb-5" style="max-width: 700px;">
             Мы верим, что каждый ребенок уникален. Ваши отзывы помогают нам становиться лучше, а другим родителям — найти верный путь.
         </p>
-        
+
         <div class="d-flex justify-content-center">
             <div class="filter-scroll-wrapper p-2 bg-white rounded-pill shadow-sm">
                 <a href="?service=all" class="btn btn-filter {% if not current_service or current_service == 'all' %}active{% endif %}">
                     Все отзывы
                 </a>
                 {% for service in popular_services %}
-                <a href="?service={{ service.id }}" 
+                <a href="?service={{ service.id }}"
                    class="btn btn-filter {% if current_service == service.id|stringformat:'s' %}active{% endif %}">
                     {{ service.name }}
                 </a>
@@ -231,38 +85,38 @@
     </div>
 
     {% if page_obj.has_other_pages %}
-<div class="pagination-wrapper d-flex justify-content-center" data-aos="fade-up">
-    <nav aria-label="Навигация по отзывам">
-        <ul class="pagination pagination-lg mb-0">
-            
-            <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
-                <a class="page-link" href="{% if page_obj.has_previous %}?page={{ page_obj.previous_page_number }}&service={{ current_service|default:'all' }}{% else %}#{% endif %}" aria-label="Предыдущая">
-                    <i class="bi bi-chevron-left"></i>
-                </a>
-            </li>
+    <div class="pagination-wrapper d-flex justify-content-center" data-aos="fade-up">
+        <nav aria-label="Навигация по отзывам">
+            <ul class="pagination pagination-lg mb-0">
 
-            {% for num in page_obj.paginator.page_range %}
-                {% if page_obj.number == num %}
-                    <li class="page-item active" aria-current="page">
-                        <span class="page-link">{{ num }}</span>
-                    </li>
-                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ num }}&service={{ current_service|default:'all' }}">{{ num }}</a>
-                    </li>
-                {% endif %}
-            {% endfor %}
+                <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
+                    <a class="page-link" href="{% if page_obj.has_previous %}?page={{ page_obj.previous_page_number }}&service={{ current_service|default:'all' }}{% else %}#{% endif %}" aria-label="Предыдущая">
+                        <i class="bi bi-chevron-left"></i>
+                    </a>
+                </li>
 
-            <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
-                <a class="page-link" href="{% if page_obj.has_next %}?page={{ page_obj.next_page_number }}&service={{ current_service|default:'all' }}{% else %}#{% endif %}" aria-label="Следующая">
-                    <i class="bi bi-chevron-right"></i>
-                </a>
-            </li>
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <li class="page-item active" aria-current="page">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}&service={{ current_service|default:'all' }}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
 
-        </ul>
-    </nav>
-</div>
-{% endif %}
+                <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
+                    <a class="page-link" href="{% if page_obj.has_next %}?page={{ page_obj.next_page_number }}&service={{ current_service|default:'all' }}{% else %}#{% endif %}" aria-label="Следующая">
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                </li>
+
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
 </div>
 
 <div class="container mb-5">
@@ -277,25 +131,10 @@
         <div style="position:absolute; bottom: -20%; right: -5%; width: 300px; height: 300px; background: rgba(25,135,84,0.2); border-radius: 50%; filter: blur(50px);"></div>
     </div>
 </div>
+{% endblock %}
 
-<script src="{% static 'js/aos.js' %}"></script>
-<script src="{% static 'js/isotope.pkgd.min.js' %}"></script>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Инициализация анимаций
-        AOS.init({
-            duration: 800,
-            once: true,
-            offset: 50
-        });
-
-        // Инициализация Isotope сетки после загрузки всех изображений/шрифтов
-        var grid = document.querySelector('#reviews-container');
-        var iso = new Isotope(grid, {
-            itemSelector: '.col-md-6',
-            layoutMode: 'masonry'
-        });
-    });
-</script>
+{% block extra_js %}
+<script src="{% static 'vendor/aos/aos.js' %}"></script>
+<script src="{% static 'vendor/isotope/isotope.pkgd.min.js' %}"></script>
+<script src="{% static 'js/pages/reviews-list.js' %}"></script>
 {% endblock %}

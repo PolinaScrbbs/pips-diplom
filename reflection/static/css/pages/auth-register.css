@@ -1,0 +1,71 @@
+/* ==========================================================================
+   auth-register.css — страница регистрации.
+   ========================================================================== */
+
+:root {
+    --auth-bg: #f8faf9;
+    --input-focus: #198754;
+}
+
+.auth-page-wrapper {
+    min-height: calc(100vh - 80px);
+    background: radial-gradient(circle at top right, #e8f5e9 0%, var(--auth-bg) 40%);
+    display: flex;
+    align-items: center;
+    padding: 40px 0;
+}
+
+.auth-card {
+    border: none;
+    border-radius: 28px;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
+}
+
+.form-floating > .form-control {
+    border: 2px solid #edf2f0;
+    border-radius: 16px;
+    background-color: #fcfdfc;
+    transition: all 0.3s ease;
+}
+
+.form-floating > .form-control:focus {
+    border-color: var(--input-focus);
+    box-shadow: 0 0 0 4px rgba(25, 135, 84, 0.1);
+    background-color: #fff;
+}
+
+.form-floating > label {
+    padding-left: 1.25rem;
+    color: #6c757d;
+}
+
+.btn-auth-submit {
+    background: linear-gradient(135deg, #198754 0%, #12633d 100%);
+    color: white;
+    border: none;
+    border-radius: 16px;
+    padding: 14px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.btn-auth-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(25, 135, 84, 0.3);
+    color: white;
+}
+
+.invalid-feedback {
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-left: 1rem;
+}
+
+.input-group-text {
+    border: none;
+    background: transparent;
+    color: #adb5bd;
+}

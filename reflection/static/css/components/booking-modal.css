@@ -1,0 +1,20 @@
+/* ==========================================================================
+   booking-modal.css
+   Модалка записи (#bookingModal), валидация и shake-анимация ошибок.
+   Подключается из base.html (модалка включена на всех страницах).
+   ========================================================================== */
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25%      { transform: translateX(-10px); }
+    75%      { transform: translateX(10px); }
+}
+
+.custom-input.is-invalid {
+    border-color: #dc3545 !important;
+    background-image: none !important;
+}
+
+.was-validated .custom-input:valid {
+    border-color: #198754 !important;
+}

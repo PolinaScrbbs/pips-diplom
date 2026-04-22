@@ -11,146 +11,15 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="{% static 'fonts/montserrat.css' %}" rel="stylesheet">
 
-  <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet" />
-  <link href="{% static 'bootstrap/css/fonts/bootstrap-icons.woff' %}" rel="stylesheet">
-  <link href="{% static 'bootstrap/css/fonts/bootstrap-icons.woff2' %}" rel="stylesheet">
-  <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap-icons.css' %}">
-  
-  <style>
-    :root {
-      --primary-sage: #4a7c59; /* Успокаивающий зеленый */
-      --accent-soft: #8fc0a9;
-      --bg-light: #f8faf9;
-      --glass: rgba(255, 255, 255, 0.85);
-      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
+  <link href="{% static 'vendor/bootstrap/css/bootstrap.min.css' %}" rel="stylesheet" />
+  <link rel="stylesheet" href="{% static 'vendor/bootstrap/css/bootstrap-icons.css' %}">
 
-    body {
-      font-family: 'Inter', sans-serif;
-      background-color: var(--bg-light);
-      color: #2d3436;
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-    }
+  <link rel="stylesheet" href="{% static 'css/base.css' %}">
+  <link rel="stylesheet" href="{% static 'css/components/booking-modal.css' %}">
 
-    h1, h2, h3, .navbar-brand {
-      font-family: 'Montserrat', sans-serif;
-    }
-
-    /* Современный стеклянный навигатор */
-    .navbar {
-      background: var(--glass) !important;
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border-bottom: 1px solid rgba(0,0,0,0.05);
-      padding: 0.8rem 0;
-    }
-
-    .navbar-brand {
-      font-weight: 700;
-      letter-spacing: -0.5px;
-      color: var(--primary-sage) !important;
-      font-size: 1.4rem;
-    }
-
-    .nav-link {
-      font-weight: 500;
-      color: #576574 !important;
-      margin: 0 10px;
-      transition: var(--transition);
-      position: relative;
-    }
-
-    .nav-link:hover {
-      color: var(--primary-sage) !important;
-    }
-
-    /* Кнопки в стиле Soft UI */
-    .btn-sage {
-      background-color: var(--primary-sage);
-      color: white;
-      border-radius: 50px;
-      padding: 0.6rem 1.6rem;
-      border: none;
-      transition: var(--transition);
-      font-weight: 500;
-    }
-
-    .btn-sage:hover {
-      background-color: #3d664a;
-      transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(74, 124, 89, 0.2);
-      color: white;
-    }
-
-    .btn-outline-sage {
-      border: 2px solid var(--primary-sage);
-      color: var(--primary-sage);
-      border-radius: 50px;
-      padding: 0.6rem 1.6rem;
-      font-weight: 500;
-      transition: var(--transition);
-    }
-
-    .btn-outline-sage:hover {
-      background-color: var(--primary-sage);
-      color: white;
-    }
-
-    /* Профиль пользователя */
-    .user-avatar {
-      width: 38px;
-      height: 38px;
-      background: linear-gradient(135deg, var(--primary-sage), var(--accent-soft));
-      color: white;
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 700;
-      box-shadow: 0 4px 12px rgba(74, 124, 89, 0.15);
-    }
-
-    main {
-      flex: 1;
-    }
-
-    /* Элегантный футер */
-    footer {
-      background: white;
-      border-top: 1px solid rgba(0,0,0,0.05);
-      padding: 3rem 0;
-    }
-
-    .footer-title {
-      font-weight: 700;
-      color: var(--primary-sage);
-      margin-bottom: 1rem;
-    }
-
-    .footer-link {
-      color: #636e72;
-      text-decoration: none;
-      transition: var(--transition);
-    }
-
-    .footer-link:hover {
-      color: var(--primary-sage);
-    }
-
-    /* Анимация контента */
-    .content-fade {
-      animation: fadeIn 0.5s ease-in-out;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-  </style>
+  {% block extra_css %}{% endblock %}
 </head>
-<body class="d-flex flex-column min-vh-100">
+<body class="d-flex flex-column min-vh-100 {% block body_class %}{% endblock %}">
 
 <header class="sticky-top">
   <nav class="navbar navbar-expand-lg">
@@ -164,66 +33,63 @@
       </button>
 
       <div class="collapse navbar-collapse" id="mainNavbar">
-    <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
-    {% if user.is_authenticated %}
-        {% if user.is_moderator %}
-            <li class="nav-item dropdown">
+        <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
+          {% if user.is_authenticated %}
+            {% if user.is_moderator %}
+              <li class="nav-item dropdown">
                 <a class="nav-link dropdown-toggle text-warning fw-bold" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="bi bi-shield-lock me-1"></i> Панель модератора
+                  <i class="bi bi-shield-lock me-1"></i> Панель модератора
                 </a>
                 <ul class="dropdown-menu border-0 shadow-sm" aria-labelledby="adminDropdown">
-                    <li><a class="dropdown-item" href="{% url 'services:moderator_list' %}">Управление услугами</a></li>
-                    <li><a class="dropdown-item" href="{% url 'reviews:moderator_reviews' %}">Отзывы клиентов</a></li>
+                  <li><a class="dropdown-item" href="{% url 'services:moderator_list' %}">Управление услугами</a></li>
+                  <li><a class="dropdown-item" href="{% url 'reviews:moderator_reviews' %}">Отзывы клиентов</a></li>
                 </ul>
-            </li>
-        {% endif %}
-    {% endif %}
-
-    {% if user.is_authenticated %}
-        {% if user.is_admin %}
-            <li class="nav-item">
+              </li>
+            {% endif %}
+            {% if user.is_admin %}
+              <li class="nav-item">
                 <a class="nav-link text-danger fw-bold" href="{% url 'admin_panel:users_list' %}">
-                    <i class="bi bi-speedometer2 me-1"></i> Админ-панель
+                  <i class="bi bi-speedometer2 me-1"></i> Админ-панель
                 </a>
+              </li>
+            {% endif %}
+          {% endif %}
+
+          {% if not user.is_moderator %}
+            <li class="nav-item">
+              <a class="nav-link {% if request.resolver_match.url_name == 'why_us' %}active{% endif %}" href="{% url 'main:why_us' %}">Почему мы</a>
             </li>
-        {% endif %}
-    {% endif %}
+          {% endif %}
 
-    {% if not user.is_moderator %}
-    <li class="nav-item">
-        <a class="nav-link {% if request.resolver_match.url_name == 'why_us' %}active{% endif %}" href="{% url 'main:why_us' %}">Почему мы</a>
-    </li>
-    {% endif %}
-    
-    <li class="nav-item">
-        <a class="nav-link {% if request.resolver_match.url_name == 'services' %}active{% endif %}" href="{% url 'services:services' %}">Услуги</a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link {% if request.resolver_match.url_name == 'reviews' %}active{% endif %}" href="{% url 'reviews:reviews' %}">Отзывы</a>
-    </li>
-</ul>
+          <li class="nav-item">
+            <a class="nav-link {% if request.resolver_match.url_name == 'services' %}active{% endif %}" href="{% url 'services:services' %}">Услуги</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {% if request.resolver_match.url_name == 'reviews' %}active{% endif %}" href="{% url 'reviews:reviews' %}">Отзывы</a>
+          </li>
+        </ul>
 
-    <div class="d-flex align-items-center gap-3">
-        {% if user.is_authenticated %}           
+        <div class="d-flex align-items-center gap-3">
+          {% if user.is_authenticated %}
             {% if user.is_user %}
-            <a href="{% url 'users:profile' %}" class="text-decoration-none d-flex align-items-center me-2">
+              <a href="{% url 'users:profile' %}" class="text-decoration-none d-flex align-items-center me-2">
                 <div class="user-avatar text-uppercase">{{ user.username|first }}</div>
                 <span class="ms-2 d-none d-xl-inline fw-medium text-dark">{{ user.username }}</span>
-            </a>
-                <button class="btn btn-sage d-none d-md-block" data-bs-toggle="modal" data-bs-target="#bookingModal">
-                    Записаться
-                </button>
+              </a>
+              <button class="btn btn-sage d-none d-md-block" data-bs-toggle="modal" data-bs-target="#bookingModal">
+                Записаться
+              </button>
             {% endif %}
-            
+
             <a href="{% url 'users:logout' %}" class="btn btn-link text-muted p-0 ms-2" title="Выйти">
-                <i class="bi bi-box-arrow-right fs-4"></i>
+              <i class="bi bi-box-arrow-right fs-4"></i>
             </a>
-        {% else %}
+          {% else %}
             <a href="{% url 'users:login' %}" class="btn btn-link text-dark text-decoration-none fw-medium">Войти</a>
             <a href="{% url 'users:register' %}" class="btn btn-sage">Регистрация</a>
-        {% endif %}
-    </div>
-</div>
+          {% endif %}
+        </div>
+      </div>
     </div>
   </nav>
 </header>
@@ -241,12 +107,13 @@
         <p class="text-muted small">Центр психологической поддержки и развития ребенка в Курске. Работаем с любовью к каждому ребенку.</p>
       </div>
       <div class="col-md-2 offset-md-2">
-  <h6 class="fw-bold">Меню</h6>
-  <ul class="list-unstyled">
-    <li><a href="{% url 'main:why_us' %}" class="footer-link small">Почему мы</a></li> <li><a href="{% url 'services:services' %}" class="footer-link small">Услуги</a></li>
-    <li><a href="{% url 'reviews:reviews' %}" class="footer-link small">Отзывы</a></li>
-  </ul>
-</div>
+        <h6 class="fw-bold">Меню</h6>
+        <ul class="list-unstyled">
+          <li><a href="{% url 'main:why_us' %}" class="footer-link small">Почему мы</a></li>
+          <li><a href="{% url 'services:services' %}" class="footer-link small">Услуги</a></li>
+          <li><a href="{% url 'reviews:reviews' %}" class="footer-link small">Отзывы</a></li>
+        </ul>
+      </div>
       <div class="col-md-4">
         <h6 class="fw-bold">Контакты</h6>
         <p class="small text-muted mb-1"><i class="bi bi-geo-alt me-2"></i>г. Курск, ул. Карла Маркса, 72/20</p>
@@ -266,9 +133,11 @@
 
 {% include "booking/_form_modal.html" %}
 
+<script src="{% static 'vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+<script src="{% static 'vendor/imask/imask.min.js' %}"></script>
+<script src="{% static 'js/components/booking-modal.js' %}"></script>
 
-<script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
-
+{% block extra_js %}{% endblock %}
 
 </body>
 </html>

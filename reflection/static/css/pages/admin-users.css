@@ -1,0 +1,115 @@
+/* ==========================================================================
+   admin-users.css — админ-панель: список пользователей.
+   ========================================================================== */
+
+:root {
+    --admin-accent: #b42318;
+    --admin-bg: #f6f7fb;
+}
+
+body.page-admin-users { background-color: var(--admin-bg); }
+
+.admin-table-container {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+    overflow: hidden;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.search-bar {
+    background: #f8faf9;
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    padding: 12px 20px;
+    transition: all 0.3s ease;
+}
+
+.search-bar:focus {
+    background: white;
+    border-color: var(--admin-accent);
+    box-shadow: 0 0 0 4px rgba(180, 35, 24, 0.08);
+}
+
+.table thead th {
+    background: #fdfdfd;
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: #8898aa;
+    padding: 18px 25px;
+    border-bottom: 1px solid #edf2f0;
+}
+
+.table tbody td {
+    padding: 18px 25px;
+    vertical-align: middle;
+    font-size: 0.95rem;
+}
+
+.row-inactive {
+    opacity: 0.65;
+    background-color: #fcfcfc;
+}
+
+.role-badge {
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 0.8rem;
+    display: inline-block;
+}
+
+.role-user       { background: #eef2ff; color: #3730a3; }
+.role-moderator  { background: #ecfdf3; color: #027a48; }
+.role-admin      { background: #fef3f2; color: #b42318; }
+
+.filter-dot {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 10px;
+    height: 10px;
+    background-color: #f5365c;
+    border: 2px solid white;
+    border-radius: 50%;
+}
+
+tr.placeholder-row td          { color: transparent; user-select: none; }
+tr.placeholder-row:hover       { background: transparent !important; }
+
+.action-btn {
+    width: 38px;
+    height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    transition: all 0.2s;
+    border: 1px solid #eee;
+    background: white;
+    color: #525f7f;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.action-btn:hover {
+    background: #f8fafb;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+}
+
+.btn-edit:hover               { color: #5e72e4; border-color: #5e72e4; }
+.btn-active-toggle.is-active  { color: #2e7d32; border-color: #2e7d32; }
+.btn-active-toggle.is-inactive{ color: #b42318; border-color: #b42318; }
+
+.action-btn.action-btn-locked {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.admin-modal-card { border-radius: 20px; }
+
+.admin-search-input .input-group-text { border-radius: 12px 0 0 12px; }
+.admin-search-input .form-control      { border-radius: 0 12px 12px 0; }

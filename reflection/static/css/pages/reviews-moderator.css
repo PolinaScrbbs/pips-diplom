@@ -1,0 +1,50 @@
+/* ==========================================================================
+   reviews-moderator.css — страница модератора: управление отзывами.
+   ========================================================================== */
+
+:root {
+    --mod-sage: #4a7c59;
+    --mod-bg: #f4f7f6;
+}
+
+.page-reviews-moderator body { background-color: var(--mod-bg); }
+
+.mod-table-container {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+    overflow: hidden;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.search-bar {
+    background: #f8faf9;
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    padding: 10px 20px;
+}
+
+.rating-star { color: #ffc107; font-size: 0.9rem; }
+
+.review-text-preview {
+    max-width: 300px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+    color: #6c757d;
+}
+
+.table thead th {
+    background: #fdfdfd;
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #8898aa;
+    padding: 18px 25px;
+}
+
+.review-row:hover {
+    background-color: #f8fafb;
+    cursor: pointer;
+}

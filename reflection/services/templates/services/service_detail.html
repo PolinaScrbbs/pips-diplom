@@ -3,100 +3,14 @@
 
 {% block title %}{{ service.name }} — Центр «Отражение»{% endblock %}
 
+{% block body_class %}page-service-detail{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'vendor/aos/aos.css' %}">
+<link rel="stylesheet" href="{% static 'css/pages/service-detail.css' %}">
+{% endblock %}
+
 {% block content %}
-<link rel="stylesheet" href="{% static 'css/aos.css' %}" />
-
-<style>
-    :root {
-        --sage-gradient: linear-gradient(135deg, #4a7c59 0%, #3d664a 100%);
-    }
-
-    /* Шапка страницы */
-    .detail-header {
-        background: #f8fbf9;
-        padding: 60px 0;
-        border-radius: 0 0 40px 40px;
-    }
-
-    .breadcrumb-item a {
-        color: var(--primary-sage);
-        text-decoration: none;
-        font-size: 0.9rem;
-    }
-
-    .service-badge {
-        background: rgba(74, 124, 89, 0.1);
-        color: var(--primary-sage);
-        font-weight: 600;
-        padding: 5px 15px;
-        border-radius: 50px;
-        display: inline-block;
-        margin-bottom: 15px;
-    }
-
-    /* Контентная часть */
-    .content-box {
-        background: #fff;
-        border-radius: 24px;
-        padding: 40px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.03);
-    }
-
-    .sticky-sidebar {
-        position: sticky;
-        top: 100px;
-    }
-
-    .price-card {
-        background: #fff;
-        border-radius: 24px;
-        border: 1px solid rgba(0,0,0,0.05);
-        padding: 30px;
-        box-shadow: 0 15px 35px rgba(0,0,0,0.05);
-    }
-
-    /* Иконки этапов */
-    .step-icon {
-        width: 50px;
-        height: 50px;
-        background: var(--primary-sage);
-        color: #fff;
-        border-radius: 15px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 700;
-        margin-bottom: 15px;
-    }
-
-    .process-line {
-        position: relative;
-    }
-
-    .process-line::before {
-        content: '';
-        position: absolute;
-        left: 25px;
-        top: 50px;
-        bottom: 0;
-        width: 2px;
-        background: #eef2f0;
-        z-index: 0;
-    }
-
-    .feature-list li {
-        margin-bottom: 15px;
-        display: flex;
-        align-items: flex-start;
-    }
-
-    .feature-list i {
-        color: var(--primary-sage);
-        margin-right: 12px;
-        margin-top: 3px;
-    }
-</style>
-
 <div class="detail-header" data-aos="fade-down">
     <div class="container">
         <nav aria-label="breadcrumb">
@@ -159,19 +73,20 @@
                         <h6 class="text-muted text-uppercase small fw-bold mb-3">Стоимость приема</h6>
                         <div class="display-5 fw-bold text-success mb-2">{{ service.price }} ₽</div>
                         <p class="text-muted mb-4"><i class="bi bi-clock me-2"></i>{{ service.duration }}</p>
-                        
+
                         <ul class="list-unstyled text-start feature-list mb-4">
                             <li><i class="bi bi-check-circle-fill"></i> Индивидуальный подход</li>
                             <li><i class="bi bi-check-circle-fill"></i> Комфортный кабинет</li>
                             <li><i class="bi bi-check-circle-fill"></i> Полная конфиденциальность</li>
                         </ul>
 
-                        <button class="btn btn-sage w-100 btn-lg shadow-sm py-3" 
-        data-bs-toggle="modal" 
-        data-bs-target="#bookingModal"
-        data-service-id="{{ service.pk }}"> Записаться сейчас
-</button>
-                        
+                        <button class="btn btn-sage w-100 btn-lg shadow-sm py-3"
+                                data-bs-toggle="modal"
+                                data-bs-target="#bookingModal"
+                                data-service-id="{{ service.pk }}">
+                            Записаться сейчас
+                        </button>
+
                         <div class="mt-4 p-3 bg-light rounded-4">
                             <p class="small text-muted mb-0 text-start">
                                 <i class="bi bi-info-circle me-2"></i>
@@ -191,39 +106,9 @@
         </div>
     </div>
 </section>
+{% endblock %}
 
-<script src="{% static 'js/aos.js' %}"></script>
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-    const bookingModal = document.getElementById('bookingModal');
-    
-    if (bookingModal) {
-        bookingModal.addEventListener('show.bs.modal', function(event) {
-            // Кнопка, которая открыла модальное окно
-            const button = event.relatedTarget;
-            
-            // Извлекаем ID услуги из атрибута data-service-id
-            const serviceId = button.getAttribute('data-service-id');
-            
-            // Находим селектор услуг внутри модального окна
-            // Предположим, что у него id="id_service" (стандарт Django) или имя name="service"
-            const serviceSelect = bookingModal.querySelector('select[name="service"]');
-            
-            if (serviceSelect && serviceId) {
-                serviceSelect.value = serviceId;
-                
-                // UX-улучшение: если мы уже на странице конкретной услуги, 
-                // можно заблокировать изменение выбора, чтобы пользователь не ошибся,
-                // либо просто оставить как дефолт.
-                // serviceSelect.disabled = true; 
-            }
-        });
-    }
-});
-</script>
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        AOS.init({ duration: 800, once: true });
-    });
-</script>
+{% block extra_js %}
+<script src="{% static 'vendor/aos/aos.js' %}"></script>
+<script src="{% static 'js/pages/service-detail.js' %}"></script>
 {% endblock %}

@@ -1,23 +1,4 @@
 {% load static %}
-<style>
-/* Анимация ошибки */
-@keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(-10px); }
-    75% { transform: translateX(10px); }
-}
-
-.custom-input.is-invalid {
-    border-color: #dc3545 !important;
-    background-image: none !important; /* Убираем стандартную иконку Bootstrap */
-}
-
-/* Красивая подсветка валидных полей */
-.was-validated .custom-input:valid {
-    border-color: #198754 !important;
-}
-</style>
-
 <div class="modal fade" id="bookingModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg" style="border-radius: 28px; overflow: hidden;">
@@ -33,23 +14,23 @@
                 <form id="bookingForm" method="post" action="{% url 'booking:create_booking' %}" novalidate>
                     {% csrf_token %}
                     <input type="hidden" name="next" value="{{ request.path }}">
-                    
+
                     <div class="form-floating mb-3">
-                        <input type="text" name="child_name" class="form-control custom-input" id="id_child_name" 
+                        <input type="text" name="child_name" class="form-control custom-input" id="id_child_name"
                                placeholder="Имя ребенка" required
                                value="{% if last_booking %}{{ last_booking.child_name }}{% endif %}">
                         <label for="id_child_name"><i class="bi bi-person me-2"></i>Имя ребенка</label>
                     </div>
 
                     <div class="form-floating mb-3">
-                        <input type="text" name="parent_name" class="form-control custom-input" id="id_parent_name" 
+                        <input type="text" name="parent_name" class="form-control custom-input" id="id_parent_name"
                                placeholder="Ваше имя" required
                                value="{% if last_booking %}{{ last_booking.parent_name }}{% endif %}">
                         <label for="id_parent_name"><i class="bi bi-person-check me-2"></i>Ваше имя</label>
                     </div>
 
                     <div class="form-floating mb-3">
-                        <input type="tel" name="phone" class="form-control custom-input" id="id_phone" 
+                        <input type="tel" name="phone" class="form-control custom-input" id="id_phone"
                                placeholder="Телефон" required
                                value="{% if user.is_authenticated %}{{ last_booking.phone|default:user.phone|default:'' }}{% endif %}">
                         <label for="id_phone"><i class="bi bi-telephone me-2"></i>Номер телефона</label>
@@ -81,144 +62,3 @@
         </div>
     </div>
 </div>
-
-<script src="{% static 'js/imask.min.js' %}"></script>
-<script>
-  document.addEventListener('DOMContentLoaded', function() {
-    const bookingForm = document.getElementById('bookingForm');
-    const successContent = document.getElementById('bookingSuccess');
-    const submitBtn = document.getElementById('bookingSubmitBtn');
-
-    if (bookingForm) {
-        bookingForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            // Простая валидация
-            if (!this.checkValidity()) {
-                this.classList.add('was-validated');
-                return;
-            }
-
-            const formData = new FormData(this);
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Обработка...';
-
-            fetch(this.getAttribute('action'), {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRFToken': formData.get('csrfmiddlewaretoken')
-                }
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    bookingForm.classList.add('d-none');
-                    successContent.classList.remove('d-none');
-                    // Опционально: редирект через 2 сек или перезагрузка страницы
-                    // setTimeout(() => { location.reload(); }, 2000);
-                } else {
-                    alert('Ошибка при заполнении: ' + JSON.stringify(data.errors));
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = 'Подтвердить запись';
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = 'Подтвердить запись';
-            });
-        });
-    }
-});
-
-document.addEventListener('DOMContentLoaded', function() {
-    const bookingForm = document.getElementById('bookingForm');
-    const successContent = document.getElementById('bookingSuccess');
-    const submitBtn = document.getElementById('bookingSubmitBtn');
-    const phoneInput = document.getElementById('id_phone');
-    const modalHeader = document.querySelector('.modal-header');
-
-    // 1. Инициализация маски (только один раз)
-    const phoneMask = IMask(phoneInput, {
-        mask: '+{7} (000) 000-00-00'
-    });
-
-    if (bookingForm) {
-        // Убеждаемся, что обработчик только один
-        bookingForm.addEventListener('submit', function(e) {
-            // ОСТАНАВЛИВАЕМ все стандартные действия сразу
-            e.preventDefault();
-            e.stopPropagation();
-            
-            // Если кнопка уже отключена — выходим (защита от спам-кликов)
-            if (submitBtn.disabled) return;
-
-            // Сброс валидации
-            this.classList.remove('was-validated');
-            
-            // Проверка маски телефона
-            if (!phoneMask.masked.isComplete) {
-                phoneInput.setCustomValidity("Введите полный номер телефона");
-                phoneInput.classList.add('is-invalid');
-            } else {
-                phoneInput.setCustomValidity("");
-                phoneInput.classList.remove('is-invalid');
-            }
-
-            // Нативная валидация Bootstrap
-            if (!this.checkValidity()) {
-                this.classList.add('was-validated');
-                const modalContent = this.closest('.modal-content');
-                modalContent.style.animation = 'shake 0.4s ease';
-                setTimeout(() => modalContent.style.animation = '', 400);
-                return;
-            }
-
-            // ПОДГОТОВКА К ОТПРАВКЕ
-            const formData = new FormData(this);
-            submitBtn.disabled = true; // Блокируем кнопку
-            const originalBtnHtml = submitBtn.innerHTML;
-            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Отправка...';
-
-            fetch(this.getAttribute('action'), {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRFToken': formData.get('csrfmiddlewaretoken')
-                }
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    // Успех
-                    bookingForm.classList.add('d-none');
-                    if (modalHeader) modalHeader.classList.add('d-none');
-                    successContent.classList.remove('d-none');
-                } else {
-                    // Серверные ошибки
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = originalBtnHtml;
-                    alert('Ошибка: ' + JSON.stringify(data.errors));
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = originalBtnHtml;
-                alert('Произошла ошибка при соединении с сервером');
-            });
-        });
-
-        // Живая очистка ошибок при вводе
-        bookingForm.querySelectorAll('input, select').forEach(el => {
-            el.addEventListener('input', () => {
-                el.classList.remove('is-invalid');
-                if (el.checkValidity()) el.setCustomValidity("");
-            });
-        });
-    }
-});
-</script>

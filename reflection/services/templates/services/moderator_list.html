@@ -3,112 +3,27 @@
 
 {% block title %}Управление услугами — Панель модератора{% endblock %}
 
+{% block body_class %}page-services-moderator{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/pages/services-moderator.css' %}">
+{% endblock %}
+
 {% block content %}
-<style>
-    :root {
-        --mod-sage: #4a7c59;
-        --mod-bg: #f4f7f6;
-    }
-
-    body { background-color: var(--mod-bg); }
-
-    .mod-table-container {
-        background: white;
-        border-radius: 20px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.03);
-        overflow: hidden;
-        border: 1px solid rgba(0,0,0,0.05);
-    }
-
-    .search-bar {
-        background: #f8faf9;
-        border: 1px solid #e9ecef;
-        border-radius: 12px;
-        padding: 12px 20px;
-        transition: all 0.3s ease;
-    }
-
-    .search-bar:focus {
-        background: white;
-        border-color: var(--mod-sage);
-        box-shadow: 0 0 0 4px rgba(74, 124, 89, 0.1);
-    }
-
-    .table thead th {
-        background: #fdfdfd;
-        text-transform: uppercase;
-        font-size: 0.7rem;
-        font-weight: 700;
-        letter-spacing: 1px;
-        color: #8898aa;
-        padding: 18px 25px;
-        border-bottom: 1px solid #edf2f0;
-    }
-
-    .table tbody td {
-        padding: 18px 25px;
-        vertical-align: middle;
-        font-size: 0.95rem;
-    }
-
-    .row-hidden {
-        opacity: 0.6;
-        background-color: #fcfcfc;
-    }
-
-    .price-badge {
-        background: #e8f5e9;
-        color: #2e7d32;
-        padding: 6px 12px;
-        border-radius: 8px;
-        font-weight: 700;
-    }
-
-    .action-btn {
-        width: 38px;
-        height: 38px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 10px;
-        transition: all 0.2s;
-        border: 1px solid #eee;
-        background: white;
-        color: #525f7f;
-        text-decoration: none;
-        cursor: pointer;
-    }
-
-    .action-btn:hover {
-        background: #f8fafb;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.05);
-    }
-
-    .btn-toggle-view.is-hidden { color: #f5365c; border-color: #f5365c; }
-    .btn-edit:hover { color: #5e72e4; border-color: #5e72e4; }
-    .btn-delete:hover { color: #f5365c; border-color: #f5365c; }
-
-    .filter-dot {
-        position: absolute;
-        top: -2px;
-        right: -2px;
-        width: 10px;
-        height: 10px;
-        background-color: #f5365c;
-        border: 2px solid white;
-        border-radius: 50%;
-    }
-</style>
-
-<div class="container py-5">
+<div id="services-moderator-root"
+     class="container py-5"
+     data-create-url="{% url 'services:service_create' %}"
+     data-toggle-url="{% url 'services:service_toggle' 0 %}"
+     data-json-url="{% url 'services:service_json' 0 %}"
+     data-update-url="{% url 'services:service_update' 0 %}"
+     data-delete-url="{% url 'services:service_delete' 0 %}">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div class="d-flex align-items-center gap-3">
             <div>
                 <h2 class="fw-bold text-dark m-0">Управление услугами</h2>
                 <p class="text-muted small m-0">Найдено: {{ page_obj.paginator.count }} позиций</p>
             </div>
-            
+
             <button class="btn btn-outline-dark rounded-pill px-3 shadow-sm position-relative" data-bs-toggle="modal" data-bs-target="#filterModal">
                 <i class="bi bi-filter-left me-1"></i> Фильтры
                 {% if search_query or min_price or max_price or visibility != 'visible' %}
@@ -135,11 +50,11 @@
                 </thead>
                 <tbody>
                     {% for service in page_obj %}
-                    <tr id="service-row-{{ service.pk }}" 
-                        class="service-clickable-row {% if service.is_hidden %}row-hidden{% endif %}" 
+                    <tr id="service-row-{{ service.pk }}"
+                        class="service-clickable-row {% if service.is_hidden %}row-hidden{% endif %}"
                         data-url="{% url 'services:service_detail' service.pk %}"
                         style="cursor: pointer;">
-                        
+
                         <td>
                             <span class="fw-bold text-dark d-block">{{ service.name }}</span>
                             <span class="text-muted small">ID: #{{ service.pk }} | {{ service.duration|default:"—" }}</span>
@@ -152,9 +67,9 @@
                         </td>
                         <td class="text-end position-relative">
                             <div class="d-flex justify-content-end gap-2 actions-wrapper" onclick="event.stopPropagation();">
-                                <button class="action-btn btn-toggle-view {% if service.is_hidden %}is-hidden{% endif %}" 
+                                <button class="action-btn btn-toggle-view {% if service.is_hidden %}is-hidden{% endif %}"
                                         id="toggle-btn-{{ service.pk }}"
-                                        onclick="toggleVisibility('{{ service.pk }}')" 
+                                        onclick="toggleVisibility('{{ service.pk }}')"
                                         title="Скрыть/Показать">
                                     <i class="bi {% if service.is_hidden %}bi-eye-slash{% else %}bi-eye{% endif %}"></i>
                                 </button>
@@ -162,10 +77,10 @@
                                 <button class="action-btn btn-edit edit-service-trigger" data-id="{{ service.pk }}" title="Редактировать">
                                     <i class="bi bi-pencil"></i>
                                 </button>
-                                
-                                <button class="action-btn btn-delete text-danger delete-service-trigger" 
-                                        data-id="{{ service.pk }}" 
-                                        data-name="{{ service.name }}" 
+
+                                <button class="action-btn btn-delete text-danger delete-service-trigger"
+                                        data-id="{{ service.pk }}"
+                                        data-name="{{ service.name }}"
                                         title="Удалить">
                                     <i class="bi bi-trash"></i>
                                 </button>
@@ -190,7 +105,7 @@
                     <li class="page-item active"><span class="page-link border-0 shadow-sm rounded-3 mx-1 bg-success">{{ num }}</span></li>
                 {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
                     <li class="page-item">
-                        <a class="page-link border-0 shadow-sm rounded-3 mx-1 text-dark" 
+                        <a class="page-link border-0 shadow-sm rounded-3 mx-1 text-dark"
                            href="?page={{ num }}&search={{ search_query|default:'' }}&visibility={{ visibility|default:'visible' }}&sort={{ sort|default:'' }}">{{ num }}</a>
                     </li>
                 {% endif %}
@@ -339,158 +254,8 @@
         </div>
     </div>
 </div>
+{% endblock %}
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    
-    if (typeof bootstrap === 'undefined') {
-        setTimeout(initScripts, 100);
-    } else {
-        initScripts();
-    }
-
-    function initScripts() {
-        const editModalEl = document.getElementById('editServiceModal');
-        const deleteModalEl = document.getElementById('deleteConfirmModal');
-        
-        const editModal = editModalEl ? new bootstrap.Modal(editModalEl) : null;
-        const deleteModal = deleteModalEl ? new bootstrap.Modal(deleteModalEl) : null;
-
-        let serviceIdToDelete = null;
-
-        // Переход в детали
-        document.querySelectorAll('.service-clickable-row').forEach(row => {
-            row.addEventListener('click', function(e) {
-                if (!e.target.closest('.actions-wrapper')) {
-                    const url = this.dataset.url;
-                    if (url) window.location.href = url;
-                }
-            });
-        });
-
-        // Переключение видимости (AJAX)
-        window.toggleVisibility = function(serviceId) {
-            fetch(`/services/moderator/service/${serviceId}/toggle/`, {
-                method: "POST",
-                headers: {
-                    "X-CSRFToken": "{{ csrf_token }}",
-                    "X-Requested-With": "XMLHttpRequest"
-                }
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.status === "success") {
-                    const row = document.getElementById(`service-row-${serviceId}`);
-                    const btn = document.getElementById(`toggle-btn-${serviceId}`);
-                    const badge = document.getElementById(`status-badge-${serviceId}`);
-                    const icon = btn.querySelector('i');
-
-                    if (data.is_hidden) {
-                        row.classList.add('row-hidden');
-                        btn.classList.add('is-hidden');
-                        badge.className = "badge bg-secondary";
-                        badge.innerText = "Скрыта";
-                        icon.className = "bi bi-eye-slash";
-                    } else {
-                        row.classList.remove('row-hidden');
-                        btn.classList.remove('is-hidden');
-                        badge.className = "badge bg-success";
-                        badge.innerText = "Активна";
-                        icon.className = "bi bi-eye";
-                    }
-                }
-            });
-        };
-
-        // Загрузка данных для редактирования
-        document.querySelectorAll('.edit-service-trigger').forEach(btn => {
-            btn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                const sid = this.dataset.id;
-                fetch(`/services/moderator/service/${sid}/json/`)
-                    .then(res => res.json())
-                    .then(data => {
-                        document.getElementById('edit-service-id').value = data.id;
-                        document.getElementById('edit-name').value = data.name;
-                        document.getElementById('edit-price').value = data.price;
-                        document.getElementById('edit-duration').value = data.duration;
-                        document.getElementById('edit-short-description').value = data.short_description;
-                        document.getElementById('edit-description').value = data.description;
-                        if (editModal) editModal.show();
-                    });
-            });
-        });
-
-        // Форма редактирования (ИСПРАВЛЕННЫЙ AJAX)
-        const editForm = document.getElementById('edit-service-form');
-        if (editForm) {
-            editForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                const sid = document.getElementById('edit-service-id').value;
-                const url = `/services/moderator/service/${sid}/update/`;
-                
-                fetch(url, {
-                    method: "POST",
-                    body: new FormData(this),
-                    headers: { 
-                        "X-Requested-With": "XMLHttpRequest",
-                        "X-CSRFToken": "{{ csrf_token }}"
-                    }
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.status === "success") location.reload();
-                    else alert("Ошибка при сохранении");
-                });
-            });
-        }
-
-        // Создание (AJAX)
-        const createForm = document.getElementById('create-service-form');
-        if (createForm) {
-            createForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                fetch("{% url 'services:service_create' %}", {
-                    method: "POST",
-                    body: new FormData(this),
-                    headers: { "X-Requested-With": "XMLHttpRequest" }
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.status === "success") location.reload();
-                    else alert("Ошибка при создании");
-                });
-            });
-        }
-
-        // Удаление (Подтверждение)
-        document.querySelectorAll('.delete-service-trigger').forEach(btn => {
-            btn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                serviceIdToDelete = this.dataset.id;
-                document.getElementById('delete-service-name').innerText = this.dataset.name;
-                if (deleteModal) deleteModal.show();
-            });
-        });
-
-        const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
-        if (confirmDeleteBtn) {
-            confirmDeleteBtn.addEventListener('click', function() {
-                if (!serviceIdToDelete) return;
-                fetch(`/services/moderator/service/${serviceIdToDelete}/delete/`, {
-                    method: "POST",
-                    headers: {
-                        "X-CSRFToken": "{{ csrf_token }}",
-                        "X-Requested-With": "XMLHttpRequest"
-                    }
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.status === "success") location.reload();
-                });
-            });
-        }
-    }
-});
-</script>
+{% block extra_js %}
+<script src="{% static 'js/pages/services-moderator.js' %}"></script>
 {% endblock %}

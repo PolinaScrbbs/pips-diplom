@@ -1,0 +1,98 @@
+/* ==========================================================================
+   services-moderator.css — страница модератора: управление услугами.
+   ========================================================================== */
+
+:root {
+    --mod-sage: #4a7c59;
+    --mod-bg: #f4f7f6;
+}
+
+.page-services-moderator body { background-color: var(--mod-bg); }
+
+.mod-table-container {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+    overflow: hidden;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.search-bar {
+    background: #f8faf9;
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    padding: 12px 20px;
+    transition: all 0.3s ease;
+}
+
+.search-bar:focus {
+    background: white;
+    border-color: var(--mod-sage);
+    box-shadow: 0 0 0 4px rgba(74, 124, 89, 0.1);
+}
+
+.table thead th {
+    background: #fdfdfd;
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: #8898aa;
+    padding: 18px 25px;
+    border-bottom: 1px solid #edf2f0;
+}
+
+.table tbody td {
+    padding: 18px 25px;
+    vertical-align: middle;
+    font-size: 0.95rem;
+}
+
+.row-hidden {
+    opacity: 0.6;
+    background-color: #fcfcfc;
+}
+
+.price-badge {
+    background: #e8f5e9;
+    color: #2e7d32;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-weight: 700;
+}
+
+.action-btn {
+    width: 38px;
+    height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    transition: all 0.2s;
+    border: 1px solid #eee;
+    background: white;
+    color: #525f7f;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.action-btn:hover {
+    background: #f8fafb;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+}
+
+.btn-toggle-view.is-hidden { color: #f5365c; border-color: #f5365c; }
+.btn-edit:hover           { color: #5e72e4; border-color: #5e72e4; }
+.btn-delete:hover         { color: #f5365c; border-color: #f5365c; }
+
+.filter-dot {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 10px;
+    height: 10px;
+    background-color: #f5365c;
+    border: 2px solid white;
+    border-radius: 50%;
+}

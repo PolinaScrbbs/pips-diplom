@@ -1,0 +1,138 @@
+/* ==========================================================================
+   reviews-list.css — публичная страница отзывов.
+   ========================================================================== */
+
+:root {
+    --glass-bg: rgba(255, 255, 255, 0.8);
+    --success-gradient: linear-gradient(135deg, #198754 0%, #12633d 100%);
+}
+
+.page-reviews-list body { background-color: #f8faf9; }
+
+.reviews-hero {
+    padding: 100px 0 60px;
+    background: radial-gradient(circle at top right, #e8f5e9 0%, transparent 40%);
+}
+
+.review-card {
+    border-radius: 24px !important;
+    border: 1px solid rgba(0, 0, 0, 0.03) !important;
+    transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+    background: white;
+}
+
+.review-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08) !important;
+}
+
+.star-rating         { color: #ffc107; font-size: 0.85rem; }
+.star-rating .bi-star { color: #dee2e6; }
+
+.filter-scroll-wrapper {
+    display: flex;
+    overflow-x: auto;
+    padding-bottom: 10px;
+    scrollbar-width: none;
+}
+
+.filter-scroll-wrapper::-webkit-scrollbar { display: none; }
+
+.btn-filter {
+    white-space: nowrap;
+    border: none;
+    background: #eee;
+    color: #555;
+    border-radius: 100px;
+    padding: 10px 24px;
+    font-weight: 600;
+    margin-right: 8px;
+    transition: 0.3s;
+}
+
+.btn-filter.active {
+    background: #198754;
+    color: white;
+    box-shadow: 0 8px 15px rgba(25, 135, 84, 0.2);
+}
+
+.author-avatar {
+    width: 48px;
+    height: 48px;
+    background: var(--success-gradient);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 16px;
+    font-weight: 700;
+    box-shadow: 0 4px 10px rgba(25, 135, 84, 0.15);
+}
+
+.service-tag {
+    background: #f0f4f2;
+    color: #198754;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 6px;
+}
+
+.pagination-wrapper {
+    margin-top: 4rem;
+    padding: 10px;
+}
+
+.pagination { gap: 8px; }
+.pagination .page-item { border: none; }
+
+.pagination .page-link {
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 16px !important;
+    border: none !important;
+    background: white;
+    color: #495057;
+    font-weight: 600;
+    font-size: 1rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+    transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.pagination .page-link:hover {
+    background: #f0f4f2;
+    color: #198754;
+    transform: translateY(-4px);
+    box-shadow: 0 10px 20px rgba(25, 135, 84, 0.1);
+}
+
+.pagination .page-item.active .page-link {
+    background: var(--success-gradient) !important;
+    color: white !important;
+    box-shadow: 0 8px 20px rgba(25, 135, 84, 0.3);
+}
+
+.pagination .page-item:first-child .page-link,
+.pagination .page-item:last-child .page-link {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    font-size: 1.2rem;
+}
+
+.pagination .page-item.disabled .page-link {
+    opacity: 0.4;
+    background: transparent;
+    box-shadow: none;
+    transform: none;
+}
+
+@media (max-width: 576px) {
+    .pagination .page-link {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px !important;
+    }
+}
