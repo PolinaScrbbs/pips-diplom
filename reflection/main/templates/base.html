@@ -24,16 +24,22 @@
 
 <script>
 /* Inline-bootstrap для анимации смены темы.
- * Создаёт overlay ДО первой отрисовки, чтобы новая страница не мигала. */
+ * Создаёт overlay ДО первой отрисовки, чтобы новая страница не мигала.
+ * Зоны: light (по умолчанию), dark (логи), stats (статистика). */
 (function () {
     try {
         var raw = sessionStorage.getItem('reflection.themeTransition');
         if (!raw) return;
         sessionStorage.removeItem('reflection.themeTransition');
         var data = JSON.parse(raw);
-        if (!data || (data.direction !== 'to-dark' && data.direction !== 'to-light')) return;
-        var isDark = document.body.classList.contains('page-admin-logs');
-        if ((data.direction === 'to-dark') !== isDark) return;
+        if (!data) return;
+        var VALID = { 'to-light': 'light', 'to-dark': 'dark', 'to-stats': 'stats' };
+        var wantedZone = VALID[data.direction];
+        if (!wantedZone) return;
+        var bodyZone = 'light';
+        if (document.body.classList.contains('page-admin-logs'))  bodyZone = 'dark';
+        if (document.body.classList.contains('page-admin-stats')) bodyZone = 'stats';
+        if (bodyZone !== wantedZone) return;
         var x = (typeof data.x === 'number' ? data.x : 0.5) * window.innerWidth;
         var y = (typeof data.y === 'number' ? data.y : 0.5) * window.innerHeight;
         var ov = document.createElement('div');
@@ -52,6 +58,13 @@
                         '<span class="tt-label-icon">❀</span>' +
                         '<span class="tt-label-title">Отражение</span>' +
                         '<span class="tt-label-subtitle">детский центр</span>' +
+                    '</span>' +
+                    '<span class="tt-label-stats">' +
+                        '<span class="tt-label-bars" aria-hidden="true">' +
+                            '<span></span><span></span><span></span><span></span>' +
+                        '</span>' +
+                        '<span class="tt-label-title">Аналитика</span>' +
+                        '<span class="tt-label-subtitle">центр управления</span>' +
                     '</span>';
             }
             ov.appendChild(n);
@@ -96,6 +109,7 @@
                 </a>
                 <ul class="dropdown-menu border-0 shadow-sm" aria-labelledby="adminPanelDropdown">
                   <li><a class="dropdown-item" href="{% url 'admin_panel:users_list' %}"><i class="bi bi-people me-2"></i>Пользователи</a></li>
+                  <li><a class="dropdown-item" href="{% url 'admin_panel:stats' %}"><i class="bi bi-bar-chart-line me-2"></i>Статистика</a></li>
                   <li><a class="dropdown-item" href="{% url 'admin_panel:logs' %}"><i class="bi bi-terminal me-2"></i>Системные логи</a></li>
                 </ul>
               </li>

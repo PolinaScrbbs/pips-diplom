@@ -15,23 +15,57 @@
     'use strict';
 
     const STORAGE_KEY = 'reflection.themeTransition';
-    const DARK_PATH_PREFIX = '/admin-panel/logs';
     const OUTGOING_DURATION = 700;
     const SAFETY_TIMEOUT = 1500;
     const MOTION_QUERY = window.matchMedia('(prefers-reduced-motion: reduce)');
 
-    function isDarkPath(href) {
+    /* Регистрируем «зоны» — визуально различающиеся разделы сайта.
+     * Анимация смены темы запускается, когда переходим из одной зоны в другую. */
+    const ZONE_PREFIXES = [
+        { zone: 'dark',  prefix: '/admin-panel/logs' },
+        { zone: 'stats', prefix: '/admin-panel/stats' },
+    ];
+    const BODY_ZONE_CLASSES = [
+        { cls: 'page-admin-logs',  zone: 'dark' },
+        { cls: 'page-admin-stats', zone: 'stats' },
+    ];
+
+    function zoneFromPath(href) {
         try {
             const url = new URL(href, window.location.origin);
             if (url.origin !== window.location.origin) return null;
-            return url.pathname.startsWith(DARK_PATH_PREFIX);
+            for (const item of ZONE_PREFIXES) {
+                if (url.pathname.startsWith(item.prefix)) return item.zone;
+            }
+            return 'light';
         } catch (_) {
             return null;
         }
     }
 
-    function currentlyDark() {
-        return document.body.classList.contains('page-admin-logs');
+    function currentZone() {
+        for (const item of BODY_ZONE_CLASSES) {
+            if (document.body.classList.contains(item.cls)) return item.zone;
+        }
+        return 'light';
+    }
+
+    function labelMarkup() {
+        return (
+            '<span class="tt-label-dark">&gt; booting reflection.shell</span>' +
+            '<span class="tt-label-light">' +
+                '<span class="tt-label-icon">❀</span>' +
+                '<span class="tt-label-title">Отражение</span>' +
+                '<span class="tt-label-subtitle">детский центр</span>' +
+            '</span>' +
+            '<span class="tt-label-stats">' +
+                '<span class="tt-label-bars" aria-hidden="true">' +
+                    '<span></span><span></span><span></span><span></span>' +
+                '</span>' +
+                '<span class="tt-label-title">Аналитика</span>' +
+                '<span class="tt-label-subtitle">центр управления</span>' +
+            '</span>'
+        );
     }
 
     function buildOverlay() {
@@ -42,15 +76,7 @@
         ['tt-bg', 'tt-ring', 'tt-label'].forEach((cls) => {
             const n = document.createElement('div');
             n.className = cls;
-            if (cls === 'tt-label') {
-                n.innerHTML =
-                    '<span class="tt-label-dark">&gt; booting reflection.shell</span>' +
-                    '<span class="tt-label-light">' +
-                        '<span class="tt-label-icon">❀</span>' +
-                        '<span class="tt-label-title">Отражение</span>' +
-                        '<span class="tt-label-subtitle">детский центр</span>' +
-                    '</span>';
-            }
+            if (cls === 'tt-label') n.innerHTML = labelMarkup();
             overlay.appendChild(n);
         });
         return overlay;
@@ -122,14 +148,11 @@
             href.startsWith('tel:') || href.startsWith('javascript:')
         ) return;
 
-        const targetIsDark = isDarkPath(link.href);
-        if (targetIsDark === null) return;
-
-        const fromDark = currentlyDark();
-        let direction;
-        if (!fromDark && targetIsDark) direction = 'to-dark';
-        else if (fromDark && !targetIsDark) direction = 'to-light';
-        else return;
+        const toZone = zoneFromPath(link.href);
+        if (toZone === null) return;
+        const fromZone = currentZone();
+        if (fromZone === toZone) return;
+        const direction = 'to-' + toZone;
 
         try {
             const a = new URL(link.href, window.location.origin);

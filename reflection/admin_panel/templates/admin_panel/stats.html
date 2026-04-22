@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Статистика — Панель администратора{% endblock %}
+
+{% block body_class %}page-admin-stats{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/components/admin-subnav.css' %}">
+<link rel="stylesheet" href="{% static 'css/pages/admin-stats.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="stats-page"
+     id="admin-stats-root"
+     data-data-url="{% url 'admin_panel:stats_data' %}">
+
+    {% include "admin_panel/_nav.html" with active='stats' %}
+
+    <header class="stats-heading">
+        <div>
+            <h1>Статистика центра</h1>
+            <p class="stats-subtitle">Сводные графики по пользователям, услугам, записям и отзывам</p>
+        </div>
+        <div class="stats-range" role="tablist" aria-label="Период">
+            <button type="button" class="stats-range-btn" data-days="7">7 дней</button>
+            <button type="button" class="stats-range-btn active" data-days="30">30 дней</button>
+            <button type="button" class="stats-range-btn" data-days="90">90 дней</button>
+        </div>
+    </header>
+
+    <section class="stats-kpi" aria-label="Ключевые показатели">
+        <article class="kpi-card kpi-users">
+            <header>
+                <span class="kpi-icon"><i class="bi bi-people-fill"></i></span>
+                <span class="kpi-title">Пользователи</span>
+            </header>
+            <div class="kpi-value" data-kpi="total_users">—</div>
+            <footer class="kpi-breakdown" data-kpi="users_breakdown">
+                <span><b data-kpi="users_user">0</b> юзеров</span>
+                <span><b data-kpi="users_moderator">0</b> модераторов</span>
+                <span><b data-kpi="users_admin">0</b> админов</span>
+            </footer>
+        </article>
+
+        <article class="kpi-card kpi-services">
+            <header>
+                <span class="kpi-icon"><i class="bi bi-grid-3x3-gap-fill"></i></span>
+                <span class="kpi-title">Услуги</span>
+            </header>
+            <div class="kpi-value">
+                <span data-kpi="active_services">0</span>
+                <small>/ <span data-kpi="total_services">0</span></small>
+            </div>
+            <footer class="kpi-breakdown">
+                <span>активных из общего количества</span>
+            </footer>
+        </article>
+
+        <article class="kpi-card kpi-bookings">
+            <header>
+                <span class="kpi-icon"><i class="bi bi-calendar-check-fill"></i></span>
+                <span class="kpi-title">Записи</span>
+            </header>
+            <div class="kpi-value" data-kpi="total_bookings">0</div>
+            <footer class="kpi-breakdown">
+                <span><b data-kpi="bookings_in_period">0</b> за период</span>
+            </footer>
+        </article>
+
+        <article class="kpi-card kpi-rating">
+            <header>
+                <span class="kpi-icon"><i class="bi bi-star-fill"></i></span>
+                <span class="kpi-title">Рейтинг</span>
+            </header>
+            <div class="kpi-value">
+                <span data-kpi="avg_rating">—</span>
+                <small>/ 5</small>
+            </div>
+            <footer class="kpi-breakdown">
+                <span><b data-kpi="total_reviews">0</b> отзывов</span>
+            </footer>
+        </article>
+
+        <article class="kpi-card kpi-revenue">
+            <header>
+                <span class="kpi-icon"><i class="bi bi-cash-coin"></i></span>
+                <span class="kpi-title">Оборот за период</span>
+            </header>
+            <div class="kpi-value">
+                <span data-kpi="total_revenue">0</span> <small>₽</small>
+            </div>
+            <footer class="kpi-breakdown">
+                <span>по ценам услуг в записях</span>
+            </footer>
+        </article>
+    </section>
+
+    <section class="stats-grid">
+        <article class="chart-card chart-wide">
+            <header>
+                <h3>Активность по дням</h3>
+                <p>Новые регистрации и записи за выбранный период</p>
+            </header>
+            <div class="chart-wrap"><canvas id="chart-activity"></canvas></div>
+        </article>
+
+        <article class="chart-card">
+            <header>
+                <h3>Пользователи по ролям</h3>
+                <p>Распределение аудитории по типу доступа</p>
+            </header>
+            <div class="chart-wrap"><canvas id="chart-roles"></canvas></div>
+        </article>
+
+        <article class="chart-card">
+            <header>
+                <h3>Топ услуг</h3>
+                <p>Количество записей по услугам</p>
+            </header>
+            <div class="chart-wrap"><canvas id="chart-top-services"></canvas></div>
+        </article>
+
+        <article class="chart-card">
+            <header>
+                <h3>Оценки отзывов</h3>
+                <p>Распределение звёзд, которые ставят клиенты</p>
+            </header>
+            <div class="chart-wrap"><canvas id="chart-ratings"></canvas></div>
+        </article>
+
+        <article class="chart-card">
+            <header>
+                <h3>Записи по дням недели</h3>
+                <p>Понедельник → Воскресенье</p>
+            </header>
+            <div class="chart-wrap"><canvas id="chart-weekday"></canvas></div>
+        </article>
+
+        <article class="chart-card">
+            <header>
+                <h3>Часы активности</h3>
+                <p>Когда чаще всего создают записи</p>
+            </header>
+            <div class="chart-wrap"><canvas id="chart-hours"></canvas></div>
+        </article>
+
+        <article class="chart-card">
+            <header>
+                <h3>Оборот по дням</h3>
+                <p>Сумма стоимостей услуг в новых записях</p>
+            </header>
+            <div class="chart-wrap"><canvas id="chart-revenue"></canvas></div>
+        </article>
+
+        <article class="chart-card chart-list">
+            <header>
+                <h3>Топ активных клиентов</h3>
+                <p>Пять пользователей с наибольшим числом записей</p>
+            </header>
+            <ol class="top-clients" id="top-clients">
+                <li class="empty">—</li>
+            </ol>
+        </article>
+    </section>
+
+    <div class="stats-footer">
+        <span class="dot on" id="stats-status-dot"></span>
+        <span id="stats-status-text">Загрузка…</span>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'vendor/chartjs/chart.umd.js' %}"></script>
+<script src="{% static 'js/pages/admin-stats.js' %}"></script>
+{% endblock %}

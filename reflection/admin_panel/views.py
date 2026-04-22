@@ -1,14 +1,19 @@
 import logging
 import re
-from datetime import date as date_type, datetime
+from datetime import date as date_type, datetime, timedelta
 
 from django.conf import settings
 from django.core.paginator import Paginator
-from django.db.models import Q, Value
-from django.db.models.functions import Replace
+from django.db.models import Avg, Count, Q, Sum, Value
+from django.db.models.functions import Replace, TruncDate
 from django.http import FileResponse, Http404, JsonResponse
 from django.shortcuts import get_object_or_404, render
+from django.utils import timezone
 from django.utils.dateparse import parse_date
+
+from booking.models import Booking
+from reviews.models import Review
+from services.models import Service
 
 from admin_panel.decorators import admin_required
 from admin_panel.forms import UserCreateForm, UserUpdateForm
@@ -477,3 +482,173 @@ def logs_download(request):
         as_attachment=True,
         filename=f"app-{d.isoformat()}.log",
     )
+
+
+# ---------------------------------------------------------------------------
+# Статистика — сводные графики по пользователям, услугам, записям и отзывам.
+# ---------------------------------------------------------------------------
+def _build_date_series(qs_map: dict, days: int):
+    """
+    qs_map: {date_obj: value} — произвольный словарь с датами из БД.
+    Возвращает два массива [labels_iso], [values] — ровно за `days` дней
+    подряд, от (сегодня - days + 1) до сегодня, включая дни без событий (0).
+    """
+    today = timezone.localdate()
+    labels, values = [], []
+    for i in range(days - 1, -1, -1):
+        d = today - timedelta(days=i)
+        labels.append(d.isoformat())
+        values.append(float(qs_map.get(d, 0) or 0))
+    return labels, values
+
+
+def _counts_by_date(queryset, field: str, days: int):
+    """Группировка по дате (без времени) с TruncDate — SQLite-совместимо."""
+    since = timezone.now() - timedelta(days=days - 1)
+    rows = (
+        queryset.filter(**{f"{field}__gte": since})
+        .annotate(d=TruncDate(field))
+        .values("d")
+        .annotate(n=Count("id"))
+    )
+    return {r["d"]: r["n"] for r in rows if r["d"] is not None}
+
+
+def _sum_by_date(queryset, field: str, sum_field: str, days: int):
+    since = timezone.now() - timedelta(days=days - 1)
+    rows = (
+        queryset.filter(**{f"{field}__gte": since})
+        .annotate(d=TruncDate(field))
+        .values("d")
+        .annotate(s=Sum(sum_field))
+    )
+    return {r["d"]: r["s"] for r in rows if r["d"] is not None}
+
+
+@admin_required
+def stats_page(request):
+    """HTML-страница статистики (сами данные грузятся JSON-endpoint'ом)."""
+    return render(request, "admin_panel/stats.html")
+
+
+@admin_required
+def stats_data(request):
+    """
+    JSON со всеми показателями для дашборда. Диапазон — 30 дней по умолчанию,
+    можно переопределить через ?days=<7|30|90>.
+    """
+    try:
+        days = int(request.GET.get("days") or 30)
+    except (TypeError, ValueError):
+        days = 30
+    days = max(7, min(365, days))
+
+    today = timezone.localdate()
+    period_start = today - timedelta(days=days - 1)
+
+    # --- KPI -----------------------------------------------------------------
+    total_users = User.objects.count()
+    users_by_role = {
+        row["role"]: row["n"]
+        for row in User.objects.values("role").annotate(n=Count("id"))
+    }
+    active_services = Service.objects.filter(is_hidden=False).count()
+    total_services = Service.objects.count()
+    total_bookings = Booking.objects.count()
+    bookings_in_period = Booking.objects.filter(created_at__date__gte=period_start).count()
+    avg_rating = Review.objects.aggregate(avg=Avg("rating"))["avg"]
+    total_reviews = Review.objects.count()
+
+    # --- Series --------------------------------------------------------------
+    signups_labels, signups = _build_date_series(
+        _counts_by_date(User.objects.all(), "date_joined", days),
+        days,
+    )
+    _, bookings_series = _build_date_series(
+        _counts_by_date(Booking.objects.all(), "created_at", days),
+        days,
+    )
+
+    # Выручка = сумма цен услуг по забронированным записям (агрегируем
+    # отдельно, чтобы не тянуть сервис в каждую строку).
+    revenue_map = {}
+    revenue_rows = (
+        Booking.objects.filter(created_at__date__gte=period_start)
+        .annotate(d=TruncDate("created_at"))
+        .values("d")
+        .annotate(s=Sum("service__price"))
+    )
+    for r in revenue_rows:
+        if r["d"] is not None:
+            revenue_map[r["d"]] = r["s"]
+    _, revenue_series = _build_date_series(revenue_map, days)
+    total_revenue = sum(revenue_series)
+
+    # --- Топ услуг -----------------------------------------------------------
+    top_services = list(
+        Service.objects.annotate(c=Count("bookings"))
+        .order_by("-c", "name")[:8]
+        .values("name", "c")
+    )
+
+    # --- Распределение оценок ------------------------------------------------
+    rating_rows = Review.objects.values("rating").annotate(c=Count("id"))
+    rating_counts = [0, 0, 0, 0, 0]
+    for r in rating_rows:
+        if 1 <= r["rating"] <= 5:
+            rating_counts[r["rating"] - 1] = r["c"]
+
+    # --- Активность по дню недели (ПН..ВС) -----------------------------------
+    # SQLite не умеет нативно дни недели: считаем в Python, это дёшево.
+    weekday_counts = [0] * 7
+    for b in Booking.objects.filter(created_at__date__gte=period_start).values_list(
+        "created_at", flat=True
+    ):
+        local_day = timezone.localtime(b).weekday()
+        weekday_counts[local_day] += 1
+
+    # --- Активность по часу дня ---------------------------------------------
+    hour_counts = [0] * 24
+    for b in Booking.objects.filter(created_at__date__gte=period_start).values_list(
+        "created_at", flat=True
+    ):
+        hour_counts[timezone.localtime(b).hour] += 1
+
+    # --- Топ активных клиентов ----------------------------------------------
+    top_clients = list(
+        User.objects.filter(role=User.USER)
+        .annotate(c=Count("bookings"))
+        .filter(c__gt=0)
+        .order_by("-c", "username")[:5]
+        .values("username", "c")
+    )
+
+    return JsonResponse({
+        "days": days,
+        "kpi": {
+            "total_users": total_users,
+            "users_by_role": {
+                "user": users_by_role.get(User.USER, 0),
+                "moderator": users_by_role.get(User.MODERATOR, 0),
+                "admin": users_by_role.get(User.ADMIN, 0),
+            },
+            "active_services": active_services,
+            "total_services": total_services,
+            "total_bookings": total_bookings,
+            "bookings_in_period": bookings_in_period,
+            "avg_rating": round(avg_rating, 2) if avg_rating is not None else None,
+            "total_reviews": total_reviews,
+            "total_revenue": float(total_revenue or 0),
+        },
+        "series": {
+            "labels": signups_labels,
+            "signups": signups,
+            "bookings": bookings_series,
+            "revenue": revenue_series,
+        },
+        "top_services": top_services,
+        "rating_counts": rating_counts,
+        "weekday_counts": weekday_counts,
+        "hour_counts": hour_counts,
+        "top_clients": top_clients,
+    })

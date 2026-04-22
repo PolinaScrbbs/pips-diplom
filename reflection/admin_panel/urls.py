@@ -18,4 +18,7 @@ urlpatterns = [
     path("logs/users/", views.logs_users, name="logs_users"),
     path("logs/clear/", views.logs_clear, name="logs_clear"),
     path("logs/download/", views.logs_download, name="logs_download"),
+
+    path("stats/", views.stats_page, name="stats"),
+    path("stats/data/", views.stats_data, name="stats_data"),
 ]
