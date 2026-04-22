@@ -16,10 +16,53 @@
 
   <link rel="stylesheet" href="{% static 'css/base.css' %}">
   <link rel="stylesheet" href="{% static 'css/components/booking-modal.css' %}">
+  <link rel="stylesheet" href="{% static 'css/components/theme-transition.css' %}">
 
   {% block extra_css %}{% endblock %}
 </head>
 <body class="d-flex flex-column min-vh-100 {% block body_class %}{% endblock %}">
+
+<script>
+/* Inline-bootstrap для анимации смены темы.
+ * Создаёт overlay ДО первой отрисовки, чтобы новая страница не мигала. */
+(function () {
+    try {
+        var raw = sessionStorage.getItem('reflection.themeTransition');
+        if (!raw) return;
+        sessionStorage.removeItem('reflection.themeTransition');
+        var data = JSON.parse(raw);
+        if (!data || (data.direction !== 'to-dark' && data.direction !== 'to-light')) return;
+        var isDark = document.body.classList.contains('page-admin-logs');
+        if ((data.direction === 'to-dark') !== isDark) return;
+        var x = (typeof data.x === 'number' ? data.x : 0.5) * window.innerWidth;
+        var y = (typeof data.y === 'number' ? data.y : 0.5) * window.innerHeight;
+        var ov = document.createElement('div');
+        ov.id = 'theme-transition-overlay';
+        ov.className = 'is-active tt-in tt-' + data.direction;
+        ov.setAttribute('aria-hidden', 'true');
+        ov.style.setProperty('--tt-x', x + 'px');
+        ov.style.setProperty('--tt-y', y + 'px');
+        ['tt-bg', 'tt-ring', 'tt-label'].forEach(function (cls) {
+            var n = document.createElement('div');
+            n.className = cls;
+            if (cls === 'tt-label') {
+                n.innerHTML =
+                    '<span class="tt-label-dark">&gt; booting reflection.shell</span>' +
+                    '<span class="tt-label-light">' +
+                        '<span class="tt-label-icon">❀</span>' +
+                        '<span class="tt-label-title">Отражение</span>' +
+                        '<span class="tt-label-subtitle">детский центр</span>' +
+                    '</span>';
+            }
+            ov.appendChild(n);
+        });
+        document.body.appendChild(ov);
+        setTimeout(function () {
+            ov.classList.remove('is-active', 'tt-in', 'tt-' + data.direction);
+        }, 1100);
+    } catch (_) { /* no-op */ }
+})();
+</script>
 
 <header class="sticky-top">
   <nav class="navbar navbar-expand-lg">
@@ -140,6 +183,7 @@
 <script src="{% static 'vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
 <script src="{% static 'vendor/imask/imask.min.js' %}"></script>
 <script src="{% static 'js/components/booking-modal.js' %}"></script>
+<script src="{% static 'js/components/theme-transition.js' %}"></script>
 
 {% block extra_js %}{% endblock %}
 

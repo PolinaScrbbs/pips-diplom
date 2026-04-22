@@ -1,0 +1,246 @@
+/* theme-transition.css
+ * Анимация смены цветовой темы при навигации между обычными страницами
+ * и страницей системных логов.
+ *
+ * Принцип работы:
+ *   1. На странице-источнике перехватывается клик по ссылке-цели.
+ *   2. Над страницей появляется fixed-overlay, который через clip-path:circle
+ *      «расходится» из точки клика и закрывает экран нужным цветом темы.
+ *   3. После полного закрытия идёт реальная навигация.
+ *   4. На целевой странице оверлей уже закрывает весь экран и обратной
+ *      анимацией стягивается в точку — открывая новый интерфейс.
+ *
+ * Стартовая точка анимации передаётся между страницами через sessionStorage
+ * (в виде долей от размера вьюпорта).
+ */
+
+#theme-transition-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    pointer-events: none;
+    will-change: clip-path, opacity;
+    /* Стартово невидим, пока не активирован JS-ом */
+    opacity: 0;
+    visibility: hidden;
+}
+
+#theme-transition-overlay.is-active {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: all;
+}
+
+/* Базовый цвет/градиент в зависимости от направления */
+#theme-transition-overlay.tt-to-dark .tt-bg {
+    background:
+        radial-gradient(circle at var(--tt-x, 50%) var(--tt-y, 50%),
+            #0d2418 0%,
+            #0a1f14 35%,
+            #061812 70%,
+            #04110b 100%);
+}
+
+#theme-transition-overlay.tt-to-light .tt-bg {
+    background:
+        radial-gradient(circle at var(--tt-x, 50%) var(--tt-y, 50%),
+            #ffffff 0%,
+            #f7fbf8 30%,
+            #ecf6ef 60%,
+            #e0f0e6 100%);
+}
+
+#theme-transition-overlay .tt-bg {
+    position: absolute;
+    inset: 0;
+    will-change: clip-path;
+}
+
+/* Светящееся зелёное кольцо на гребне волны (через transform — дёшево) */
+#theme-transition-overlay .tt-ring {
+    position: absolute;
+    width: 240px;
+    height: 240px;
+    left: var(--tt-x, 50%);
+    top: var(--tt-y, 50%);
+    margin-left: -120px;
+    margin-top: -120px;
+    border-radius: 50%;
+    border: 2px solid rgba(94, 196, 130, 0.55);
+    box-shadow:
+        0 0 80px 16px rgba(94, 196, 130, 0.45),
+        inset 0 0 40px rgba(94, 196, 130, 0.25);
+    transform: scale(0);
+    transform-origin: center;
+    will-change: transform, opacity;
+    mix-blend-mode: screen;
+    pointer-events: none;
+}
+
+/* Подпись по центру — разная для тёмного и светлого направлений */
+#theme-transition-overlay .tt-label {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    pointer-events: none;
+    white-space: nowrap;
+    text-align: center;
+}
+
+#theme-transition-overlay .tt-label-dark,
+#theme-transition-overlay .tt-label-light {
+    display: none;
+}
+
+#theme-transition-overlay.tt-to-dark .tt-label-dark {
+    display: inline-block;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Menlo', 'Consolas', monospace;
+    font-size: 0.9rem;
+    color: #5ec482;
+    text-shadow: 0 0 10px rgba(94, 196, 130, 0.6);
+    letter-spacing: 0.05em;
+}
+
+#theme-transition-overlay.tt-to-dark .tt-label-dark::after {
+    content: '_';
+    display: inline-block;
+    margin-left: 2px;
+    animation: tt-label-cursor 0.8s steps(1) infinite;
+}
+
+@keyframes tt-label-cursor {
+    50% { opacity: 0; }
+}
+
+/* Светлое направление: элегантная брендовая подпись */
+#theme-transition-overlay.tt-to-light .tt-label-light {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+    font-family: 'Montserrat', system-ui, sans-serif;
+    color: #4a7c59;
+}
+
+#theme-transition-overlay.tt-to-light .tt-label-light .tt-label-icon {
+    font-size: 2.2rem;
+    background: linear-gradient(135deg, #4a7c59, #8fc0a9);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 4px 18px rgba(74, 124, 89, 0.25));
+    line-height: 1;
+    animation: tt-petal 1.4s ease-in-out infinite;
+}
+
+#theme-transition-overlay.tt-to-light .tt-label-light .tt-label-title {
+    font-size: 1.35rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #4a7c59, #6aa07a);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+#theme-transition-overlay.tt-to-light .tt-label-light .tt-label-subtitle {
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: rgba(74, 124, 89, 0.55);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+}
+
+#theme-transition-overlay.tt-to-light .tt-label-light .tt-label-subtitle::before,
+#theme-transition-overlay.tt-to-light .tt-label-light .tt-label-subtitle::after {
+    content: '';
+    display: inline-block;
+    width: 24px;
+    height: 1px;
+    background: rgba(74, 124, 89, 0.35);
+}
+
+@keyframes tt-petal {
+    0%, 100% { transform: rotate(-4deg) scale(1); }
+    50%      { transform: rotate(4deg) scale(1.06); }
+}
+
+/* ----- OUTGOING (covering) ----- */
+
+@keyframes tt-cover {
+    from { clip-path: circle(0px at var(--tt-x) var(--tt-y)); }
+    to   { clip-path: circle(160% at var(--tt-x) var(--tt-y)); }
+}
+
+@keyframes tt-ring-grow {
+    0%   { transform: scale(0);  opacity: 1; }
+    70%  { opacity: 0.6; }
+    100% { transform: scale(20); opacity: 0; }
+}
+
+@keyframes tt-label-fade-in {
+    0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.92); }
+    50%  { opacity: 0; }
+    100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+#theme-transition-overlay.tt-out .tt-bg {
+    animation: tt-cover 700ms cubic-bezier(0.7, 0, 0.25, 1) forwards;
+}
+
+#theme-transition-overlay.tt-out .tt-ring {
+    animation: tt-ring-grow 700ms cubic-bezier(0.7, 0, 0.25, 1) forwards;
+}
+
+#theme-transition-overlay.tt-out .tt-label {
+    animation: tt-label-fade-in 700ms 220ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* ----- INCOMING (revealing) ----- */
+
+@keyframes tt-reveal {
+    from { clip-path: circle(160% at var(--tt-x) var(--tt-y)); }
+    to   { clip-path: circle(0px at var(--tt-x) var(--tt-y)); }
+}
+
+@keyframes tt-ring-shrink {
+    0%   { transform: scale(20); opacity: 0; }
+    25%  { opacity: 0.6; }
+    100% { transform: scale(0);  opacity: 1; }
+}
+
+@keyframes tt-label-fade-out {
+    from { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    to   { opacity: 0; transform: translate(-50%, -50%) scale(1.05); }
+}
+
+#theme-transition-overlay.tt-in .tt-bg {
+    /* Стартово закрываем весь экран, потом анимация */
+    clip-path: circle(160% at var(--tt-x) var(--tt-y));
+    animation: tt-reveal 850ms cubic-bezier(0.7, 0, 0.25, 1) forwards;
+}
+
+#theme-transition-overlay.tt-in .tt-ring {
+    --tt-progress: 160;
+    animation: tt-ring-shrink 850ms cubic-bezier(0.7, 0, 0.25, 1) forwards;
+}
+
+#theme-transition-overlay.tt-in .tt-label {
+    opacity: 1;
+    animation: tt-label-fade-out 420ms 120ms ease forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #theme-transition-overlay,
+    #theme-transition-overlay * {
+        animation-duration: 250ms !important;
+        animation-timing-function: linear !important;
+    }
+    #theme-transition-overlay .tt-ring,
+    #theme-transition-overlay .tt-label { display: none; }
+}
