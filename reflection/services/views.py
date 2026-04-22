@@ -2,7 +2,7 @@ import logging
 
 from django.http import JsonResponse
 from django.db import connection
-from django.db.models import Q
+from django.db.models import Q, Avg, Count
 from django.shortcuts import render, get_object_or_404
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
@@ -105,6 +105,16 @@ def moderator_services_list(request):
     paginator = Paginator(services, 6)
     page_obj = paginator.get_page(request.GET.get("page"))
 
+    # KPI по всему справочнику услуг (не зависят от текущего фильтра — это общая
+    # картинка, так удобнее при принятии решений).
+    kpi = Service.objects.aggregate(
+        total=Count("id"),
+        visible=Count("id", filter=Q(is_hidden=False)),
+        hidden=Count("id", filter=Q(is_hidden=True)),
+        avg_price=Avg("price"),
+    )
+    has_filters = bool(search_query or min_price or max_price or visibility != "visible")
+
     return render(
         request,
         "services/moderator_list.html",
@@ -114,7 +124,9 @@ def moderator_services_list(request):
             "min_price": min_price,
             "max_price": max_price,
             "sort": sort_by,
-            "visibility": visibility,  # Не забудьте передать в контекст
+            "visibility": visibility,
+            "kpi": kpi,
+            "has_filters": has_filters,
         },
     )
 

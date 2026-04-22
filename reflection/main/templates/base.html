@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 {% load static %}
-<html lang="ru">
+<html lang="ru"{% if user.is_admin %} data-admin-controls="1"{% endif %}>
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -22,9 +22,16 @@
 
   <script>
   /* Применяем пользовательский выбор «без анимаций» ДО первой отрисовки,
-   * чтобы избежать даже краткого проигрывания анимации на F5. */
+   * чтобы избежать даже краткого проигрывания анимации на F5.
+   * Доступно ТОЛЬКО админу (инструмент разработки/дебага). Для остальных
+   * сохранённая настройка игнорируется и очищается. */
   (function () {
       try {
+          var isAdmin = document.documentElement.dataset.adminControls === '1';
+          if (!isAdmin) {
+              localStorage.removeItem('reflection.animations');
+              return;
+          }
           if (localStorage.getItem('reflection.animations') === 'off') {
               document.documentElement.classList.add('no-anim');
           }
@@ -48,6 +55,24 @@
             {% csrf_token %}
             <button type="submit" class="impersonation-exit">
                 <i class="bi bi-box-arrow-right"></i> Выйти из режима
+            </button>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+{% if is_moderator_preview %}
+<div class="impersonation-banner is-preview" role="alert">
+    <div class="impersonation-banner-inner">
+        <span class="impersonation-dot" aria-hidden="true"></span>
+        <span class="impersonation-text">
+            Предпросмотр клиентской версии сайта
+            (модератор: <strong>{{ user.username }}</strong>)
+        </span>
+        <form method="post" action="{% url 'main:stop_moderator_preview' %}" class="impersonation-form">
+            {% csrf_token %}
+            <button type="submit" class="impersonation-exit">
+                <i class="bi bi-box-arrow-right"></i> Выйти из предпросмотра
             </button>
         </form>
     </div>
@@ -144,6 +169,12 @@
           <span class="brand-divider" aria-hidden="true">·</span>
           <span class="brand-admin-label">Админ-панель</span>
         </a>
+      {% elif user.is_moderator and not is_moderator_preview %}
+        <a class="navbar-brand navbar-brand-moderator d-flex align-items-center" href="{% url 'services:moderator_list' %}">
+          <i class="bi bi-flower1 me-2"></i>Отражение
+          <span class="brand-divider" aria-hidden="true">·</span>
+          <span class="brand-moderator-label">Модератор</span>
+        </a>
       {% else %}
         <a class="navbar-brand d-flex align-items-center" href="{% url 'main:index' %}">
           <i class="bi bi-flower1 me-2"></i>Отражение
@@ -157,21 +188,27 @@
       <div class="collapse navbar-collapse" id="mainNavbar">
         <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
           {% if user.is_admin %}
-          {% elif user.is_moderator %}
-            <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle text-warning fw-bold" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                <i class="bi bi-shield-lock me-1"></i> Панель модератора
+            {# У админа пункты разнесены по навбару внутри admin_panel/_nav.html #}
+          {% elif user.is_moderator and not is_moderator_preview %}
+            <li class="nav-item">
+              <a class="nav-link moderator-nav-link {% if request.resolver_match.namespace == 'services' and request.resolver_match.url_name == 'moderator_list' %}active{% endif %}"
+                 href="{% url 'services:moderator_list' %}">
+                <i class="bi bi-ui-checks-grid me-1"></i>Услуги
               </a>
-              <ul class="dropdown-menu border-0 shadow-sm" aria-labelledby="adminDropdown">
-                <li><a class="dropdown-item" href="{% url 'services:moderator_list' %}">Управление услугами</a></li>
-                <li><a class="dropdown-item" href="{% url 'reviews:moderator_reviews' %}">Отзывы клиентов</a></li>
-              </ul>
             </li>
             <li class="nav-item">
-              <a class="nav-link {% if request.resolver_match.url_name == 'services' %}active{% endif %}" href="{% url 'services:services' %}">Услуги</a>
+              <a class="nav-link moderator-nav-link {% if request.resolver_match.namespace == 'reviews' and request.resolver_match.url_name == 'moderator_reviews' %}active{% endif %}"
+                 href="{% url 'reviews:moderator_reviews' %}">
+                <i class="bi bi-chat-square-text me-1"></i>Отзывы
+              </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link {% if request.resolver_match.url_name == 'reviews' %}active{% endif %}" href="{% url 'reviews:reviews' %}">Отзывы</a>
+              <form method="post" action="{% url 'main:start_moderator_preview' %}" class="m-0 d-inline-block">
+                {% csrf_token %}
+                <button type="submit" class="nav-link moderator-nav-link moderator-preview-btn">
+                  <i class="bi bi-eye me-1"></i>Предпросмотр
+                </button>
+              </form>
             </li>
           {% else %}
             <li class="nav-item">
@@ -187,18 +224,20 @@
         </ul>
 
         <div class="d-flex align-items-center gap-3">
-          <button type="button"
-                  class="anim-toggle"
-                  data-role="anim-toggle"
-                  aria-pressed="false"
-                  aria-label="Переключить анимации"
-                  title="Анимации переходов: включены">
-              <span class="anim-toggle-icon" aria-hidden="true">
-                  <i class="bi bi-lightning-charge-fill anim-toggle-on"></i>
-                  <i class="bi bi-lightning-charge anim-toggle-off"></i>
-              </span>
-              <span class="anim-toggle-label">Анимации</span>
-          </button>
+          {% if user.is_admin %}
+            <button type="button"
+                    class="anim-toggle"
+                    data-role="anim-toggle"
+                    aria-pressed="false"
+                    aria-label="Переключить анимации"
+                    title="Анимации переходов: включены">
+                <span class="anim-toggle-icon" aria-hidden="true">
+                    <i class="bi bi-lightning-charge-fill anim-toggle-on"></i>
+                    <i class="bi bi-lightning-charge anim-toggle-off"></i>
+                </span>
+                <span class="anim-toggle-label">Анимации</span>
+            </button>
+          {% endif %}
           {% if user.is_authenticated %}
             {% if user.is_user %}
               <a href="{% url 'users:profile' %}" class="text-decoration-none d-flex align-items-center me-2">

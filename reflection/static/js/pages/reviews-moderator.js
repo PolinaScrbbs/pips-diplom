@@ -26,10 +26,15 @@
         document.getElementById('modal-date').innerText = date;
         document.getElementById('modal-text').innerText = text;
 
+        const avatar = document.getElementById('modal-avatar');
+        if (avatar) {
+            avatar.innerText = (author || '?').trim().charAt(0).toUpperCase();
+        }
+
         let starsHtml = '';
         const r = parseInt(rating, 10);
         for (let i = 1; i <= 5; i++) {
-            starsHtml += `<i class="bi bi-star-fill ${i <= r ? 'text-warning' : 'text-light'}"></i>`;
+            starsHtml += `<i class="bi ${i <= r ? 'bi-star-fill' : 'bi-star'}"></i>`;
         }
         document.getElementById('modal-rating').innerHTML = starsHtml;
 

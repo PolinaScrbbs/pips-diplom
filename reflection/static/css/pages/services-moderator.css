@@ -1,98 +1,49 @@
 /* ==========================================================================
-   services-moderator.css — страница модератора: управление услугами.
+   services-moderator.css
+   --------------------------------------------------------------------------
+   Page-specific дополнения для страницы услуг модератора.
+   Базовые компоненты (hero / kpi / toolbar / data-grid / modal) живут в
+   moderator-shared.css — сюда выносим только то, что уникально для услуг.
    ========================================================================== */
 
-:root {
-    --mod-sage: #4a7c59;
-    --mod-bg: #f4f7f6;
+/* При наведении на строку услуг подсвечиваем название лёгким сдвигом
+   для тактильного ощущения «открыть карточку». */
+.page-services-moderator .mod-datagrid .mod-row-link:hover .fw-bold {
+    color: var(--mod-sage-dark);
 }
 
-.page-services-moderator body { background-color: var(--mod-bg); }
-
-.mod-table-container {
-    background: white;
-    border-radius: 20px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
-    overflow: hidden;
-    border: 1px solid rgba(0, 0, 0, 0.05);
+/* Дополнительные состояния для тумблера видимости на карточке. */
+.page-services-moderator .mod-icon-btn.is-hidden-state:hover {
+    color: #8c6a00;
+    border-color: #e7c85f;
+    background: #fcefc3;
 }
 
-.search-bar {
-    background: #f8faf9;
-    border: 1px solid #e9ecef;
-    border-radius: 12px;
-    padding: 12px 20px;
-    transition: all 0.3s ease;
+/* Иконка длительности в подписи под названием. */
+.page-services-moderator .mod-datagrid td .bi-clock {
+    color: var(--mod-sage);
+    font-size: 0.85rem;
+    margin-right: 2px;
 }
 
-.search-bar:focus {
-    background: white;
-    border-color: var(--mod-sage);
-    box-shadow: 0 0 0 4px rgba(74, 124, 89, 0.1);
+/* Лёгкий «индикатор» под строкой при наведении (аккуратная полоска слева). */
+.page-services-moderator .mod-datagrid .mod-row-link {
+    position: relative;
 }
-
-.table thead th {
-    background: #fdfdfd;
-    text-transform: uppercase;
-    font-size: 0.7rem;
-    font-weight: 700;
-    letter-spacing: 1px;
-    color: #8898aa;
-    padding: 18px 25px;
-    border-bottom: 1px solid #edf2f0;
-}
-
-.table tbody td {
-    padding: 18px 25px;
-    vertical-align: middle;
-    font-size: 0.95rem;
-}
-
-.row-hidden {
-    opacity: 0.6;
-    background-color: #fcfcfc;
-}
-
-.price-badge {
-    background: #e8f5e9;
-    color: #2e7d32;
-    padding: 6px 12px;
-    border-radius: 8px;
-    font-weight: 700;
-}
-
-.action-btn {
-    width: 38px;
-    height: 38px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 10px;
-    transition: all 0.2s;
-    border: 1px solid #eee;
-    background: white;
-    color: #525f7f;
-    text-decoration: none;
-    cursor: pointer;
-}
-
-.action-btn:hover {
-    background: #f8fafb;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
-}
-
-.btn-toggle-view.is-hidden { color: #f5365c; border-color: #f5365c; }
-.btn-edit:hover           { color: #5e72e4; border-color: #5e72e4; }
-.btn-delete:hover         { color: #f5365c; border-color: #f5365c; }
-
-.filter-dot {
+.page-services-moderator .mod-datagrid .mod-row-link::before {
+    content: "";
     position: absolute;
-    top: -2px;
-    right: -2px;
-    width: 10px;
-    height: 10px;
-    background-color: #f5365c;
-    border: 2px solid white;
-    border-radius: 50%;
+    left: 0;
+    top: 8px;
+    bottom: 8px;
+    width: 3px;
+    border-radius: 0 2px 2px 0;
+    background: transparent;
+    transition: background 0.2s ease;
+}
+.page-services-moderator .mod-datagrid .mod-row-link:hover::before {
+    background: var(--mod-sage);
+}
+.page-services-moderator .mod-datagrid .mod-row-link.is-hidden-row:hover::before {
+    background: var(--mod-amber);
 }

@@ -1,4 +1,15 @@
-from django.shortcuts import render
+import logging
+
+from django.shortcuts import redirect, render
+from django.views.decorators.http import require_POST
+
+from .utils import moderator_required
+
+logger = logging.getLogger("app")
+
+# Ключ сессии для режима «предпросмотра» клиентской версии сайта модератором.
+# Храним отдельно от impersonation — это простой UI-флаг, без подмены request.user.
+MODERATOR_PREVIEW_KEY = "moderator_preview"
 
 
 def custom_page_not_found(request, exception=None):
@@ -69,3 +80,34 @@ def index(request):
 
 def why_us(request):
     return render(request, "main/why_us.html")
+
+
+# ---------------------------------------------------------------------------
+# Режим «предпросмотра клиентской версии сайта» для модератора.
+#
+# Аналог impersonation у админа, но упрощённый: request.user не подменяется
+# (модератор остаётся модератором на уровне прав), меняется только внешний
+# вид базового шаблона — навбар становится клиентским, а сверху висит
+# баннер с кнопкой выхода из режима. Состояние хранится в сессии.
+# ---------------------------------------------------------------------------
+
+
+@require_POST
+@moderator_required
+def start_moderator_preview(request):
+    """Включает режим предпросмотра и отправляет модератора на главную."""
+    request.session[MODERATOR_PREVIEW_KEY] = True
+    logger.info("Moderator %s started client preview", request.user.username)
+    return redirect("main:index")
+
+
+@require_POST
+def stop_moderator_preview(request):
+    """Выключает режим предпросмотра. Доступен всем, у кого он активен в сессии."""
+    was_active = request.session.pop(MODERATOR_PREVIEW_KEY, False)
+    if was_active and request.user.is_authenticated:
+        logger.info("Moderator %s stopped client preview", request.user.username)
+    # Возвращаем модератора в его рабочую область.
+    if request.user.is_authenticated and request.user.is_moderator():
+        return redirect("services:moderator_list")
+    return redirect("main:index")

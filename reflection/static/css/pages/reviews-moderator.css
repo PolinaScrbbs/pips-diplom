@@ -1,50 +1,41 @@
 /* ==========================================================================
-   reviews-moderator.css — страница модератора: управление отзывами.
+   reviews-moderator.css
+   --------------------------------------------------------------------------
+   Page-specific дополнения для страницы отзывов модератора.
+   Базовые компоненты (hero / kpi / toolbar / data-grid / modal) живут в
+   moderator-shared.css — здесь только то, что уникально для отзывов.
    ========================================================================== */
 
-:root {
-    --mod-sage: #4a7c59;
-    --mod-bg: #f4f7f6;
-}
-
-.page-reviews-moderator body { background-color: var(--mod-bg); }
-
-.mod-table-container {
-    background: white;
-    border-radius: 20px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+.page-reviews-moderator .review-text-preview {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
     overflow: hidden;
-    border: 1px solid rgba(0, 0, 0, 0.05);
+    color: #52605a;
+    font-size: 0.92rem;
+    line-height: 1.45;
+    max-width: 560px;
 }
 
-.search-bar {
-    background: #f8faf9;
-    border: 1px solid #e9ecef;
-    border-radius: 12px;
-    padding: 10px 20px;
+/* Плашка «последний месяц» — оставлена как точка расширения,
+   используется JS-фильтрацией, если потребуется в будущем. */
+.page-reviews-moderator .mod-chip .bi-star-fill {
+    color: #f0b429;
 }
 
-.rating-star { color: #ffc107; font-size: 0.9rem; }
-
-.review-text-preview {
-    max-width: 300px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    display: block;
-    color: #6c757d;
+/* Ряд 1-2★ — чуть тёплый фон, чтобы сразу обращать внимание. */
+.page-reviews-moderator .mod-datagrid .review-row.is-low td {
+    background: linear-gradient(90deg, #fff8ec, transparent 60%);
 }
 
-.table thead th {
-    background: #fdfdfd;
-    text-transform: uppercase;
-    font-size: 0.7rem;
-    font-weight: 700;
-    color: #8898aa;
-    padding: 18px 25px;
+/* Модалка деталей: чуть увеличим звёзды заголовка и выделим. */
+.page-reviews-moderator #reviewDetailModal .mod-stars i {
+    font-size: 1.05rem;
 }
-
-.review-row:hover {
-    background-color: #f8fafb;
-    cursor: pointer;
+.page-reviews-moderator #reviewDetailModal #modal-text {
+    font-size: 0.98rem;
+    background: #fbfcfb;
+    border: 1px solid var(--mod-border-2);
+    border-radius: 14px;
+    padding: 16px 18px;
 }

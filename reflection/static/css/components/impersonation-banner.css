@@ -71,3 +71,23 @@
     background: #6a4acf;
     color: #fff;
 }
+
+/* --- Модификатор для модераторского «предпросмотра клиентской версии».
+   Переиспользуем механику (sticky-полоса + пульсирующий дот + кнопка выхода),
+   но в янтарно-оранжевой палитре, чтобы не путать с админским impersonation. */
+.impersonation-banner.is-preview {
+    background: linear-gradient(90deg, #6f3b0a 0%, #b57b1d 100%);
+}
+.impersonation-banner.is-preview .impersonation-dot {
+    background: #ffe6a3;
+    box-shadow: 0 0 0 0 rgba(255, 230, 163, 0.7);
+    animation: impDotPreview 1.6s ease-in-out infinite;
+}
+.impersonation-banner.is-preview .impersonation-text strong {
+    color: #ffe6a3;
+}
+
+@keyframes impDotPreview {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255, 230, 163, 0.7); }
+    50%      { box-shadow: 0 0 0 6px rgba(255, 230, 163, 0); }
+}

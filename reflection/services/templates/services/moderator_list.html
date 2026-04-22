@@ -6,44 +6,123 @@
 {% block body_class %}page-services-moderator{% endblock %}
 
 {% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/pages/moderator-shared.css' %}">
 <link rel="stylesheet" href="{% static 'css/pages/services-moderator.css' %}">
 {% endblock %}
 
 {% block content %}
 <div id="services-moderator-root"
-     class="container py-5"
+     class="container py-4"
      data-create-url="{% url 'services:service_create' %}"
      data-toggle-url="{% url 'services:service_toggle' 0 %}"
      data-json-url="{% url 'services:service_json' 0 %}"
      data-update-url="{% url 'services:service_update' 0 %}"
      data-delete-url="{% url 'services:service_delete' 0 %}">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div class="d-flex align-items-center gap-3">
-            <div>
-                <h2 class="fw-bold text-dark m-0">Управление услугами</h2>
-                <p class="text-muted small m-0">Найдено: {{ page_obj.paginator.count }} позиций</p>
-            </div>
 
-            <button class="btn btn-outline-dark rounded-pill px-3 shadow-sm position-relative" data-bs-toggle="modal" data-bs-target="#filterModal">
-                <i class="bi bi-filter-left me-1"></i> Фильтры
-                {% if search_query or min_price or max_price or visibility != 'visible' %}
-                    <span class="filter-dot"></span>
-                {% endif %}
+    {# ===== Hero ===== #}
+    <section class="mod-hero d-flex justify-content-between align-items-start flex-wrap gap-3">
+        <div>
+            <span class="mod-hero__eyebrow">
+                <i class="bi bi-ui-checks-grid"></i> Модератор · Услуги
+            </span>
+            <h1 class="mod-hero__title">Каталог услуг центра</h1>
+            <p class="mod-hero__subtitle">
+                Добавляйте новые услуги, управляйте видимостью и ценой.
+                KPI-метрики и быстрые фильтры помогают навести порядок в каталоге за пару кликов.
+            </p>
+        </div>
+        <div class="mod-hero__actions">
+            <button class="btn btn-ghost {% if has_filters %}has-dot{% endif %}"
+                    data-bs-toggle="modal" data-bs-target="#filterModal">
+                <i class="bi bi-funnel me-1"></i>Расширенные фильтры
+            </button>
+            <button class="btn btn-primary-sage"
+                    data-bs-toggle="modal" data-bs-target="#createServiceModal">
+                <i class="bi bi-plus-lg me-1"></i>Новая услуга
+            </button>
+        </div>
+    </section>
+
+    {# ===== KPI ===== #}
+    <section class="mod-kpi-grid" aria-label="Ключевые метрики">
+        <div class="mod-kpi">
+            <span class="mod-kpi__label"><i class="bi bi-collection"></i>Всего услуг</span>
+            <span class="mod-kpi__value">{{ kpi.total|default:0 }}</span>
+            <span class="mod-kpi__hint">в справочнике</span>
+        </div>
+        <div class="mod-kpi">
+            <span class="mod-kpi__label"><i class="bi bi-eye"></i>Видимых</span>
+            <span class="mod-kpi__value">{{ kpi.visible|default:0 }}</span>
+            <span class="mod-kpi__hint">доступны клиентам</span>
+        </div>
+        <div class="mod-kpi mod-kpi--amber">
+            <span class="mod-kpi__label"><i class="bi bi-eye-slash"></i>Скрытых</span>
+            <span class="mod-kpi__value">{{ kpi.hidden|default:0 }}</span>
+            <span class="mod-kpi__hint">не показываются на сайте</span>
+        </div>
+        <div class="mod-kpi">
+            <span class="mod-kpi__label"><i class="bi bi-cash-coin"></i>Средняя цена</span>
+            <span class="mod-kpi__value">
+                {{ kpi.avg_price|default:0|floatformat:0 }}<small>₽</small>
+            </span>
+            <span class="mod-kpi__hint">по всем услугам</span>
+        </div>
+    </section>
+
+    {# ===== Toolbar ===== #}
+    <form method="get" class="mod-toolbar" id="mod-toolbar">
+        <div class="mod-toolbar__chips" role="tablist" aria-label="Статус видимости">
+            <button type="submit" name="visibility" value="visible"
+                    class="mod-chip {% if visibility == 'visible' %}is-active{% endif %}">
+                <i class="bi bi-eye"></i>Активные
+                <span class="count">{{ kpi.visible|default:0 }}</span>
+            </button>
+            <button type="submit" name="visibility" value="hidden"
+                    class="mod-chip {% if visibility == 'hidden' %}is-active{% endif %}">
+                <i class="bi bi-eye-slash"></i>Скрытые
+                <span class="count">{{ kpi.hidden|default:0 }}</span>
+            </button>
+            <button type="submit" name="visibility" value="all"
+                    class="mod-chip {% if visibility == 'all' %}is-active{% endif %}">
+                <i class="bi bi-grid"></i>Все
+                <span class="count">{{ kpi.total|default:0 }}</span>
             </button>
         </div>
 
-        <button class="btn btn-success px-4 py-2 rounded-pill shadow-sm" data-bs-toggle="modal" data-bs-target="#createServiceModal">
-            <i class="bi bi-plus-lg me-2"></i>Новая услуга
-        </button>
-    </div>
+        <div class="d-flex align-items-center gap-2 flex-grow-1 justify-content-end flex-wrap">
+            <label class="mod-search" aria-label="Поиск по названию">
+                <i class="bi bi-search"></i>
+                <input type="search" name="search" value="{{ search_query|default:'' }}"
+                       placeholder="Поиск по названию услуги…"
+                       autocomplete="off">
+                {% if search_query %}
+                    <a class="mod-search__clear" href="?visibility={{ visibility }}" aria-label="Сбросить поиск">
+                        <i class="bi bi-x-lg"></i>
+                    </a>
+                {% endif %}
+            </label>
 
-    <div class="mod-table-container">
+            <select name="sort" class="mod-select" onchange="this.form.submit()">
+                <option value="-created_at" {% if sort == '-created_at' %}selected{% endif %}>Новые сверху</option>
+                <option value="created_at"  {% if sort == 'created_at' %}selected{% endif %}>Старые сверху</option>
+                <option value="price"       {% if sort == 'price' %}selected{% endif %}>Цена ↑</option>
+                <option value="-price"      {% if sort == '-price' %}selected{% endif %}>Цена ↓</option>
+                <option value="name"        {% if sort == 'name' %}selected{% endif %}>По алфавиту</option>
+            </select>
+
+            {# чтобы visibility/сортировка сохранились при сабмите «поиска» #}
+            <input type="hidden" name="visibility" value="{{ visibility }}">
+        </div>
+    </form>
+
+    {# ===== Data-grid ===== #}
+    <div class="mod-datagrid">
         <div class="table-responsive">
-            <table class="table table-hover align-middle m-0">
+            <table class="table align-middle m-0">
                 <thead>
                     <tr>
                         <th>Название услуги</th>
-                        <th>Стоимость</th>
+                        <th class="text-end">Стоимость</th>
                         <th>Статус</th>
                         <th class="text-end">Управление</th>
                     </tr>
@@ -51,34 +130,40 @@
                 <tbody>
                     {% for service in page_obj %}
                     <tr id="service-row-{{ service.pk }}"
-                        class="service-clickable-row {% if service.is_hidden %}row-hidden{% endif %}"
-                        data-url="{% url 'services:service_detail' service.pk %}"
-                        style="cursor: pointer;">
+                        class="mod-row-link service-clickable-row {% if service.is_hidden %}is-hidden-row{% endif %}"
+                        data-url="{% url 'services:service_detail' service.pk %}">
 
                         <td>
-                            <span class="fw-bold text-dark d-block">{{ service.name }}</span>
-                            <span class="text-muted small">ID: #{{ service.pk }} | {{ service.duration|default:"—" }}</span>
+                            <span class="fw-bold d-block">{{ service.name }}</span>
+                            <span class="text-muted small">
+                                ID #{{ service.pk }}
+                                {% if service.duration %}
+                                    · <i class="bi bi-clock"></i> {{ service.duration }}
+                                {% endif %}
+                            </span>
                         </td>
-                        <td><span class="price-badge">{{ service.price }} ₽</span></td>
+                        <td class="text-end">
+                            <span class="mod-price">{{ service.price }} ₽</span>
+                        </td>
                         <td>
-                            <span id="status-badge-{{ service.pk }}" class="badge {% if service.is_hidden %}bg-secondary{% else %}bg-success{% endif %}">
+                            <span id="status-badge-{{ service.pk }}"
+                                  class="mod-status {% if service.is_hidden %}is-hidden{% else %}is-active{% endif %}">
                                 {% if service.is_hidden %}Скрыта{% else %}Активна{% endif %}
                             </span>
                         </td>
-                        <td class="text-end position-relative">
-                            <div class="d-flex justify-content-end gap-2 actions-wrapper" onclick="event.stopPropagation();">
-                                <button class="action-btn btn-toggle-view {% if service.is_hidden %}is-hidden{% endif %}"
+                        <td class="text-end">
+                            <div class="mod-actions" onclick="event.stopPropagation();">
+                                <button class="mod-icon-btn {% if service.is_hidden %}is-hidden-state{% endif %}"
                                         id="toggle-btn-{{ service.pk }}"
                                         onclick="toggleVisibility('{{ service.pk }}')"
-                                        title="Скрыть/Показать">
+                                        title="Скрыть / Показать">
                                     <i class="bi {% if service.is_hidden %}bi-eye-slash{% else %}bi-eye{% endif %}"></i>
                                 </button>
-
-                                <button class="action-btn btn-edit edit-service-trigger" data-id="{{ service.pk }}" title="Редактировать">
+                                <button class="mod-icon-btn edit-service-trigger"
+                                        data-id="{{ service.pk }}" title="Редактировать">
                                     <i class="bi bi-pencil"></i>
                                 </button>
-
-                                <button class="action-btn btn-delete text-danger delete-service-trigger"
+                                <button class="mod-icon-btn is-danger delete-service-trigger"
                                         data-id="{{ service.pk }}"
                                         data-name="{{ service.name }}"
                                         title="Удалить">
@@ -89,7 +174,22 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="4" class="text-center py-5 text-muted">Ничего не найдено</td>
+                        <td colspan="4">
+                            <div class="mod-empty">
+                                <div class="mod-empty__icon"><i class="bi bi-search"></i></div>
+                                <div class="mod-empty__title">
+                                    {% if has_filters %}По заданным фильтрам ничего не найдено{% else %}Пока нет ни одной услуги{% endif %}
+                                </div>
+                                <div>
+                                    {% if has_filters %}
+                                        Попробуйте изменить критерии или
+                                        <a href="{% url 'services:moderator_list' %}" class="link-success">сбросить фильтры</a>.
+                                    {% else %}
+                                        Добавьте первую услугу — кнопка «Новая услуга» в шапке.
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -98,15 +198,14 @@
     </div>
 
     {% if page_obj.has_other_pages %}
-    <nav class="mt-4">
-        <ul class="pagination justify-content-center">
+    <nav class="mt-4 d-flex justify-content-center" aria-label="Пагинация">
+        <ul class="mod-pagination list-unstyled m-0">
             {% for num in page_obj.paginator.page_range %}
                 {% if page_obj.number == num %}
-                    <li class="page-item active"><span class="page-link border-0 shadow-sm rounded-3 mx-1 bg-success">{{ num }}</span></li>
+                    <li><span class="is-current">{{ num }}</span></li>
                 {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-                    <li class="page-item">
-                        <a class="page-link border-0 shadow-sm rounded-3 mx-1 text-dark"
-                           href="?page={{ num }}&search={{ search_query|default:'' }}&visibility={{ visibility|default:'visible' }}&sort={{ sort|default:'' }}">{{ num }}</a>
+                    <li>
+                        <a href="?page={{ num }}&search={{ search_query|default:'' }}&visibility={{ visibility|default:'visible' }}&sort={{ sort|default:'' }}">{{ num }}</a>
                     </li>
                 {% endif %}
             {% endfor %}
@@ -115,140 +214,152 @@
     {% endif %}
 </div>
 
-<div class="modal fade" id="filterModal" tabindex="-1" aria-hidden="true">
+{# ===== Модалки ===== #}
+<div class="modal fade mod-modal" id="filterModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
-            <div class="modal-header border-0 pb-0">
-                <h5 class="fw-bold px-3 pt-3">Настройка фильтров</h5>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-funnel"></i> Расширенные фильтры</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form method="get">
-                <div class="modal-body p-4">
-                    <div class="mb-4">
-                        <label class="small fw-bold text-muted mb-2 text-uppercase">Статус видимости</label>
-                        <select name="visibility" class="form-select search-bar">
+                <div class="modal-body">
+                    <div class="mod-field mb-3">
+                        <label>Статус видимости</label>
+                        <select name="visibility" class="form-select">
                             <option value="visible" {% if visibility == 'visible' %}selected{% endif %}>Только активные</option>
-                            <option value="hidden" {% if visibility == 'hidden' %}selected{% endif %}>Только скрытые</option>
-                            <option value="all" {% if visibility == 'all' %}selected{% endif %}>Показать все</option>
+                            <option value="hidden"  {% if visibility == 'hidden' %}selected{% endif %}>Только скрытые</option>
+                            <option value="all"     {% if visibility == 'all' %}selected{% endif %}>Показать все</option>
                         </select>
                     </div>
-                    <div class="mb-4">
-                        <label class="small fw-bold text-muted mb-2 text-uppercase">Поиск по названию</label>
-                        <input type="text" name="search" class="form-control search-bar" placeholder="Введите название..." value="{{ search_query|default:'' }}">
+                    <div class="mod-field mb-3">
+                        <label>Поиск по названию</label>
+                        <input type="text" name="search" class="form-control"
+                               placeholder="Введите название…" value="{{ search_query|default:'' }}">
                     </div>
-                    <div class="mb-2">
-                        <label class="small fw-bold text-muted mb-2 text-uppercase">Сортировка</label>
-                        <select name="sort" class="form-select search-bar">
+                    <div class="mod-field">
+                        <label>Сортировка</label>
+                        <select name="sort" class="form-select">
                             <option value="-created_at" {% if sort == '-created_at' %}selected{% endif %}>Сначала новые</option>
-                            <option value="price" {% if sort == 'price' %}selected{% endif %}>По возрастанию цены</option>
-                            <option value="-price" {% if sort == '-price' %}selected{% endif %}>По убыванию цены</option>
+                            <option value="price"       {% if sort == 'price' %}selected{% endif %}>По возрастанию цены</option>
+                            <option value="-price"      {% if sort == '-price' %}selected{% endif %}>По убыванию цены</option>
                         </select>
                     </div>
                 </div>
-                <div class="modal-footer border-0 p-4 pt-0 justify-content-between">
-                    <a href="{% url 'services:moderator_list' %}" class="btn btn-light rounded-pill px-3">Сбросить</a>
-                    <button type="submit" class="btn btn-dark rounded-pill px-4">Применить</button>
+                <div class="modal-footer justify-content-between">
+                    <a href="{% url 'services:moderator_list' %}" class="btn btn-mod-ghost">Сбросить</a>
+                    <button type="submit" class="btn btn-mod-primary">Применить</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
-<div class="modal fade" id="createServiceModal" tabindex="-1" aria-hidden="true">
+<div class="modal fade mod-modal" id="createServiceModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
-            <div class="modal-header border-0 pb-0">
-                <h5 class="fw-bold px-3 pt-3">Добавить услугу</h5>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-plus-square"></i> Добавить услугу</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form id="create-service-form">
                 {% csrf_token %}
-                <div class="modal-body p-4">
+                <div class="modal-body">
                     <div class="row g-3">
-                        <div class="col-12">
-                            <label class="small fw-bold text-muted">Название</label>
-                            <input type="text" name="name" class="form-control rounded-3" required>
+                        <div class="col-12 mod-field">
+                            <label>Название</label>
+                            <input type="text" name="name" class="form-control" required>
                         </div>
-                        <div class="col-md-6">
-                            <label class="small fw-bold text-muted">Цена (₽)</label>
-                            <input type="number" name="price" class="form-control rounded-3" required>
+                        <div class="col-md-6 mod-field">
+                            <label>Цена (₽)</label>
+                            <input type="number" name="price" class="form-control" required>
                         </div>
-                        <div class="col-md-6">
-                            <label class="small fw-bold text-muted">Длительность</label>
-                            <input type="text" name="duration" class="form-control rounded-3" placeholder="60 мин.">
+                        <div class="col-md-6 mod-field">
+                            <label>Длительность</label>
+                            <input type="text" name="duration" class="form-control" placeholder="60 мин.">
                         </div>
-                        <div class="col-12">
-                            <label class="small fw-bold text-muted">Краткое описание</label>
-                            <input type="text" name="short_description" class="form-control rounded-3">
+                        <div class="col-12 mod-field">
+                            <label>Краткое описание</label>
+                            <input type="text" name="short_description" class="form-control">
                         </div>
-                        <div class="col-12">
-                            <label class="small fw-bold text-muted">Полное описание</label>
-                            <textarea name="description" class="form-control rounded-3" rows="4"></textarea>
+                        <div class="col-12 mod-field">
+                            <label>Полное описание</label>
+                            <textarea name="description" class="form-control" rows="4"></textarea>
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer border-0 p-4 pt-0">
-                    <button type="submit" class="btn btn-success px-4 rounded-pill w-100 shadow-sm">Создать услугу</button>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-mod-ghost" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-mod-primary">
+                        <i class="bi bi-check2 me-1"></i>Создать услугу
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
-<div class="modal fade" id="editServiceModal" tabindex="-1" aria-hidden="true">
+<div class="modal fade mod-modal" id="editServiceModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
-            <div class="modal-header border-0 pb-0">
-                <h5 class="fw-bold px-3 pt-3">Редактировать услугу</h5>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-pencil-square"></i> Редактировать услугу</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form id="edit-service-form">
                 {% csrf_token %}
                 <input type="hidden" name="service_id" id="edit-service-id">
-                <div class="modal-body p-4">
+                <div class="modal-body">
                     <div class="row g-3">
-                        <div class="col-12">
-                            <label class="small fw-bold text-muted">Название</label>
-                            <input type="text" name="name" id="edit-name" class="form-control rounded-3" required>
+                        <div class="col-12 mod-field">
+                            <label>Название</label>
+                            <input type="text" name="name" id="edit-name" class="form-control" required>
                         </div>
-                        <div class="col-md-6">
-                            <label class="small fw-bold text-muted">Цена (₽)</label>
-                            <input type="number" name="price" id="edit-price" class="form-control rounded-3" required>
+                        <div class="col-md-6 mod-field">
+                            <label>Цена (₽)</label>
+                            <input type="number" name="price" id="edit-price" class="form-control" required>
                         </div>
-                        <div class="col-md-6">
-                            <label class="small fw-bold text-muted">Длительность</label>
-                            <input type="text" name="duration" id="edit-duration" class="form-control rounded-3">
+                        <div class="col-md-6 mod-field">
+                            <label>Длительность</label>
+                            <input type="text" name="duration" id="edit-duration" class="form-control">
                         </div>
-                        <div class="col-12">
-                            <label class="small fw-bold text-muted">Краткое описание</label>
-                            <input type="text" name="short_description" id="edit-short-description" class="form-control rounded-3">
+                        <div class="col-12 mod-field">
+                            <label>Краткое описание</label>
+                            <input type="text" name="short_description" id="edit-short-description" class="form-control">
                         </div>
-                        <div class="col-12">
-                            <label class="small fw-bold text-muted">Полное описание</label>
-                            <textarea name="description" id="edit-description" class="form-control rounded-3" rows="4"></textarea>
+                        <div class="col-12 mod-field">
+                            <label>Полное описание</label>
+                            <textarea name="description" id="edit-description" class="form-control" rows="4"></textarea>
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer border-0 p-4 pt-0">
-                    <button type="submit" class="btn btn-primary px-4 rounded-pill w-100 shadow-sm">Сохранить изменения</button>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-mod-ghost" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-mod-primary">
+                        <i class="bi bi-save me-1"></i>Сохранить изменения
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
-<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
+<div class="modal fade mod-modal" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-sm">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
+        <div class="modal-content">
             <div class="modal-body p-4 text-center">
-                <div class="text-danger mb-3">
-                    <i class="bi bi-exclamation-triangle-fill" style="font-size: 3rem;"></i>
+                <div class="mod-empty__icon mx-auto"
+                     style="background:#fceaec; color:#b02a37;">
+                    <i class="bi bi-exclamation-triangle"></i>
                 </div>
-                <h5 class="fw-bold">Удалить услугу?</h5>
-                <p class="text-muted small">Вы собираетесь удалить "<span id="delete-service-name"></span>". Это действие необратимо.</p>
+                <h5 class="fw-bold mt-3 mb-1">Удалить услугу?</h5>
+                <p class="text-muted small mb-0">
+                    Вы собираетесь удалить «<span id="delete-service-name"></span>».
+                    Это действие необратимо.
+                </p>
                 <div class="d-flex gap-2 mt-4">
-                    <button type="button" class="btn btn-light w-100 rounded-pill" data-bs-dismiss="modal">Отмена</button>
-                    <button type="button" id="confirm-delete-btn" class="btn btn-danger w-100 rounded-pill">Удалить</button>
+                    <button type="button" class="btn btn-mod-ghost w-100" data-bs-dismiss="modal">Отмена</button>
+                    <button type="button" id="confirm-delete-btn" class="btn btn-mod-danger w-100">Удалить</button>
                 </div>
             </div>
         </div>

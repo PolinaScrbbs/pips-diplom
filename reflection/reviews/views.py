@@ -1,7 +1,7 @@
 import logging
 
 from django.db import models
-from django.db.models import Count
+from django.db.models import Count, Avg, Q
 from django.shortcuts import render, get_object_or_404
 from django.core.paginator import Paginator
 from django.http import JsonResponse
@@ -122,9 +122,34 @@ def moderator_reviews_list(request):
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
 
+    # KPI: считаем по всему справочнику отзывов (не по фильтру).
+    kpi_raw = Review.objects.aggregate(
+        total=Count("id"),
+        avg_rating=Avg("rating"),
+        top=Count("id", filter=Q(rating=5)),
+        low=Count("id", filter=Q(rating__lte=2)),
+    )
+    avg_rating = kpi_raw["avg_rating"] or 0
+    # Целая часть звёзд для отрисовки KPI-шкалы (1..5).
+    avg_int = int(round(avg_rating))
+    avg_stars_full = range(max(min(avg_int, 5), 0))
+    avg_stars_empty = range(5 - max(min(avg_int, 5), 0))
+
+    kpi = {
+        "total": kpi_raw["total"],
+        "avg_rating": round(avg_rating, 1) if avg_rating else 0,
+        "top": kpi_raw["top"],
+        "low": kpi_raw["low"],
+        "stars_full": list(avg_stars_full),
+        "stars_empty": list(avg_stars_empty),
+    }
+    has_filters = bool(search_query or rating_filter)
+
     context = {
         "page_obj": page_obj,
         "search_query": search_query,
         "rating_filter": rating_filter,
+        "kpi": kpi,
+        "has_filters": has_filters,
     }
     return render(request, "reviews/moderator_reviews.html", context)

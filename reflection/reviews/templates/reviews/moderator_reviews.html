@@ -6,79 +6,171 @@
 {% block body_class %}page-reviews-moderator{% endblock %}
 
 {% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/pages/moderator-shared.css' %}">
 <link rel="stylesheet" href="{% static 'css/pages/reviews-moderator.css' %}">
 {% endblock %}
 
 {% block content %}
-<div class="container py-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+<div class="container py-4">
+
+    {# ===== Hero ===== #}
+    <section class="mod-hero d-flex justify-content-between align-items-start flex-wrap gap-3">
         <div>
-            <h2 class="fw-bold text-dark m-0">Отзывы клиентов</h2>
-            <p class="text-muted small m-0">Всего получено: {{ page_obj.paginator.count }}</p>
+            <span class="mod-hero__eyebrow">
+                <i class="bi bi-chat-square-text"></i> Модератор · Отзывы
+            </span>
+            <h1 class="mod-hero__title">Отзывы клиентов</h1>
+            <p class="mod-hero__subtitle">
+                Наблюдайте за общим тоном обратной связи: средний рейтинг,
+                доля восторженных и недовольных клиентов, полнотекстовый поиск по автору и содержимому.
+            </p>
+        </div>
+    </section>
+
+    {# ===== KPI ===== #}
+    <section class="mod-kpi-grid" aria-label="Ключевые метрики отзывов">
+        <div class="mod-kpi">
+            <span class="mod-kpi__label"><i class="bi bi-chat-dots"></i>Всего отзывов</span>
+            <span class="mod-kpi__value">{{ kpi.total|default:0 }}</span>
+            <span class="mod-kpi__hint">за всё время</span>
+        </div>
+        <div class="mod-kpi mod-kpi--rating">
+            <span class="mod-kpi__label"><i class="bi bi-star-half"></i>Средний рейтинг</span>
+            <span class="mod-kpi__value">
+                {{ kpi.avg_rating|default:0 }}<small>/ 5</small>
+            </span>
+            <span class="mod-kpi__stars" aria-hidden="true">
+                {% for _ in kpi.stars_full %}<i class="bi bi-star-fill"></i>{% endfor %}
+                {% for _ in kpi.stars_empty %}<i class="bi bi-star"></i>{% endfor %}
+            </span>
+        </div>
+        <div class="mod-kpi">
+            <span class="mod-kpi__label"><i class="bi bi-stars"></i>Восторженных</span>
+            <span class="mod-kpi__value">{{ kpi.top|default:0 }}</span>
+            <span class="mod-kpi__hint">оценка 5★</span>
+        </div>
+        <div class="mod-kpi mod-kpi--amber">
+            <span class="mod-kpi__label"><i class="bi bi-exclamation-circle"></i>Требуют внимания</span>
+            <span class="mod-kpi__value">{{ kpi.low|default:0 }}</span>
+            <span class="mod-kpi__hint">оценка 1–2★</span>
+        </div>
+    </section>
+
+    {# ===== Toolbar ===== #}
+    <form method="get" class="mod-toolbar" id="mod-toolbar-reviews">
+        <div class="mod-toolbar__chips" role="tablist" aria-label="Фильтр по оценке">
+            <button type="submit" name="rating" value=""
+                    class="mod-chip {% if not rating_filter %}is-active{% endif %}">
+                <i class="bi bi-grid"></i>Все
+                <span class="count">{{ kpi.total|default:0 }}</span>
+            </button>
+            <button type="submit" name="rating" value="5"
+                    class="mod-chip {% if rating_filter == '5' %}is-active{% endif %}">
+                <i class="bi bi-star-fill"></i>5★
+            </button>
+            <button type="submit" name="rating" value="4"
+                    class="mod-chip {% if rating_filter == '4' %}is-active{% endif %}">
+                <i class="bi bi-star-fill"></i>4★
+            </button>
+            <button type="submit" name="rating" value="3"
+                    class="mod-chip {% if rating_filter == '3' %}is-active{% endif %}">
+                <i class="bi bi-star-fill"></i>3★
+            </button>
+            <button type="submit" name="rating" value="2"
+                    class="mod-chip {% if rating_filter == '2' %}is-active{% endif %}">
+                <i class="bi bi-star-fill"></i>2★
+            </button>
+            <button type="submit" name="rating" value="1"
+                    class="mod-chip {% if rating_filter == '1' %}is-active{% endif %}">
+                <i class="bi bi-star-fill"></i>1★
+            </button>
         </div>
 
-        <form method="get" class="d-flex gap-2">
-            <input type="text" name="search" class="form-control search-bar shadow-sm"
-                   placeholder="Поиск по автору или тексту..." value="{{ search_query }}">
+        <label class="mod-search" aria-label="Поиск по автору или тексту">
+            <i class="bi bi-search"></i>
+            <input type="search" name="search" value="{{ search_query|default:'' }}"
+                   placeholder="Поиск по автору или тексту…"
+                   autocomplete="off">
+            {% if search_query %}
+                <a class="mod-search__clear"
+                   href="?rating={{ rating_filter|default:'' }}" aria-label="Сбросить поиск">
+                    <i class="bi bi-x-lg"></i>
+                </a>
+            {% endif %}
+        </label>
 
-            <select name="rating" class="form-select search-bar shadow-sm" style="width: 150px;">
-                <option value="">Все оценки</option>
-                <option value="5" {% if rating_filter == "5" %}selected{% endif %}>5 звезд</option>
-                <option value="4" {% if rating_filter == "4" %}selected{% endif %}>4 звезды</option>
-                <option value="3" {% if rating_filter == "3" %}selected{% endif %}>3 звезды</option>
-                <option value="2" {% if rating_filter == "2" %}selected{% endif %}>2 звезды</option>
-                <option value="1" {% if rating_filter == "1" %}selected{% endif %}>1 звезда</option>
-            </select>
+        {# сохраняем rating при сабмите поисковой строки #}
+        <input type="hidden" name="rating" value="{{ rating_filter|default:'' }}">
+    </form>
 
-            <button type="submit" class="btn btn-dark rounded-pill px-4 shadow-sm">
-                <i class="bi bi-search"></i>
-            </button>
-        </form>
-    </div>
-
-    <div class="mod-table-container">
+    {# ===== Data-grid ===== #}
+    <div class="mod-datagrid">
         <div class="table-responsive">
             <table class="table align-middle m-0">
                 <thead>
                     <tr>
-                        <th>Дата</th>
-                        <th>Клиент</th>
-                        <th>Оценка</th>
+                        <th style="width: 130px;">Дата</th>
+                        <th style="width: 220px;">Клиент</th>
+                        <th style="width: 140px;">Оценка</th>
                         <th>Текст отзыва</th>
-                        <th class="text-end">Просмотр</th>
+                        <th class="text-end" style="width: 80px;"></th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for review in page_obj %}
-                    <tr class="review-row" onclick="viewReview('{{ review.author }}', '{{ review.rating }}', '{{ review.text|escapejs }}', '{{ review.created_at|date:'d.m.Y H:i' }}')">
-                        <td class="text-muted small">{{ review.created_at|date:"d.m.Y" }}</td>
+                    <tr class="mod-row-link review-row"
+                        onclick="viewReview('{{ review.author }}', '{{ review.rating }}', '{{ review.text|escapejs }}', '{{ review.created_at|date:'d.m.Y H:i' }}')">
                         <td>
-                            <div class="d-flex align-items-center">
-                                <div class="avatar-circle me-2 bg-light d-flex align-items-center justify-content-center rounded-circle" style="width: 32px; height: 32px;">
-                                    <i class="bi bi-person text-secondary"></i>
+                            <span class="d-block fw-semibold">{{ review.created_at|date:"d.m.Y" }}</span>
+                            <span class="text-muted small">{{ review.created_at|date:"H:i" }}</span>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="mod-avatar">{{ review.author.username|first }}</span>
+                                <div>
+                                    <span class="fw-bold d-block">{{ review.author.username }}</span>
+                                    <span class="text-muted small">клиент</span>
                                 </div>
-                                <span class="fw-bold">{{ review.author.username }}</span>
                             </div>
                         </td>
                         <td>
-                            <div class="d-flex">
+                            <span class="mod-stars" aria-label="Оценка {{ review.rating }} из 5">
                                 {% for i in "12345" %}
-                                    <i class="bi bi-star-fill {% if forloop.counter <= review.rating %}rating-star{% else %}text-light{% endif %}"></i>
+                                    {% if forloop.counter <= review.rating %}
+                                        <i class="bi bi-star-fill"></i>
+                                    {% else %}
+                                        <i class="bi bi-star"></i>
+                                    {% endif %}
                                 {% endfor %}
-                            </div>
+                            </span>
                         </td>
                         <td>
                             <span class="review-text-preview">{{ review.text }}</span>
                         </td>
                         <td class="text-end">
-                            <button class="btn btn-sm btn-outline-secondary rounded-pill px-3">
-                                <i class="bi bi-eye"></i>
+                            <button class="mod-icon-btn" title="Подробнее">
+                                <i class="bi bi-arrow-right"></i>
                             </button>
                         </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="5" class="text-center py-5 text-muted">Отзывов пока нет</td>
+                        <td colspan="5">
+                            <div class="mod-empty">
+                                <div class="mod-empty__icon"><i class="bi bi-chat-square"></i></div>
+                                <div class="mod-empty__title">
+                                    {% if has_filters %}По заданным фильтрам отзывов не найдено{% else %}Отзывов пока нет{% endif %}
+                                </div>
+                                <div>
+                                    {% if has_filters %}
+                                        Попробуйте изменить критерии или
+                                        <a href="{% url 'reviews:moderator_reviews' %}" class="link-success">сбросить фильтры</a>.
+                                    {% else %}
+                                        Как только клиенты оставят первые отзывы — они появятся здесь.
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -87,39 +179,43 @@
     </div>
 
     {% if page_obj.has_other_pages %}
-    <nav class="mt-4">
-        <ul class="pagination justify-content-center">
+    <nav class="mt-4 d-flex justify-content-center" aria-label="Пагинация">
+        <ul class="mod-pagination list-unstyled m-0">
             {% for num in page_obj.paginator.page_range %}
-                <li class="page-item {% if page_obj.number == num %}active{% endif %}">
-                    <a class="page-link border-0 shadow-sm rounded-3 mx-1 {% if page_obj.number == num %}bg-dark text-white{% else %}text-dark{% endif %}"
-                       href="?page={{ num }}&search={{ search_query }}&rating={{ rating_filter }}">{{ num }}</a>
-                </li>
+                {% if page_obj.number == num %}
+                    <li><span class="is-current">{{ num }}</span></li>
+                {% else %}
+                    <li><a href="?page={{ num }}&search={{ search_query }}&rating={{ rating_filter }}">{{ num }}</a></li>
+                {% endif %}
             {% endfor %}
         </ul>
     </nav>
     {% endif %}
 </div>
 
-<div class="modal fade" id="reviewDetailModal" tabindex="-1" aria-hidden="true">
+<div class="modal fade mod-modal" id="reviewDetailModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
-            <div class="modal-header border-0 pb-0">
-                <h5 class="fw-bold p-3 mb-0">Детали отзыва</h5>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-chat-square-text"></i> Детали отзыва</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body p-4 pt-0">
+            <div class="modal-body">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <div>
-                        <span id="modal-author" class="fw-bold d-block fs-5"></span>
-                        <span id="modal-date" class="text-muted small"></span>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="mod-avatar" id="modal-avatar">—</span>
+                        <div>
+                            <span id="modal-author" class="fw-bold d-block fs-6"></span>
+                            <span id="modal-date" class="text-muted small"></span>
+                        </div>
                     </div>
-                    <div id="modal-rating" class="fs-5"></div>
+                    <div id="modal-rating" class="mod-stars fs-6"></div>
                 </div>
                 <hr class="text-muted opacity-25">
-                <p id="modal-text" class="text-secondary lh-lg"></p>
+                <p id="modal-text" class="text-secondary lh-lg m-0"></p>
             </div>
-            <div class="modal-footer border-0">
-                <button type="button" class="btn btn-light rounded-pill px-4 w-100" data-bs-dismiss="modal">Закрыть</button>
+            <div class="modal-footer justify-content-end">
+                <button type="button" class="btn btn-mod-ghost" data-bs-dismiss="modal">Закрыть</button>
             </div>
         </div>
     </div>
