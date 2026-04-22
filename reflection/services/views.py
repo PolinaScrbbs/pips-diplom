@@ -1,4 +1,5 @@
 from django.http import JsonResponse
+from django.db import connection
 from django.db.models import Q
 from django.shortcuts import render, get_object_or_404
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
@@ -69,7 +70,7 @@ def service_detail(request, pk):
 
 @moderator_required
 def moderator_services_list(request):
-    search_query = request.GET.get("search", "")
+    search_query = (request.GET.get("search") or "").strip()
     min_price = request.GET.get("min_price", "")
     max_price = request.GET.get("max_price", "")
     sort_by = request.GET.get("sort", "-created_at")
@@ -88,7 +89,13 @@ def moderator_services_list(request):
 
     # Остальные фильтры (поиск, цена...)
     if search_query:
-        services = services.filter(name__icontains=search_query)
+        # В SQLite `icontains`/LOWER() часто не работают корректно для кириллицы.
+        # Поэтому для sqlite делаем Unicode-safe фильтрацию через casefold() в Python.
+        if connection.vendor == "sqlite":
+            q = search_query.casefold()
+            services = [s for s in services if q in (s.name or "").casefold()]
+        else:
+            services = services.filter(name__icontains=search_query)
     # ... (логика с ценой из прошлых шагов) ...
 
     paginator = Paginator(services, 6)
