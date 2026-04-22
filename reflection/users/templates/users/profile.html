@@ -24,9 +24,18 @@
                     <p class="text-muted small mb-3">{{ user.get_role_display }}</p>
 
                     <div class="d-grid gap-2 mb-4">
-                        <button class="btn btn-success-gradient btn-sm rounded-pill py-2 shadow-sm" data-bs-toggle="modal" data-bs-target="#bookingModal">
-                            <i class="bi bi-plus-circle me-2"></i>Новая запись
-                        </button>
+                        {% if is_preview_mode %}
+                            <button class="btn btn-success-gradient btn-sm rounded-pill py-2 shadow-sm is-preview-locked"
+                                    type="button" disabled aria-disabled="true"
+                                    title="Действие недоступно в режиме предпросмотра">
+                                <i class="bi bi-lock me-2"></i>Запись недоступна
+                            </button>
+                        {% else %}
+                            <button class="btn btn-success-gradient btn-sm rounded-pill py-2 shadow-sm"
+                                    data-bs-toggle="modal" data-bs-target="#bookingModal">
+                                <i class="bi bi-plus-circle me-2"></i>Новая запись
+                            </button>
+                        {% endif %}
                     </div>
 
                     <hr class="opacity-25 mb-4">
@@ -109,10 +118,18 @@
                                                     </td>
                                                     <td class="text-center small">{{ booking.created_at|date:"d.m.Y" }}</td>
                                                     <td class="text-end">
-                                                        {% if not booking.review_link %}
-                                                            <button class="btn btn-sm btn-outline-success rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#reviewFormModal" data-booking-id="{{ booking.id }}">Отзыв</button>
-                                                        {% else %}
+                                                        {% if booking.review_link %}
                                                             <span class="badge bg-light text-success border fw-normal px-3 py-2">Оставлен</span>
+                                                        {% elif is_preview_mode %}
+                                                            <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 is-preview-locked"
+                                                                    type="button" disabled aria-disabled="true"
+                                                                    title="Действие недоступно в режиме предпросмотра">
+                                                                <i class="bi bi-lock"></i>
+                                                            </button>
+                                                        {% else %}
+                                                            <button class="btn btn-sm btn-outline-success rounded-pill px-3"
+                                                                    data-bs-toggle="modal" data-bs-target="#reviewFormModal"
+                                                                    data-booking-id="{{ booking.id }}">Отзыв</button>
                                                         {% endif %}
                                                     </td>
                                                 </tr>
@@ -141,8 +158,18 @@
                             </div>
 
                             <div class="tab-pane fade" id="settings">
+                                {% if is_preview_mode %}
+                                    <div class="preview-lock-banner mb-4">
+                                        <i class="bi bi-shield-lock"></i>
+                                        <div>
+                                            <strong>Режим предпросмотра.</strong>
+                                            Изменение данных клиента заблокировано.
+                                        </div>
+                                    </div>
+                                {% endif %}
                                 <form method="post" action="{% url 'users:profile' %}">
                                     {% csrf_token %}
+                                    <fieldset {% if is_preview_mode %}disabled aria-disabled="true"{% endif %}>
                                     <div class="row g-4">
                                         <div class="col-md-12">
                                             <label class="form-label small fw-bold text-muted">Логин (Имя пользователя)</label>
@@ -157,9 +184,18 @@
                                             <input type="text" class="form-control custom-input" id="settings_phone" name="phone" value="{{ user.phone|default:'' }}" placeholder="+7 (___) ___-__-__">
                                         </div>
                                         <div class="col-12 mt-4 text-end">
-                                            <button type="submit" class="btn btn-success-gradient px-5 rounded-pill py-2">Сохранить изменения</button>
+                                            {% if is_preview_mode %}
+                                                <button type="button" class="btn btn-success-gradient px-5 rounded-pill py-2 is-preview-locked"
+                                                        disabled aria-disabled="true"
+                                                        title="Действие недоступно в режиме предпросмотра">
+                                                    <i class="bi bi-lock me-2"></i>Сохранение заблокировано
+                                                </button>
+                                            {% else %}
+                                                <button type="submit" class="btn btn-success-gradient px-5 rounded-pill py-2">Сохранить изменения</button>
+                                            {% endif %}
                                         </div>
                                     </div>
+                                    </fieldset>
                                 </form>
                             </div>
                         </div>

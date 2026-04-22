@@ -105,6 +105,7 @@ TEMPLATES = [
                 "booking.context_processors.booking_form_context",
                 "admin_panel.context_processors.impersonation",
                 "main.context_processors.moderator_preview",
+                "main.context_processors.preview_mode",
             ],
         },
     },

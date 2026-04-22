@@ -23,17 +23,34 @@
                     Создаём безопасное пространство для разговоров, понимания и роста. Помогаем детям и родителям находить общий язык уже более 10 лет.
                 </p>
                 <div class="d-flex flex-wrap gap-3">
-                    <button type="button"
-                        class="btn btn-success-gradient btn-lg px-5 py-3 rounded-pill shadow-lg hover-up"
-                        {% if user.is_authenticated %}
-                            data-bs-toggle="modal"
-                            data-bs-target="#bookingModal"
-                        {% else %}
-                            data-login-url="{% url 'users:login' %}"
-                            onclick="window.location.href=this.dataset.loginUrl"
-                        {% endif %}>
-                        Записаться на приём
-                    </button>
+                    {% if is_preview_mode %}
+                        <button type="button" disabled aria-disabled="true"
+                                class="btn btn-success-gradient btn-lg px-5 py-3 rounded-pill shadow-lg is-preview-locked"
+                                title="Действие недоступно в режиме предпросмотра">
+                            <i class="bi bi-lock me-2"></i>Запись недоступна
+                        </button>
+                    {% elif user.is_authenticated and user.is_user %}
+                        <button type="button"
+                                class="btn btn-success-gradient btn-lg px-5 py-3 rounded-pill shadow-lg hover-up"
+                                data-bs-toggle="modal"
+                                data-bs-target="#bookingModal">
+                            Записаться на приём
+                        </button>
+                    {% elif user.is_authenticated %}
+                        {# Админ/модератор вне preview — им запись в принципе не нужна. #}
+                        <button type="button" disabled aria-disabled="true"
+                                class="btn btn-success-gradient btn-lg px-5 py-3 rounded-pill shadow-lg is-preview-locked"
+                                title="Запись доступна только клиентам">
+                            <i class="bi bi-lock me-2"></i>Только для клиентов
+                        </button>
+                    {% else %}
+                        <button type="button"
+                                class="btn btn-success-gradient btn-lg px-5 py-3 rounded-pill shadow-lg hover-up"
+                                data-login-url="{% url 'users:login' %}"
+                                onclick="window.location.href=this.dataset.loginUrl">
+                            Записаться на приём
+                        </button>
+                    {% endif %}
                     <a href="https://vk.com/club_otragenie" target="_blank"
                        class="btn btn-outline-success btn-lg px-5 py-3 rounded-pill hover-up">
                         <i class="bi bi-chat-dots me-2"></i>Написать в VK

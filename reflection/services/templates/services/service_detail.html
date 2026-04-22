@@ -80,12 +80,26 @@
                             <li><i class="bi bi-check-circle-fill"></i> Полная конфиденциальность</li>
                         </ul>
 
-                        <button class="btn btn-sage w-100 btn-lg shadow-sm py-3"
-                                data-bs-toggle="modal"
-                                data-bs-target="#bookingModal"
-                                data-service-id="{{ service.pk }}">
-                            Записаться сейчас
-                        </button>
+                        {% if is_preview_mode %}
+                            <button class="btn btn-sage w-100 btn-lg shadow-sm py-3 is-preview-locked"
+                                    type="button" disabled aria-disabled="true"
+                                    title="Действие недоступно в режиме предпросмотра">
+                                <i class="bi bi-lock me-2"></i>Запись недоступна
+                            </button>
+                        {% elif user.is_authenticated and not user.is_user %}
+                            <button class="btn btn-sage w-100 btn-lg shadow-sm py-3 is-preview-locked"
+                                    type="button" disabled aria-disabled="true"
+                                    title="Запись доступна только клиентам">
+                                <i class="bi bi-lock me-2"></i>Только для клиентов
+                            </button>
+                        {% else %}
+                            <button class="btn btn-sage w-100 btn-lg shadow-sm py-3"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#bookingModal"
+                                    data-service-id="{{ service.pk }}">
+                                Записаться сейчас
+                            </button>
+                        {% endif %}
 
                         <div class="mt-4 p-3 bg-light rounded-4">
                             <p class="small text-muted mb-0 text-start">

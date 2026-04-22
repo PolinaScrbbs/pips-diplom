@@ -244,9 +244,18 @@
                 <div class="user-avatar text-uppercase">{{ user.username|first }}</div>
                 <span class="ms-2 d-none d-xl-inline fw-medium text-dark">{{ user.username }}</span>
               </a>
-              <button class="btn btn-sage d-none d-md-block" data-bs-toggle="modal" data-bs-target="#bookingModal">
-                Записаться
-              </button>
+              {% if is_preview_mode %}
+                <button class="btn btn-sage d-none d-md-block is-preview-locked"
+                        type="button" disabled aria-disabled="true"
+                        title="Действие недоступно в режиме предпросмотра">
+                  <i class="bi bi-lock me-1"></i>Записаться
+                </button>
+              {% else %}
+                <button class="btn btn-sage d-none d-md-block"
+                        data-bs-toggle="modal" data-bs-target="#bookingModal">
+                  Записаться
+                </button>
+              {% endif %}
             {% endif %}
 
             <a href="{% url 'users:logout' %}" class="btn btn-link text-muted p-0 ms-2" title="Выйти">
