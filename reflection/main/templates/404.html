@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Страница не найдена — Отражение{% endblock %}
+
+{% block body_class %}page-error{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/pages/error.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="error-wrapper">
+    <div class="error-card">
+        <img src="{% static 'images/illustrations/error-404.svg' %}"
+             alt="" class="error-illustration" loading="eager" width="340" height="255">
+
+        <div class="error-code">404</div>
+        <h1 class="error-title">Такой страницы не существует</h1>
+        <p class="error-description">
+            Возможно, она была перенесена, переименована или никогда не существовала.
+            Давайте вернёмся туда, где точно всё на месте.
+        </p>
+
+        <div class="error-actions">
+            <a href="{% url 'main:index' %}" class="btn error-btn error-btn-primary">
+                <i class="bi bi-house"></i> На главную
+            </a>
+            <a href="{% url 'services:services' %}" class="btn error-btn error-btn-outline">
+                <i class="bi bi-collection"></i> Наши услуги
+            </a>
+        </div>
+    </div>
+</section>
+{% endblock %}

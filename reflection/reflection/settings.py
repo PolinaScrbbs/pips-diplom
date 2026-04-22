@@ -47,6 +47,10 @@ INSTALLED_APPS = [
 
 AUTH_USER_MODEL = "users.User"
 
+# Куда редиректить неавторизованных пользователей.
+# Используется login_required, redirect_to_login и нашими декораторами ролей.
+LOGIN_URL = "users:login"
+
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = "static/"
 

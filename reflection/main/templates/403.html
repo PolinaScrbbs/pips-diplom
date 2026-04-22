@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Доступ запрещён — Отражение{% endblock %}
+
+{% block body_class %}page-error{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/pages/error.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="error-wrapper">
+    <div class="error-card">
+        <img src="{% static 'images/illustrations/error-403.svg' %}"
+             alt="" class="error-illustration" loading="eager" width="340" height="255">
+
+        <div class="error-code">403</div>
+        <h1 class="error-title">Доступ запрещён</h1>
+        <p class="error-description">
+            {% if user.is_authenticated %}
+                У вашей роли <strong>«{{ user.get_role_display }}»</strong> нет прав для просмотра этой страницы.
+                Выберите раздел, который доступен вам.
+            {% else %}
+                Чтобы просматривать эту страницу, нужно войти в аккаунт с соответствующими правами.
+            {% endif %}
+        </p>
+
+        <div class="error-actions">
+            {% if user.is_authenticated %}
+                {% if user.is_admin %}
+                    <a href="{% url 'admin_panel:users_list' %}" class="btn error-btn error-btn-primary">
+                        <i class="bi bi-speedometer2"></i> В админ-панель
+                    </a>
+                {% elif user.is_moderator %}
+                    <a href="{% url 'services:moderator_list' %}" class="btn error-btn error-btn-primary">
+                        <i class="bi bi-shield-lock"></i> В панель модератора
+                    </a>
+                {% else %}
+                    <a href="{% url 'users:profile' %}" class="btn error-btn error-btn-primary">
+                        <i class="bi bi-person"></i> В личный кабинет
+                    </a>
+                {% endif %}
+                <a href="{% url 'main:index' %}" class="btn error-btn error-btn-outline">
+                    <i class="bi bi-house"></i> На главную
+                </a>
+            {% else %}
+                <a href="{% url 'users:login' %}" class="btn error-btn error-btn-primary">
+                    <i class="bi bi-box-arrow-in-right"></i> Войти
+                </a>
+                <a href="{% url 'main:index' %}" class="btn error-btn error-btn-outline">
+                    <i class="bi bi-house"></i> На главную
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}

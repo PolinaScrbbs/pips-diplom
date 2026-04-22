@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img" aria-label=">ABC? 70?@5IQ=">
+  <defs>
+    <linearGradient id="err403Bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#eaf6ef"/>
+      <stop offset="100%" stop-color="#c9e6d1"/>
+    </linearGradient>
+    <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#6ba585"/>
+      <stop offset="100%" stop-color="#2d5a3d"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="10" y="10" width="380" height="280" rx="28" fill="url(#err403Bg)"/>
+
+  <!-- 45:>@ -->
+  <circle cx="60"  cy="60"  r="6" fill="#8fc0a9" opacity="0.65"/>
+  <circle cx="340" cy="75"  r="4" fill="#4a7c59" opacity="0.55"/>
+  <circle cx="330" cy="230" r="7" fill="#8fc0a9" opacity="0.65"/>
+  <circle cx="70"  cy="240" r="5" fill="#4a7c59" opacity="0.5"/>
+
+  <!-- I8B -->
+  <path d="M200 70
+           C 230 70 260 82 270 90
+           L 270 160
+           C 270 200 235 225 200 235
+           C 165 225 130 200 130 160
+           L 130 90
+           C 140 82 170 70 200 70 Z"
+        fill="url(#shieldGrad)"/>
+  <path d="M200 80
+           C 225 80 252 90 260 98
+           L 260 158
+           C 260 190 230 210 200 220
+           C 170 210 140 190 140 158
+           L 140 98
+           C 148 90 175 80 200 80 Z"
+        fill="#ffffff" opacity="0.12"/>
+
+  <!-- 70<>G5: 2=CB@8 I8B0 -->
+  <rect x="180" y="140" width="40" height="38" rx="6" fill="#ffffff"/>
+  <path d="M188 140 L188 125 Q188 112 200 112 Q212 112 212 125 L212 140"
+        fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="200" cy="158" r="4" fill="#2d5a3d"/>
+  <rect x="198" y="158" width="4" height="10" rx="2" fill="#2d5a3d"/>
+
+  <!-- ;8AB8:8 -->
+  <path d="M85 155 Q105 145 115 165 Q95 175 85 155 Z" fill="#8fc0a9"/>
+  <path d="M100 150 L100 170" stroke="#2d5a3d" stroke-width="1.2"/>
+  <path d="M305 155 Q285 145 275 165 Q295 175 305 155 Z" fill="#8fc0a9"/>
+  <path d="M290 150 L290 170" stroke="#2d5a3d" stroke-width="1.2"/>
+</svg>

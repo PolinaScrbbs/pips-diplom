@@ -1,24 +1,7 @@
-from functools import wraps
+"""
+Обратная совместимость: сохраняем импорт `from admin_panel.decorators import admin_required`,
+но используем централизованную реализацию из main.utils (рендерит кастомный 403).
+"""
+from main.utils import admin_required
 
-from django.contrib.auth.views import redirect_to_login
-from django.http import HttpResponseForbidden
-
-
-def admin_required(view_func):
-    """
-    Требует авторизацию и роль администратора (users.User.role == "admin").
-    """
-
-    @wraps(view_func)
-    def _wrapped(request, *args, **kwargs):
-        user = getattr(request, "user", None)
-        if not user or not user.is_authenticated:
-            return redirect_to_login(request.get_full_path())
-
-        is_admin = getattr(user, "is_admin", None)
-        if callable(is_admin) and user.is_admin():
-            return view_func(request, *args, **kwargs)
-
-        return HttpResponseForbidden("Доступ запрещён")
-
-    return _wrapped
+__all__ = ["admin_required"]

@@ -104,12 +104,16 @@ tr.placeholder-row:hover       { background: transparent !important; }
 .btn-active-toggle.is-active  { color: #2e7d32; border-color: #2e7d32; }
 .btn-active-toggle.is-inactive{ color: #b42318; border-color: #b42318; }
 
+.btn-delete        { color: #b42318; }
+.btn-delete:hover  { color: #ffffff; background: #b42318; border-color: #b42318; }
+
 .action-btn.action-btn-locked {
     opacity: 0.5;
     cursor: not-allowed;
 }
 
 .admin-modal-card { border-radius: 20px; }
+.admin-modal-icon { font-size: 3rem; line-height: 1; }
 
 .admin-search-input .input-group-text { border-radius: 12px 0 0 12px; }
 .admin-search-input .form-control      { border-radius: 0 12px 12px 0; }

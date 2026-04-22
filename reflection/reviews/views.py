@@ -1,13 +1,10 @@
-from turtle import mode
-
 from django.db import models
 from django.db.models import Count
 from django.shortcuts import render, get_object_or_404
 from django.core.paginator import Paginator
 from django.http import JsonResponse
-from django.contrib.auth.decorators import login_required
 
-from main.utils import moderator_required
+from main.utils import moderator_required, user_required
 
 from .models import Review
 from .forms import ReviewCreateForm
@@ -58,7 +55,7 @@ def reviews(request):
     )
 
 
-@login_required
+@user_required
 def create_review(request):
     """
     Создание отзыва через AJAX. Только для авторизованных пользователей.

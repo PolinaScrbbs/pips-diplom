@@ -10,4 +10,5 @@ urlpatterns = [
     path("users/<int:pk>/json/", views.user_detail_json, name="user_json"),
     path("users/<int:pk>/update/", views.user_update, name="user_update"),
     path("users/<int:pk>/toggle-active/", views.user_toggle_active, name="user_toggle"),
+    path("users/<int:pk>/delete/", views.user_delete, name="user_delete"),
 ]

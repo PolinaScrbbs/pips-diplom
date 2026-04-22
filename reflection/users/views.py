@@ -2,9 +2,9 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout, authenticate
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 
+from main.utils import user_required
 from users.forms import LoginForm, RegisterForm
 from reviews.forms import ReviewCreateForm
 
@@ -32,7 +32,16 @@ def login_view(request):
             if user:
                 login(request, user)
                 messages.success(request, "Добро пожаловать!")
-                return redirect("reviews:reviews")  # или куда тебе удобнее
+                # Если фронт передал ?next=..., — уважаем его; иначе редиректим
+                # по роли на подходящую посадочную страницу.
+                next_url = request.GET.get("next") or request.POST.get("next")
+                if next_url:
+                    return redirect(next_url)
+                if user.is_admin():
+                    return redirect("admin_panel:users_list")
+                if user.is_moderator():
+                    return redirect("services:moderator_list")
+                return redirect("main:index")
             else:
                 messages.error(request, "Неверный логин или пароль.")
     else:
@@ -46,7 +55,7 @@ def logout_view(request):
     return redirect("users:login")
 
 
-@login_required(login_url="users:login")
+@user_required
 def profile_view(request):
     if request.method == "POST":
         # 1. Получаем данные из формы

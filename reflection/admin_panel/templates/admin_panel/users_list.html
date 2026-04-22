@@ -17,7 +17,8 @@
      data-create-url="{% url 'admin_panel:user_create' %}"
      data-toggle-url="{% url 'admin_panel:user_toggle' 0 %}"
      data-json-url="{% url 'admin_panel:user_json' 0 %}"
-     data-update-url="{% url 'admin_panel:user_update' 0 %}">
+     data-update-url="{% url 'admin_panel:user_update' 0 %}"
+     data-delete-url="{% url 'admin_panel:user_delete' 0 %}">
 
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div class="d-flex align-items-center gap-3">
@@ -109,6 +110,14 @@
                                 <button class="action-btn btn-edit edit-user-trigger" data-id="{{ u.pk }}" title="Редактировать">
                                     <i class="bi bi-pencil"></i>
                                 </button>
+                                {% if u.role != 'admin' and u.pk != request.user.pk %}
+                                    <button class="action-btn btn-delete delete-user-trigger"
+                                            data-id="{{ u.pk }}"
+                                            data-name="{{ u.username }}"
+                                            title="Удалить пользователя">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                {% endif %}
                             {% endif %}
                         </td>
                     </tr>
@@ -251,6 +260,25 @@
                     <button type="submit" class="btn btn-primary px-4 rounded-pill w-100 shadow-sm">Сохранить изменения</button>
                 </div>
             </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="deleteUserModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content border-0 shadow-lg admin-modal-card">
+            <div class="modal-body p-4 text-center">
+                <div class="text-danger mb-3">
+                    <i class="bi bi-exclamation-triangle-fill admin-modal-icon"></i>
+                </div>
+                <h5 class="fw-bold">Удалить пользователя?</h5>
+                <p class="text-muted small mb-0">Вы собираетесь удалить «<span id="delete-user-name" class="fw-semibold text-dark"></span>». Это действие необратимо — все связанные данные также будут удалены.</p>
+                <div id="delete-user-errors" class="text-danger small mt-3 d-none"></div>
+                <div class="d-flex gap-2 mt-4">
+                    <button type="button" class="btn btn-light w-100 rounded-pill" data-bs-dismiss="modal">Отмена</button>
+                    <button type="button" id="confirm-delete-user-btn" class="btn btn-danger w-100 rounded-pill">Удалить</button>
+                </div>
+            </div>
         </div>
     </div>
 </div>

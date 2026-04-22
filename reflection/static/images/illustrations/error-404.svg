@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img" aria-label="!B@0=8F0 =5 =0945=0">
+  <defs>
+    <linearGradient id="err404Bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#eaf6ef"/>
+      <stop offset="100%" stop-color="#c9e6d1"/>
+    </linearGradient>
+    <linearGradient id="compass" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#6ba585"/>
+      <stop offset="100%" stop-color="#2d5a3d"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="10" y="10" width="380" height="280" rx="28" fill="url(#err404Bg)"/>
+
+  <!-- 45:>@: ;8ABLO-72Q74>G:8 -->
+  <circle cx="60"  cy="60"  r="6" fill="#8fc0a9" opacity="0.65"/>
+  <circle cx="340" cy="75"  r="4" fill="#4a7c59" opacity="0.55"/>
+  <circle cx="330" cy="230" r="7" fill="#8fc0a9" opacity="0.65"/>
+  <circle cx="70"  cy="240" r="5" fill="#4a7c59" opacity="0.5"/>
+
+  <!-- :><?0A (:@C3 A 83;>9  A8<2>; ?>B5@O==>9 4>@>38) -->
+  <circle cx="200" cy="150" r="76" fill="#ffffff" stroke="#4a7c59" stroke-width="3"/>
+  <circle cx="200" cy="150" r="76" fill="none" stroke="#4a7c59" stroke-width="2" stroke-dasharray="3 7" opacity="0.45"/>
+  <!-- 45;5=8O -->
+  <g stroke="#2d5a3d" stroke-width="2" stroke-linecap="round">
+    <line x1="200" y1="82"  x2="200" y2="90"/>
+    <line x1="200" y1="210" x2="200" y2="218"/>
+    <line x1="132" y1="150" x2="140" y2="150"/>
+    <line x1="260" y1="150" x2="268" y2="150"/>
+  </g>
+  <!-- AB@5;:0 (N  75;Q=0O, S  A5@0O) -->
+  <path d="M200 150 L188 162 L200 100 L212 162 Z" fill="url(#compass)"/>
+  <path d="M200 150 L188 162 L200 200 L212 162 Z" fill="#c3deca"/>
+  <circle cx="200" cy="150" r="6" fill="#4a7c59"/>
+
+  <!-- @>AB>: C :><?0A0 -->
+  <path d="M278 200 Q290 160 295 200" fill="#6ba585"/>
+  <path d="M295 200 Q308 170 312 200" fill="#4a7c59"/>
+  <rect x="275" y="198" width="40" height="14" rx="3" fill="#b58763"/>
+</svg>

@@ -40,6 +40,7 @@
             toggleUrl: root.dataset.toggleUrl || '',
             jsonUrl: root.dataset.jsonUrl || '',
             updateUrl: root.dataset.updateUrl || '',
+            deleteUrl: root.dataset.deleteUrl || '',
         };
     }
 
@@ -152,6 +153,61 @@
                     return;
                 }
                 window.location.reload();
+            });
+        }
+
+        const deleteModalEl = document.getElementById('deleteUserModal');
+        const deleteModal = deleteModalEl && typeof bootstrap !== 'undefined'
+            ? new bootstrap.Modal(deleteModalEl)
+            : null;
+        const deleteNameEl = document.getElementById('delete-user-name');
+        const deleteErrorsEl = document.getElementById('delete-user-errors');
+        const confirmDeleteBtn = document.getElementById('confirm-delete-user-btn');
+        let userIdToDelete = null;
+
+        document.querySelectorAll('.delete-user-trigger').forEach((btn) => {
+            btn.addEventListener('click', function () {
+                userIdToDelete = this.dataset.id;
+                if (deleteNameEl) deleteNameEl.textContent = this.dataset.name || '';
+                deleteErrorsEl?.classList.add('d-none');
+                deleteModal?.show();
+            });
+        });
+
+        if (confirmDeleteBtn) {
+            confirmDeleteBtn.addEventListener('click', async function () {
+                if (!userIdToDelete || !cfg.deleteUrl) return;
+
+                confirmDeleteBtn.disabled = true;
+                try {
+                    const res = await fetch(buildUrl(cfg.deleteUrl, userIdToDelete), {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': csrftoken,
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                    });
+                    const data = await res.json();
+                    if (!res.ok || data.status !== 'success') {
+                        if (deleteErrorsEl) {
+                            deleteErrorsEl.textContent = data.message || 'Ошибка при удалении';
+                            deleteErrorsEl.classList.remove('d-none');
+                        }
+                        return;
+                    }
+
+                    const row = document.querySelector(`.delete-user-trigger[data-id="${userIdToDelete}"]`)?.closest('tr');
+                    deleteModal?.hide();
+                    if (row) {
+                        row.style.transition = 'opacity 250ms ease';
+                        row.style.opacity = '0';
+                        setTimeout(() => window.location.reload(), 260);
+                    } else {
+                        window.location.reload();
+                    }
+                } finally {
+                    confirmDeleteBtn.disabled = false;
+                }
             });
         }
     });

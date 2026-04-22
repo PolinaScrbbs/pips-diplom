@@ -185,3 +185,40 @@ def user_toggle_active(request, pk: int):
             "user": {"id": user.id, "is_active": user.is_active},
         }
     )
+
+
+@admin_required
+def user_delete(request, pk: int):
+    """
+    Удаление пользователя. Правила:
+    - метод только POST (без CSRF GET-запросов);
+    - нельзя удалить самого себя;
+    - нельзя удалить другого администратора.
+    """
+    if request.method != "POST":
+        return JsonResponse({"status": "error", "message": "Invalid method"}, status=405)
+
+    user = get_object_or_404(User, pk=pk)
+
+    if user.pk == request.user.pk:
+        return JsonResponse(
+            {"status": "error", "message": "Нельзя удалить собственный аккаунт."},
+            status=403,
+        )
+
+    if user.role == User.ADMIN:
+        return JsonResponse(
+            {"status": "error", "message": "Нельзя удалять других администраторов."},
+            status=403,
+        )
+
+    username = user.username
+    user.delete()
+
+    return JsonResponse(
+        {
+            "status": "success",
+            "message": f"Пользователь «{username}» удалён.",
+            "user": {"id": pk},
+        }
+    )

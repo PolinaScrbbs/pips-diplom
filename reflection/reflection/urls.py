@@ -13,6 +13,11 @@ urlpatterns = [
     path("admin/", admin.site.urls),
 ]
 
+# Кастомные обработчики ошибок.
+# Django подключает их автоматически как handler404/handler403 при DEBUG=False.
+handler404 = "main.views.custom_page_not_found"
+handler403 = "main.views.custom_permission_denied"
+
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

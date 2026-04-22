@@ -1,14 +1,15 @@
 # booking/views.py
 from django.shortcuts import redirect
 from django.http import JsonResponse
-from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from datetime import timedelta
+
+from main.utils import user_required
 from .forms import BookingForm
 from .models import Booking
 
 
-@login_required(login_url="users:login")
+@user_required
 def create_booking(request):
     if request.method == "POST":
         # 1. ЗАЩИТА ОТ ДУБЛИКАТОВ (АНТИ-СПАМ)

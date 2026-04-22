@@ -1,6 +1,22 @@
 from django.shortcuts import render
 
 
+def custom_page_not_found(request, exception=None):
+    """
+    Обработчик 404. Подхватывается Django как handler404 при DEBUG=False,
+    а также вызывается вручную из `/errors/404/` для превью в DEBUG-режиме.
+    """
+    return render(request, "404.html", status=404)
+
+
+def custom_permission_denied(request, exception=None):
+    """
+    Обработчик 403. Срабатывает на `raise PermissionDenied` при DEBUG=False,
+    а декораторы ролей вызывают его напрямую — чтобы работало и в DEBUG.
+    """
+    return render(request, "403.html", status=403)
+
+
 def index(request):
     services_list = [
         {
