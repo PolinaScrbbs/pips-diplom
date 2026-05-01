@@ -87,3 +87,59 @@
     margin-right: 12px;
     margin-top: 3px;
 }
+
+/* ---------- Keywords + tooltip ---------- */
+
+.kw {
+    background: rgba(74, 124, 89, 0.12);
+    border: 1px solid rgba(74, 124, 89, 0.18);
+    border-radius: 10px;
+    padding: 0.05rem 0.35rem;
+    cursor: help;
+    transition: background 0.2s ease, border-color 0.2s ease;
+    white-space: nowrap;
+}
+
+.kw:hover,
+.kw:focus {
+    background: rgba(74, 124, 89, 0.18);
+    border-color: rgba(74, 124, 89, 0.28);
+    outline: none;
+}
+
+.kw-tip {
+    position: absolute;
+    z-index: 50;
+    max-width: 360px;
+    background: rgba(255, 255, 255, 0.98);
+    border: 1px solid rgba(74, 124, 89, 0.18);
+    border-radius: 14px;
+    box-shadow: 0 18px 50px rgba(74, 124, 89, 0.16);
+    padding: 0.75rem 0.85rem;
+    color: #2c3e35;
+    font-size: 0.86rem;
+    line-height: 1.35;
+}
+
+.kw-tip__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.35rem;
+}
+
+.kw-tip__word {
+    font-weight: 800;
+    color: var(--primary-sage);
+}
+
+.kw-tip__status {
+    font-family: 'JetBrains Mono', 'Menlo', monospace;
+    font-size: 0.72rem;
+    color: #627066;
+}
+
+.kw-tip__body {
+    color: #2c3e35;
+}

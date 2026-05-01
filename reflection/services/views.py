@@ -1,16 +1,68 @@
 import logging
+import json
+import re
+import urllib.request
+import urllib.error
 
 from django.http import JsonResponse
 from django.db import connection
 from django.db.models import Q, Avg, Count
 from django.shortcuts import render, get_object_or_404
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.core.cache import cache
 
 from main.utils import moderator_required
 from services.forms import ServiceForm
 from .models import Service
 
 logger = logging.getLogger("app.services")
+
+def _ollama_explain_keyword(word: str, *, timeout_s: float = 25.0) -> str:
+    prompt = (
+        "Объясни простыми словами для родителей, что означает термин в контексте детской психологии/развития.\n"
+        "Ответ: 1–3 предложения, без списков, без лишних вводных.\n"
+        f"Термин: {word}\n"
+    )
+    payload = {
+        "model": "qwen2.5:7b-instruct",
+        "prompt": prompt,
+        "stream": False,
+        "options": {"temperature": 0.2},
+    }
+    req = urllib.request.Request(
+        "http://127.0.0.1:11434/api/generate",
+        data=json.dumps(payload, ensure_ascii=False).encode("utf-8"),
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    with urllib.request.urlopen(req, timeout=timeout_s) as resp:
+        raw = resp.read().decode("utf-8", errors="replace")
+    data = json.loads(raw)
+    txt = (data.get("response") or "").strip()
+    # убираем markdown fences если вдруг есть
+    txt = re.sub(r"^```\\w*\\s*|```$", "", txt).strip()
+    return txt
+
+
+def keyword_ask(request):
+    word = (request.GET.get("word") or "").strip().lower()
+    if not word:
+        return JsonResponse({"status": "error", "message": "word is required"}, status=400)
+    if len(word) > 80:
+        word = word[:80]
+
+    cache_key = f"kw_explain:v1:{word}"
+    cached = cache.get(cache_key)
+    if cached:
+        return JsonResponse({"status": "success", "word": word, "answer": cached, "cached": True})
+
+    try:
+        ans = _ollama_explain_keyword(word)
+    except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as e:
+        return JsonResponse({"status": "error", "message": str(e)}, status=502)
+
+    cache.set(cache_key, ans, timeout=24 * 60 * 60)
+    return JsonResponse({"status": "success", "word": word, "answer": ans, "cached": False})
 
 
 def services(request):
