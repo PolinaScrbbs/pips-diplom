@@ -4,6 +4,7 @@ import re
 import urllib.request
 import urllib.error
 from decimal import Decimal, InvalidOperation
+import os
 
 from django.http import JsonResponse
 from django.db import connection
@@ -19,28 +20,119 @@ from .models import Service
 
 logger = logging.getLogger("app.services")
 
+def _ollama_base_url() -> str:
+    """
+    Base URL для Ollama.
+
+    В Docker `127.0.0.1` указывает на контейнер, поэтому адрес нужно настраивать:
+    - Docker Desktop (macOS/Windows): http://host.docker.internal:11434
+    - compose-сервис:               http://ollama:11434
+    """
+    base = (os.getenv("REFLECTION_OLLAMA_BASE_URL") or "http://127.0.0.1:11434").rstrip("/")
+    # если кто-то указал ".../api" — нормализуем до корня
+    if base.endswith("/api"):
+        base = base[: -len("/api")]
+    return base
+
+
 def _ollama_explain_keyword(word: str, *, timeout_s: float = 25.0) -> str:
     prompt = (
         "Объясни простыми словами для родителей, что означает термин в контексте детской психологии/развития.\n"
         "Ответ: 1–3 предложения, без списков, без лишних вводных.\n"
         f"Термин: {word}\n"
     )
-    payload = {
-        "model": "qwen2.5:7b-instruct",
+    model = os.getenv("REFLECTION_LLM_MODEL") or "qwen2.5:7b-instruct"
+
+    # 1) Пробуем /api/generate (старый/простой API)
+    payload_generate = {
+        "model": model,
         "prompt": prompt,
         "stream": False,
         "options": {"temperature": 0.2},
     }
-    req = urllib.request.Request(
-        "http://127.0.0.1:11434/api/generate",
-        data=json.dumps(payload, ensure_ascii=False).encode("utf-8"),
-        headers={"Content-Type": "application/json"},
-        method="POST",
-    )
-    with urllib.request.urlopen(req, timeout=timeout_s) as resp:
-        raw = resp.read().decode("utf-8", errors="replace")
-    data = json.loads(raw)
-    txt = (data.get("response") or "").strip()
+    last_http_error = None
+    try:
+        req = urllib.request.Request(
+            f"{_ollama_base_url()}/api/generate",
+            data=json.dumps(payload_generate, ensure_ascii=False).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=timeout_s) as resp:
+            raw = resp.read().decode("utf-8", errors="replace")
+        data = json.loads(raw)
+        txt = (data.get("response") or "").strip()
+    except urllib.error.HTTPError as e:
+        # Некоторые сборки/режимы Ollama не отдают /api/generate → пробуем /api/chat
+        if getattr(e, "code", None) != 404:
+            raise
+        last_http_error = e
+        payload_chat = {
+            "model": model,
+            "stream": False,
+            "options": {"temperature": 0.2},
+            "messages": [
+                {"role": "system", "content": "Ты помощник. Отвечай кратко и по делу."},
+                {"role": "user", "content": prompt},
+            ],
+        }
+        try:
+            req = urllib.request.Request(
+                f"{_ollama_base_url()}/api/chat",
+                data=json.dumps(payload_chat, ensure_ascii=False).encode("utf-8"),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+            with urllib.request.urlopen(req, timeout=timeout_s) as resp:
+                raw = resp.read().decode("utf-8", errors="replace")
+            data = json.loads(raw)
+            msg = (data.get("message") or {}) if isinstance(data, dict) else {}
+            txt = (msg.get("content") or "").strip()
+        except urllib.error.HTTPError as e2:
+            # Если и chat не найден — пробуем OpenAI-совместимый API (/v1).
+            if getattr(e2, "code", None) != 404:
+                raise
+            payload_v1 = {
+                "model": model,
+                "temperature": 0.2,
+                "messages": [
+                    {"role": "system", "content": "Ты помощник. Отвечай кратко и по делу."},
+                    {"role": "user", "content": prompt},
+                ],
+            }
+            req = urllib.request.Request(
+                f"{_ollama_base_url()}/v1/chat/completions",
+                data=json.dumps(payload_v1, ensure_ascii=False).encode("utf-8"),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+            try:
+                with urllib.request.urlopen(req, timeout=timeout_s) as resp:
+                    raw = resp.read().decode("utf-8", errors="replace")
+            except urllib.error.HTTPError as e3:
+                # Диагностика: /api/tags доступен, а generate/chat/v1 отсутствуют.
+                tried = [
+                    f"{_ollama_base_url()}/api/generate",
+                    f"{_ollama_base_url()}/api/chat",
+                    f"{_ollama_base_url()}/v1/chat/completions",
+                ]
+                tags_status = None
+                try:
+                    with urllib.request.urlopen(f"{_ollama_base_url()}/api/tags", timeout=timeout_s) as resp:
+                        tags_status = getattr(resp, "status", None) or 200
+                except Exception:
+                    tags_status = None
+                msg = (
+                    "ollama_endpoints_unavailable: "
+                    f"generate=404 chat=404 v1={getattr(e3,'code',None)} tags_status={tags_status} tried={tried}"
+                )
+                raise urllib.error.HTTPError(e3.url, e3.code, msg, e3.hdrs, e3.fp)
+            data = json.loads(raw)
+            choices = data.get("choices") or []
+            first = choices[0] if choices else {}
+            msg = first.get("message") or {}
+            txt = (msg.get("content") or "").strip()
+
     # убираем markdown fences если вдруг есть
     txt = re.sub(r"^```\\w*\\s*|```$", "", txt).strip()
     return txt
@@ -61,7 +153,16 @@ def keyword_ask(request):
     try:
         ans = _ollama_explain_keyword(word)
     except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as e:
-        return JsonResponse({"status": "error", "message": str(e)}, status=502)
+        # Важно для отладки в Docker: показать, куда ходили.
+        urls = [
+            f"{_ollama_base_url()}/api/generate",
+            f"{_ollama_base_url()}/api/chat",
+            f"{_ollama_base_url()}/v1/chat/completions",
+        ]
+        return JsonResponse(
+            {"status": "error", "message": str(e), "ollama_url": urls[0], "ollama_urls_tried": urls},
+            status=502,
+        )
 
     cache.set(cache_key, ans, timeout=24 * 60 * 60)
     return JsonResponse({"status": "success", "word": word, "answer": ans, "cached": False})

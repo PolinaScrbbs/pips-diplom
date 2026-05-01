@@ -1,0 +1,15 @@
+## Django (tests)
+DJANGO_SECRET_KEY=test-secret
+DJANGO_DEBUG=0
+DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1
+
+# Отдельная БД для тестов (можно заменить на :memory: если ваши тесты это поддерживают)
+DJANGO_SQLITE_PATH=/tmp/reflection_test.sqlite3
+
+## LLM (tests)
+# В тестах обычно LLM отключают/не требуют; оставляем адрес как есть.
+# Если Ollama недоступна, проект и так уходит в fallback-эвристику.
+REFLECTION_OLLAMA_BASE_URL=http://127.0.0.1:11434
+REFLECTION_LLM_MODEL=qwen2.5:7b-instruct
+REFLECTION_LLM_TIMEOUT_S=180
+

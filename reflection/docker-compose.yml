@@ -1,0 +1,77 @@
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      DJANGO_DEBUG: "1"
+      DJANGO_ALLOWED_HOSTS: "localhost,127.0.0.1"
+      DJANGO_SQLITE_PATH: "/app/db/db.sqlite3"
+      # Ollama in docker-compose network:
+      REFLECTION_OLLAMA_BASE_URL: "http://ollama:11434"
+      # Default model from docs:
+      REFLECTION_LLM_MODEL: "qwen2.5:7b-instruct"
+      REFLECTION_LLM_TIMEOUT_S: "180"
+    volumes:
+      # Persist SQLite DB + media/logs between restarts
+      - sqlite_data:/app/db
+      - media_data:/app/media
+    depends_on:
+      - ollama
+    networks:
+      - reflectionnet
+    command: >
+      sh -c "
+      python manage.py migrate &&
+      python manage.py runserver 0.0.0.0:8000
+      "
+
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    # ВАЖНО: не делаем `ollama pull` при старте compose.
+    # Иначе при проблемах сети/реестра можно зависнуть на "pulling manifest".
+    # Модель можно подтянуть вручную командой (после старта):
+    #   docker compose exec ollama ollama pull qwen2.5:7b-instruct
+    # В образе `ollama/ollama` entrypoint уже `ollama`,
+    # поэтому тут командой должен быть только subcommand.
+    command: ["serve"]
+    networks:
+      - reflectionnet
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+
+  # Одноразовая автоподтяжка модели ПОСЛЕ старта Ollama.
+  # Не блокирует запуск web/ollama, делает ограниченное число попыток.
+  ollama-pull:
+    image: ollama/ollama:latest
+    depends_on:
+      ollama:
+        condition: service_healthy
+    environment:
+      # Говорим CLI, к какому серверу подключаться
+      OLLAMA_HOST: "ollama:11434"
+      # Модель можно переопределять через .env / окружение compose
+      REFLECTION_LLM_MODEL: "qwen2.5:7b-instruct"
+    volumes:
+      - ./docker/ollama-pull.sh:/ollama-pull.sh:ro
+    entrypoint: ["sh", "/ollama-pull.sh"]
+    restart: "on-failure"
+    networks:
+      - reflectionnet
+
+volumes:
+  sqlite_data:
+  media_data:
+  ollama_data:
+
+networks:
+  reflectionnet:
+

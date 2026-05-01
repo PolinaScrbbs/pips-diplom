@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -20,12 +21,18 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-1nzv4*^ksy3&-l8qy6fu=o!t-+760jwv@hxo$b)&hv)5v1ohbm"
+SECRET_KEY = os.getenv(
+    "DJANGO_SECRET_KEY",
+    "django-insecure-1nzv4*^ksy3&-l8qy6fu=o!t-+760jwv@hxo$b)&hv)5v1ohbm",
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = (os.getenv("DJANGO_DEBUG") or "1").lower() in ("1", "true", "yes", "y", "on")
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [h.strip() for h in (os.getenv("DJANGO_ALLOWED_HOSTS") or "").split(",") if h.strip()] or [
+    "localhost",
+    "127.0.0.1",
+]
 
 
 # Application definition
@@ -120,7 +127,7 @@ WSGI_APPLICATION = "reflection.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "NAME": os.getenv("DJANGO_SQLITE_PATH") or (BASE_DIR / "db.sqlite3"),
     }
 }
 

@@ -135,6 +135,24 @@ def normalize_sql(sql: str, *, max_len: int = 400) -> str:
     return s
 
 
+def _ollama_base_url() -> str:
+    """
+    Base URL для Ollama.
+
+    В Docker 127.0.0.1 указывает на контейнер, поэтому адрес нужно уметь
+    настраивать, например: http://ollama:11434.
+    """
+    try:
+        import os
+
+        base = (os.getenv("REFLECTION_OLLAMA_BASE_URL") or "http://127.0.0.1:11434").rstrip("/")
+        if base.endswith("/api"):
+            base = base[: -len("/api")]
+        return base
+    except Exception:
+        return "http://127.0.0.1:11434"
+
+
 def _ollama_generate_json(*, model: str, prompt: str, timeout_s: float) -> Dict[str, Any]:
     """
     Вызов локальной LLM через Ollama (бесплатно, офлайн).
@@ -155,16 +173,60 @@ def _ollama_generate_json(*, model: str, prompt: str, timeout_s: float) -> Dict[
             # но промпт просит короткий результат.
         },
     }
-    req = urllib.request.Request(
-        "http://127.0.0.1:11434/api/generate",
-        data=json.dumps(payload, ensure_ascii=False).encode("utf-8"),
-        headers={"Content-Type": "application/json"},
-        method="POST",
-    )
-    with urllib.request.urlopen(req, timeout=timeout_s) as resp:
-        raw = resp.read().decode("utf-8", errors="replace")
-    data = json.loads(raw)
-    text = (data.get("response") or "").strip()
+    def _read_json(url: str, body: Dict[str, Any]) -> Dict[str, Any]:
+        req = urllib.request.Request(
+            url,
+            data=json.dumps(body, ensure_ascii=False).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=timeout_s) as resp:
+            raw = resp.read().decode("utf-8", errors="replace")
+        return json.loads(raw)
+
+    try:
+        data = _read_json(f"{_ollama_base_url()}/api/generate", payload)
+        text = (data.get("response") or "").strip()
+    except urllib.error.HTTPError as e:
+        # Если /api/generate недоступен (404), пробуем /api/chat.
+        if getattr(e, "code", None) != 404:
+            raise
+        try:
+            data = _read_json(
+                f"{_ollama_base_url()}/api/chat",
+                {
+                    "model": model,
+                    "stream": False,
+                    "format": "json",
+                    "keep_alive": "10m",
+                    "options": {"temperature": 0.2},
+                    "messages": [
+                        {"role": "system", "content": "Возвращай строго JSON по контракту, без Markdown."},
+                        {"role": "user", "content": prompt},
+                    ],
+                },
+            )
+            msg = (data.get("message") or {}) if isinstance(data, dict) else {}
+            text = (msg.get("content") or "").strip()
+        except urllib.error.HTTPError as e2:
+            if getattr(e2, "code", None) != 404:
+                raise
+            # OpenAI-совместимый fallback
+            data = _read_json(
+                f"{_ollama_base_url()}/v1/chat/completions",
+                {
+                    "model": model,
+                    "temperature": 0.2,
+                    "messages": [
+                        {"role": "system", "content": "Возвращай строго JSON по контракту, без Markdown."},
+                        {"role": "user", "content": prompt},
+                    ],
+                },
+            )
+            choices = data.get("choices") or []
+            first = choices[0] if choices else {}
+            msg = first.get("message") or {}
+            text = (msg.get("content") or "").strip()
     # Попытка распарсить как JSON. Если модель обернула в текст — вырежем блок {...}.
     try:
         return json.loads(text)
@@ -189,7 +251,7 @@ def ollama_stream_response(*, model: str, prompt: str, timeout_s: float):
         "options": {"temperature": 0.2},
     }
     req = urllib.request.Request(
-        "http://127.0.0.1:11434/api/generate",
+        f"{_ollama_base_url()}/api/generate",
         data=json.dumps(payload, ensure_ascii=False).encode("utf-8"),
         headers={"Content-Type": "application/json"},
         method="POST",
