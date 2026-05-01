@@ -138,7 +138,7 @@ h1, h2, h3, .navbar-brand {
 }
 .navbar-brand-moderator .brand-divider {
     margin: 0 10px;
-    color: #d9bf8a;
+    color: rgba(74, 124, 89, 0.35);
     font-weight: 300;
     font-size: 1.35rem;
     line-height: 1;
@@ -146,16 +146,16 @@ h1, h2, h3, .navbar-brand {
 .navbar-brand-moderator .brand-moderator-label {
     font-weight: 500;
     font-size: 0.95rem;
-    color: #8a5a10;
+    color: var(--primary-sage);
     padding: 3px 12px;
-    background: rgba(217, 160, 46, 0.14);
+    background: rgba(74, 124, 89, 0.12);
     border-radius: 999px;
     letter-spacing: 0.01em;
     transition: var(--transition);
 }
 .navbar-brand-moderator:hover .brand-moderator-label {
-    background: rgba(217, 160, 46, 0.26);
-    color: #6b450a;
+    background: rgba(74, 124, 89, 0.18);
+    color: #3b6547;
 }
 @media (max-width: 575.98px) {
     .navbar-brand-moderator .brand-divider,
@@ -176,34 +176,34 @@ h1, h2, h3, .navbar-brand {
     border: 0;
     background: transparent;
     border-radius: 999px;
-    color: #8a5a10 !important;
+    color: #2f6b3f !important;
     transition: background 0.18s ease, color 0.18s ease, transform 0.15s ease;
     cursor: pointer;
     font: inherit;
 }
 .navbar-nav .moderator-nav-link:hover {
-    background: rgba(217, 160, 46, 0.14);
-    color: #6b450a !important;
+    background: rgba(64, 145, 87, 0.10);
+    color: #245633 !important;
     transform: translateY(-1px);
 }
 .navbar-nav .moderator-nav-link.active {
-    background: #b57b1d;
+    background: #2f6b3f;
     color: #fff !important;
-    box-shadow: 0 6px 16px rgba(181, 123, 29, 0.28);
+    box-shadow: 0 6px 16px rgba(47, 107, 63, 0.25);
     font-weight: 600;
 }
 .navbar-nav .moderator-nav-link.active:hover {
-    background: #976517;
+    background: #245633;
     color: #fff !important;
 }
 
 .navbar-nav .moderator-preview-btn {
-    border: 1px dashed rgba(138, 90, 16, 0.45) !important;
+    border: 1px dashed rgba(47, 107, 63, 0.45) !important;
     background: rgba(255, 255, 255, 0.55);
 }
 .navbar-nav .moderator-preview-btn:hover {
-    border-color: #b57b1d !important;
-    background: #b57b1d !important;
+    border-color: #2f6b3f !important;
+    background: #2f6b3f !important;
     color: #fff !important;
     transform: translateY(-1px);
 }

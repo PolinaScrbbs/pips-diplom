@@ -1,5 +1,6 @@
 import logging
 
+from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_POST
 
@@ -80,6 +81,28 @@ def index(request):
 
 def why_us(request):
     return render(request, "main/why_us.html")
+
+
+def favicon(request):
+    """
+    Serve a tiny SVG favicon for `/favicon.ico`.
+    We keep it inline to avoid committing binary `.ico` files.
+    """
+    svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#245633"/>
+      <stop offset="1" stop-color="#4a7c59"/>
+    </linearGradient>
+  </defs>
+  <rect x="6" y="6" width="52" height="52" rx="14" fill="url(#g)"/>
+  <path d="M33 16c-5 6-12 12-12 20 0 7 5 12 12 12s12-5 12-12c0-8-7-14-12-20z"
+        fill="rgba(255,255,255,0.92)"/>
+  <path d="M32 26c-2 4-5 7-5 11 0 3 2 5 5 5s5-2 5-5c0-4-3-7-5-11z"
+        fill="rgba(36,86,51,0.35)"/>
+</svg>
+"""
+    return HttpResponse(svg, content_type="image/svg+xml")
 
 
 # ---------------------------------------------------------------------------

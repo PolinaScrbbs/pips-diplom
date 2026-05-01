@@ -1,0 +1,95 @@
+{# Частичный шаблон: список (grid) + пагинация. Используется для AJAX-обновления. #}
+
+<div class="mod-datagrid">
+  <div class="mod-grid" role="table" aria-label="Список услуг">
+    <div class="mod-grid__head" role="row">
+      <div class="mod-grid__cell mod-grid__cell--head" role="columnheader">Название услуги</div>
+      <div class="mod-grid__cell mod-grid__cell--head mod-grid__cell--right" role="columnheader">Стоимость</div>
+      <div class="mod-grid__cell mod-grid__cell--head" role="columnheader">Статус</div>
+      <div class="mod-grid__cell mod-grid__cell--head mod-grid__cell--right" role="columnheader">Управление</div>
+    </div>
+
+    {% for service in page_obj %}
+    <div id="service-row-{{ service.pk }}"
+         class="mod-grid__row service-clickable-row {% if service.is_hidden %}is-hidden-row{% endif %}"
+         role="row"
+         tabindex="0"
+         data-url="{% url 'services:service_detail' service.pk %}">
+
+      <div class="mod-grid__cell" role="cell">
+        <span class="fw-bold d-block mod-grid__title">{{ service.name }}</span>
+        <span class="text-muted small">
+          ID #{{ service.pk }}
+          {% if service.duration %}
+            · <i class="bi bi-clock"></i> {{ service.duration }}
+          {% endif %}
+        </span>
+      </div>
+
+      <div class="mod-grid__cell mod-grid__cell--right" role="cell">
+        <span class="mod-price">{{ service.price }} ₽</span>
+      </div>
+
+      <div class="mod-grid__cell" role="cell">
+        <span id="status-badge-{{ service.pk }}"
+              class="mod-status {% if service.is_hidden %}is-hidden{% else %}is-active{% endif %}">
+          {% if service.is_hidden %}Скрыта{% else %}Активна{% endif %}
+        </span>
+      </div>
+
+      <div class="mod-grid__cell mod-grid__cell--right" role="cell">
+        <div class="mod-actions" onclick="event.stopPropagation();">
+          <button class="mod-icon-btn {% if service.is_hidden %}is-hidden-state{% endif %}"
+                  id="toggle-btn-{{ service.pk }}"
+                  onclick="toggleVisibility('{{ service.pk }}')"
+                  title="Скрыть / Показать">
+            <i class="bi {% if service.is_hidden %}bi-eye-slash{% else %}bi-eye{% endif %}"></i>
+          </button>
+          <button class="mod-icon-btn edit-service-trigger"
+                  data-id="{{ service.pk }}" title="Редактировать">
+            <i class="bi bi-pencil"></i>
+          </button>
+          <button class="mod-icon-btn is-danger delete-service-trigger"
+                  data-id="{{ service.pk }}"
+                  data-name="{{ service.name }}"
+                  title="Удалить">
+            <i class="bi bi-trash"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <div class="mod-empty">
+      <div class="mod-empty__icon"><i class="bi bi-search"></i></div>
+      <div class="mod-empty__title">
+        {% if has_filters %}По заданным фильтрам ничего не найдено{% else %}Пока нет ни одной услуги{% endif %}
+      </div>
+      <div>
+        {% if has_filters %}
+          Попробуйте изменить критерии или
+          <a href="{% url 'services:moderator_list' %}" class="link-success">сбросить фильтры</a>.
+        {% else %}
+          Добавьте первую услугу — кнопка «Новая услуга» в шапке.
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+{% if page_obj.has_other_pages %}
+<nav class="mt-4 d-flex justify-content-center" aria-label="Пагинация">
+  <ul class="mod-pagination list-unstyled m-0">
+    {% for num in page_obj.paginator.page_range %}
+      {% if page_obj.number == num %}
+        <li><span class="is-current">{{ num }}</span></li>
+      {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+        <li>
+          <a href="?page={{ num }}&search={{ search_query|default:'' }}&visibility={{ visibility|default:'visible' }}&sort={{ sort|default:'' }}">{{ num }}</a>
+        </li>
+      {% endif %}
+    {% endfor %}
+  </ul>
+</nav>
+{% endif %}
+

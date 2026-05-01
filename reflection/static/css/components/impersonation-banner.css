@@ -76,20 +76,20 @@
    Переиспользуем механику (sticky-полоса + пульсирующий дот + кнопка выхода),
    но в янтарно-оранжевой палитре, чтобы не путать с админским impersonation. */
 .impersonation-banner.is-preview {
-    background: linear-gradient(90deg, #6f3b0a 0%, #b57b1d 100%);
+    background: linear-gradient(90deg, #245633 0%, #4a7c59 100%);
 }
 .impersonation-banner.is-preview .impersonation-dot {
-    background: #ffe6a3;
-    box-shadow: 0 0 0 0 rgba(255, 230, 163, 0.7);
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.6);
     animation: impDotPreview 1.6s ease-in-out infinite;
 }
 .impersonation-banner.is-preview .impersonation-text strong {
-    color: #ffe6a3;
+    color: rgba(255, 255, 255, 0.95);
 }
 
 @keyframes impDotPreview {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(255, 230, 163, 0.7); }
-    50%      { box-shadow: 0 0 0 6px rgba(255, 230, 163, 0); }
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.6); }
+    50%      { box-shadow: 0 0 0 6px rgba(255, 255, 255, 0); }
 }
 
 /* --------------------------------------------------------------------------
@@ -125,15 +125,15 @@
     align-items: flex-start;
     padding: 12px 16px;
     border-radius: 14px;
-    background: #fff6e0;
-    border: 1px solid #f0d58b;
-    color: #6b4a0a;
+    background: rgba(74, 124, 89, 0.08);
+    border: 1px solid rgba(74, 124, 89, 0.25);
+    color: #245633;
     font-size: 0.9rem;
     line-height: 1.4;
 }
 .preview-lock-banner i {
     font-size: 1.1rem;
-    color: #b57b1d;
+    color: #2f6b3f;
     margin-top: 2px;
 }
-.preview-lock-banner strong { color: #6b4a0a; }
+.preview-lock-banner strong { color: #245633; }

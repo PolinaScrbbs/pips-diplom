@@ -9,12 +9,13 @@
    никаких громких акцентов — это внутренний инструмент.
    ========================================================================== */
 
-:root {
+   :root {
     --mod-sage:       #4a7c59;
     --mod-sage-dark:  #3b6547;
     --mod-sage-soft:  #e7f0ea;
-    --mod-amber:      #b57b1d;
-    --mod-amber-soft: #fdf3df;
+    /* раньше был тёплый "amber" (оранжевый акцент); убрали в пользу sage */
+    --mod-amber:      #3b6547;
+    --mod-amber-soft: #e7f0ea;
     --mod-bg:         #f4f7f6;
     --mod-surface:    #ffffff;
     --mod-border:     #e8ede9;
@@ -346,7 +347,7 @@
 }
 
 /* --------------------------------------------------------------------------
-   4. Data-grid (таблицы)
+   4. Data-grid (с нуля, без <table>)
    -------------------------------------------------------------------------- */
 .mod-datagrid {
     background: var(--mod-surface);
@@ -356,12 +357,20 @@
     overflow: hidden;
 }
 
-.mod-datagrid .table {
-    margin: 0;
-    background: transparent;
+.mod-grid {
+    width: 100%;
+    overflow-x: auto;
 }
 
-.mod-datagrid .table thead th {
+/* 4 колонки: название (flex), цена, статус, управление */
+.mod-grid__head,
+.mod-grid__row {
+    display: grid;
+    grid-template-columns: minmax(260px, 1fr) 160px 160px 190px;
+    align-items: center;
+}
+
+.mod-grid__head {
     background: #fbfcfb;
     border-bottom: 1px solid var(--mod-border-2);
     color: var(--mod-text-muted);
@@ -369,27 +378,41 @@
     font-weight: 700;
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    padding: 16px 22px;
-    position: sticky;
-    top: 0;
-    z-index: 2;
 }
 
-.mod-datagrid .table tbody td {
+.mod-grid__row {
+    border-bottom: 1px solid var(--mod-border-2);
+    transition: background-color 0.15s ease, transform 0.15s ease;
+    cursor: pointer;
+}
+.mod-grid__row:last-child { border-bottom: none; }
+.mod-grid__row:hover { background-color: #fafcfa; }
+
+.mod-grid__cell {
     padding: 18px 22px;
-    vertical-align: middle;
     font-size: 0.94rem;
     color: var(--mod-text);
-    border-bottom: 1px solid var(--mod-border-2);
+    min-width: 0; /* важно для ellipsis внутри grid */
+}
+.mod-grid__cell--head {
+    padding: 16px 22px;
+    color: var(--mod-text-muted);
+    font-size: 0.7rem;
+}
+.mod-grid__cell--right { text-align: right; }
+
+.mod-grid__title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-.mod-datagrid .table tbody tr:last-child td { border-bottom: none; }
-
-.mod-datagrid .table tbody tr {
-    transition: background-color 0.15s ease, transform 0.15s ease;
-}
-.mod-datagrid .table tbody tr:hover {
-    background-color: #fafcfa;
+/* Небольшая адаптация на узких экранах: даём горизонтальный скролл */
+@media (max-width: 720px) {
+    .mod-grid__head,
+    .mod-grid__row {
+        grid-template-columns: 280px 140px 140px 170px;
+    }
 }
 
 /* Статус-пилюли */

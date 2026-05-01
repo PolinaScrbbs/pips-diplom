@@ -4,6 +4,7 @@ from . import views
 app_name = "main"
 
 urlpatterns = [
+    path("favicon.ico", views.favicon, name="favicon"),
     path("", views.index, name="index"),
     path("why-us/", views.why_us, name="why_us"),
     path(

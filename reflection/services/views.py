@@ -3,11 +3,13 @@ import json
 import re
 import urllib.request
 import urllib.error
+from decimal import Decimal, InvalidOperation
 
 from django.http import JsonResponse
 from django.db import connection
 from django.db.models import Q, Avg, Count
 from django.shortcuts import render, get_object_or_404
+from django.template.loader import render_to_string
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.core.cache import cache
 
@@ -152,7 +154,30 @@ def moderator_services_list(request):
             services = [s for s in services if q in (s.name or "").casefold()]
         else:
             services = services.filter(name__icontains=search_query)
-    # ... (логика с ценой из прошлых шагов) ...
+
+    # Фильтр по цене (min/max). Работает и для queryset, и для списка (sqlite+python search).
+    def _to_decimal(v: str):
+        v = (v or "").strip().replace(",", ".")
+        if not v:
+            return None
+        try:
+            return Decimal(v)
+        except (InvalidOperation, ValueError):
+            return None
+
+    min_p = _to_decimal(min_price)
+    max_p = _to_decimal(max_price)
+
+    if min_p is not None:
+        if isinstance(services, list):
+            services = [s for s in services if s.price is not None and s.price >= min_p]
+        else:
+            services = services.filter(price__gte=min_p)
+    if max_p is not None:
+        if isinstance(services, list):
+            services = [s for s in services if s.price is not None and s.price <= max_p]
+        else:
+            services = services.filter(price__lte=max_p)
 
     paginator = Paginator(services, 6)
     page_obj = paginator.get_page(request.GET.get("page"))
@@ -166,6 +191,24 @@ def moderator_services_list(request):
         avg_price=Avg("price"),
     )
     has_filters = bool(search_query or min_price or max_price or visibility != "visible")
+
+    # AJAX: возвращаем только блок результатов (grid + пагинация), без перерисовки страницы.
+    if request.headers.get("x-requested-with") == "XMLHttpRequest":
+        html = render_to_string(
+            "services/_moderator_list_results.html",
+            {
+                "page_obj": page_obj,
+                "search_query": search_query,
+                "min_price": min_price,
+                "max_price": max_price,
+                "sort": sort_by,
+                "visibility": visibility,
+                "kpi": kpi,
+                "has_filters": has_filters,
+            },
+            request=request,
+        )
+        return JsonResponse({"status": "success", "html": html})
 
     return render(
         request,
