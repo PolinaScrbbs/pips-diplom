@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 420" role="img" aria-label="Психолог и ребёнок">
+  <defs>
+    <linearGradient id="heroBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#eaf6ef"/>
+      <stop offset="100%" stop-color="#d4ebe0"/>
+    </linearGradient>
+    <linearGradient id="heroAccent" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#6ba585"/>
+      <stop offset="100%" stop-color="#2d5a3d"/>
+    </linearGradient>
+  </defs>
+  <rect width="520" height="420" rx="36" fill="url(#heroBg)"/>
+  <!-- декор -->
+  <circle cx="72" cy="64" r="10" fill="#8fc0a9" opacity="0.45"/>
+  <circle cx="448" cy="92" r="7" fill="#4a7c59" opacity="0.35"/>
+  <circle cx="420" cy="340" r="14" fill="#8fc0a9" opacity="0.4"/>
+  <!-- стол -->
+  <ellipse cx="260" cy="310" rx="180" ry="28" fill="#ffffff" opacity="0.85"/>
+  <!-- взрослый -->
+  <ellipse cx="190" cy="210" rx="44" ry="52" fill="#f5faf7"/>
+  <circle cx="190" cy="148" r="38" fill="#f2e8dc"/>
+  <path d="M145 248 Q170 265 190 268 Q215 265 238 248 L248 310 L132 310 Z" fill="url(#heroAccent)" opacity="0.92"/>
+  <!-- ребёнок -->
+  <ellipse cx="330" cy="228" rx="36" ry="42" fill="#f5faf7"/>
+  <circle cx="330" cy="178" r="32" fill="#fce8d8"/>
+  <path d="M295 258 Q318 272 330 274 Q345 272 368 258 L378 312 L288 312 Z" fill="#6ba585" opacity="0.88"/>
+  <!-- связь / диалог -->
+  <path d="M228 175 Q272 155 312 175" fill="none" stroke="#4a7c59" stroke-width="3" stroke-linecap="round" opacity="0.55"/>
+  <circle cx="270" cy="162" r="6" fill="#4a7c59" opacity="0.35"/>
+</svg>

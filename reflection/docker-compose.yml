@@ -1,21 +1,26 @@
 services:
   web:
     build: .
-    ports:
-      - "8000:8000"
+    env_file:
+      - path: .env
+        required: false
     environment:
-      DJANGO_DEBUG: "1"
-      DJANGO_ALLOWED_HOSTS: "localhost,127.0.0.1"
+      DJANGO_DEBUG: ${DJANGO_DEBUG:-1}
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1}
+      DJANGO_CSRF_TRUSTED_ORIGINS: ${DJANGO_CSRF_TRUSTED_ORIGINS:-}
+      DJANGO_BEHIND_HTTPS_PROXY: ${DJANGO_BEHIND_HTTPS_PROXY:-0}
       DJANGO_SQLITE_PATH: "/app/db/db.sqlite3"
-      # Ollama in docker-compose network:
+      # Ollama must use the compose service hostname (do not take host .env localhost URL).
       REFLECTION_OLLAMA_BASE_URL: "http://ollama:11434"
       # Default model from docs:
-      REFLECTION_LLM_MODEL: "qwen2.5:7b-instruct"
-      REFLECTION_LLM_TIMEOUT_S: "180"
+      REFLECTION_LLM_MODEL: ${REFLECTION_LLM_MODEL:-qwen2.5:7b-instruct}
+      REFLECTION_LLM_TIMEOUT_S: ${REFLECTION_LLM_TIMEOUT_S:-180}
     volumes:
       # Persist SQLite DB + media/logs between restarts
       - sqlite_data:/app/db
       - media_data:/app/media
+      # collectstatic output — shared with nginx for /static/
+      - staticfiles_data:/app/staticfiles
     depends_on:
       - ollama
     networks:
@@ -23,8 +28,48 @@ services:
     command: >
       sh -c "
       python manage.py migrate &&
+      python manage.py collectstatic --noinput &&
       python manage.py runserver 0.0.0.0:8000
       "
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      LE_DOMAIN: ${LE_DOMAIN:-localhost}
+      NGINX_MODE: ${NGINX_MODE:-http-only}
+    volumes:
+      - ./deploy/nginx/templates:/etc/nginx/reflection-templates:ro
+      - ./deploy/nginx/docker-entrypoint.d/99-reflection-config.sh:/docker-entrypoint.d/99-reflection-config.sh:ro
+      - letsencrypt:/etc/letsencrypt
+      - letsencrypt_www:/var/www/certbot
+      - staticfiles_data:/var/www/django/static:ro
+      - media_data:/var/www/django/media:ro
+    depends_on:
+      - web
+    networks:
+      - reflectionnet
+
+  certbot:
+    image: certbot/certbot:latest
+    volumes:
+      - letsencrypt:/etc/letsencrypt
+      - letsencrypt_www:/var/www/certbot
+    entrypoint: /bin/sh
+    command:
+      - -c
+      - |
+        trap exit TERM
+        while :; do
+          certbot renew --webroot -w /var/www/certbot --quiet || true
+          sleep 12h & wait $$!
+        done
+    depends_on:
+      - nginx
+    networks:
+      - reflectionnet
 
   ollama:
     image: ollama/ollama:latest
@@ -70,7 +115,10 @@ services:
 volumes:
   sqlite_data:
   media_data:
+  staticfiles_data:
   ollama_data:
+  letsencrypt:
+  letsencrypt_www:
 
 networks:
   reflectionnet:

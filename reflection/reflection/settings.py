@@ -34,6 +34,13 @@ ALLOWED_HOSTS = [h.strip() for h in (os.getenv("DJANGO_ALLOWED_HOSTS") or "").sp
     "127.0.0.1",
 ]
 
+_csrf_raw = (os.getenv("DJANGO_CSRF_TRUSTED_ORIGINS") or "").strip()
+CSRF_TRUSTED_ORIGINS = [x.strip() for x in _csrf_raw.split(",") if x.strip()]
+
+if (os.getenv("DJANGO_BEHIND_HTTPS_PROXY") or "").lower() in ("1", "true", "yes", "y", "on"):
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    USE_X_FORWARDED_HOST = True
+
 
 # Application definition
 

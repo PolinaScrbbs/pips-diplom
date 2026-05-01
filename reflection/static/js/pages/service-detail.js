@@ -80,9 +80,36 @@
                     signal: abortCtrl.signal,
                     cache: 'no-store',
                 });
-                if (!res.ok) throw new Error('HTTP ' + res.status);
-                const data = await res.json();
-                if (!data || data.status !== 'success') throw new Error('Bad response');
+                let data = null;
+                try {
+                    data = await res.json();
+                } catch (_) { /* empty */ }
+                if (!res.ok) {
+                    const detail = (data && data.message) ? data.message : ('HTTP ' + res.status);
+                    if (statusEl) statusEl.textContent = 'ошибка';
+                    if (bodyEl) bodyEl.textContent = 'Не удалось получить ответ: ' + detail;
+                    return;
+                }
+                if (!data) {
+                    if (statusEl) statusEl.textContent = 'ошибка';
+                    if (bodyEl) bodyEl.textContent = 'Пустой ответ сервера';
+                    return;
+                }
+                if (data.status === 'error') {
+                    if (statusEl) statusEl.textContent = 'ошибка';
+                    if (bodyEl) {
+                        const hint = data.ollama_base
+                            ? ' Проверьте, что Ollama запущен и модель скачана: ' + data.ollama_base
+                            : '';
+                        bodyEl.textContent = (data.message || 'Сервис нейросети недоступен') + hint;
+                    }
+                    return;
+                }
+                if (data.status !== 'success') {
+                    if (statusEl) statusEl.textContent = 'ошибка';
+                    if (bodyEl) bodyEl.textContent = 'Неожиданный ответ сервера';
+                    return;
+                }
                 if (currentKw !== kw) return;
                 if (statusEl) statusEl.textContent = 'готово';
                 if (bodyEl) bodyEl.textContent = data.answer || '';

@@ -35,7 +35,17 @@ def _ollama_base_url() -> str:
     return base
 
 
-def _ollama_explain_keyword(word: str, *, timeout_s: float = 25.0) -> str:
+def _ollama_keyword_timeout_s() -> float:
+    try:
+        t = float(os.getenv("REFLECTION_LLM_TIMEOUT_S") or "60")
+    except ValueError:
+        t = 60.0
+    return min(max(t, 15.0), 300.0)
+
+
+def _ollama_explain_keyword(word: str, *, timeout_s: float | None = None) -> str:
+    if timeout_s is None:
+        timeout_s = _ollama_keyword_timeout_s()
     prompt = (
         "Объясни простыми словами для родителей, что означает термин в контексте детской психологии/развития.\n"
         "Ответ: 1–3 предложения, без списков, без лишних вводных.\n"
@@ -152,16 +162,22 @@ def keyword_ask(request):
 
     try:
         ans = _ollama_explain_keyword(word)
-    except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as e:
-        # Важно для отладки в Docker: показать, куда ходили.
+    except Exception as e:
+        # Не HTTP 502: иначе fetch падает без текста; отдаём JSON с объяснением (Ollama недоступен, таймаут и т.д.).
+        logger.warning("keyword_ask LLM failed: word=%r err=%s", word, e)
         urls = [
             f"{_ollama_base_url()}/api/generate",
             f"{_ollama_base_url()}/api/chat",
             f"{_ollama_base_url()}/v1/chat/completions",
         ]
         return JsonResponse(
-            {"status": "error", "message": str(e), "ollama_url": urls[0], "ollama_urls_tried": urls},
-            status=502,
+            {
+                "status": "error",
+                "message": str(e),
+                "ollama_base": _ollama_base_url(),
+                "ollama_urls_tried": urls,
+            },
+            status=200,
         )
 
     cache.set(cache_key, ans, timeout=24 * 60 * 60)
