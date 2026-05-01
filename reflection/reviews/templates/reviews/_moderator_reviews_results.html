@@ -1,0 +1,91 @@
+{# Частичный шаблон: список отзывов (grid) + пагинация. Для AJAX-обновления. #}
+
+<div class="mod-datagrid">
+  <div class="mod-grid mod-grid--reviews" role="table" aria-label="Список отзывов">
+    <div class="mod-grid__head" role="row">
+      <div class="mod-grid__cell mod-grid__cell--head" role="columnheader">Дата</div>
+      <div class="mod-grid__cell mod-grid__cell--head" role="columnheader">Клиент</div>
+      <div class="mod-grid__cell mod-grid__cell--head" role="columnheader">Оценка</div>
+      <div class="mod-grid__cell mod-grid__cell--head" role="columnheader">Текст отзыва</div>
+      <div class="mod-grid__cell mod-grid__cell--head mod-grid__cell--right" role="columnheader"></div>
+    </div>
+
+    {% for review in page_obj %}
+    <div class="mod-grid__row review-row"
+         role="row"
+         tabindex="0"
+         data-review-author="{{ review.author.username }}"
+         data-review-rating="{{ review.rating }}"
+         data-review-text="{{ review.text|escapejs }}"
+         data-review-date="{{ review.created_at|date:'d.m.Y H:i' }}">
+
+      <div class="mod-grid__cell" role="cell">
+        <span class="d-block fw-semibold">{{ review.created_at|date:"d.m.Y" }}</span>
+        <span class="text-muted small">{{ review.created_at|date:"H:i" }}</span>
+      </div>
+
+      <div class="mod-grid__cell" role="cell">
+        <div class="d-flex align-items-center gap-2">
+          <span class="mod-avatar">{{ review.author.username|first }}</span>
+          <div>
+            <span class="fw-bold d-block">{{ review.author.username }}</span>
+            <span class="text-muted small">клиент</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="mod-grid__cell" role="cell">
+        <span class="mod-stars" aria-label="Оценка {{ review.rating }} из 5">
+          {% for i in "12345" %}
+            {% if forloop.counter <= review.rating %}
+              <i class="bi bi-star-fill"></i>
+            {% else %}
+              <i class="bi bi-star"></i>
+            {% endif %}
+          {% endfor %}
+        </span>
+      </div>
+
+      <div class="mod-grid__cell" role="cell">
+        <span class="review-text-preview">{{ review.text }}</span>
+      </div>
+
+      <div class="mod-grid__cell mod-grid__cell--right" role="cell">
+        <button class="mod-icon-btn" title="Подробнее">
+          <i class="bi bi-arrow-right"></i>
+        </button>
+      </div>
+    </div>
+    {% empty %}
+    <div class="mod-empty">
+      <div class="mod-empty__icon"><i class="bi bi-chat-square"></i></div>
+      <div class="mod-empty__title">
+        {% if has_filters %}По заданным фильтрам отзывов не найдено{% else %}Отзывов пока нет{% endif %}
+      </div>
+      <div>
+        {% if has_filters %}
+          Попробуйте изменить критерии или
+          <a href="{% url 'reviews:moderator_reviews' %}" class="link-success">сбросить фильтры</a>.
+        {% else %}
+          Как только клиенты оставят первые отзывы — они появятся здесь.
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+{% if page_obj.has_other_pages %}
+<nav class="mt-4 d-flex justify-content-center" aria-label="Пагинация">
+  <ul class="mod-pagination list-unstyled m-0">
+    {% for num in page_obj.paginator.page_range %}
+      {% if page_obj.number == num %}
+        <li><span class="is-current">{{ num }}</span></li>
+      {% else %}
+        <li><a href="?page={{ num }}&search={{ search_query }}&rating={{ rating_filter }}">{{ num }}</a></li>
+      {% endif %}
+    {% endfor %}
+  </ul>
+</nav>
+{% endif %}
+

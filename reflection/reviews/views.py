@@ -5,6 +5,7 @@ from django.db.models import Count, Avg, Q
 from django.shortcuts import render, get_object_or_404
 from django.core.paginator import Paginator
 from django.http import JsonResponse
+from django.template.loader import render_to_string
 
 from main.utils import moderator_required, user_required
 
@@ -152,4 +153,9 @@ def moderator_reviews_list(request):
         "kpi": kpi,
         "has_filters": has_filters,
     }
+
+    if request.headers.get("x-requested-with") == "XMLHttpRequest":
+        html = render_to_string("reviews/_moderator_reviews_results.html", context, request=request)
+        return JsonResponse({"status": "success", "html": html})
+
     return render(request, "reviews/moderator_reviews.html", context)

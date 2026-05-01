@@ -1,5 +1,5 @@
 /* ==========================================================================
- * reviews-moderator.js — модалка с деталями отзыва.
+ * reviews-moderator.js — модалка + фильтры/поиск без перезагрузки.
  * ========================================================================== */
 (function () {
     'use strict';
@@ -43,5 +43,114 @@
 
     document.addEventListener('DOMContentLoaded', function () {
         ensureModal();
+
+        const toolbar = document.getElementById('mod-toolbar-reviews');
+        const results = document.getElementById('mod-results-reviews');
+        if (!toolbar || !results) return;
+
+        function setActiveChip(rating) {
+            const val = (rating || '').trim();
+            toolbar.querySelectorAll('button[data-rating]').forEach((btn) => {
+                btn.classList.toggle('is-active', (btn.dataset.rating || '') === val);
+            });
+        }
+
+        function applyStateToUI(sp) {
+            const searchEl = toolbar.querySelector('input[name="search"]');
+            const rating = (sp.get('rating') || '').trim();
+            if (searchEl) searchEl.value = (sp.get('search') || '').trim();
+            setActiveChip(rating);
+        }
+
+        function qsFromToolbar(extra) {
+            const fd = new FormData(toolbar);
+            const sp = new URLSearchParams();
+            for (const [k, v] of fd.entries()) {
+                const val = String(v || '').trim();
+                if (!val) continue;
+                sp.set(k, val);
+            }
+            if (extra) {
+                Object.keys(extra).forEach((k) => {
+                    const v = extra[k];
+                    const val = String(v || '').trim();
+                    if (!val) sp.delete(k);
+                    else sp.set(k, val);
+                });
+            }
+            if (!extra || !Object.prototype.hasOwnProperty.call(extra, 'page')) sp.delete('page');
+            return sp;
+        }
+
+        async function fetchAndRender(sp) {
+            const url = `${window.location.pathname}?${sp.toString()}`;
+            const res = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+            const data = await res.json();
+            if (!data || data.status !== 'success') return;
+            results.innerHTML = data.html || '';
+            window.history.replaceState({}, '', url);
+            applyStateToUI(sp);
+            wireRows();
+        }
+
+        function wireRows() {
+            document.querySelectorAll('.review-row').forEach((row) => {
+                if (row.__wired) return;
+                row.__wired = true;
+                const open = function () {
+                    const author = row.dataset.reviewAuthor || '';
+                    const rating = row.dataset.reviewRating || '';
+                    const text = row.dataset.reviewText || '';
+                    const date = row.dataset.reviewDate || '';
+                    window.viewReview(author, rating, text, date);
+                };
+                row.addEventListener('click', function (e) {
+                    if (e.target.closest('button')) return;
+                    open();
+                });
+                row.addEventListener('keydown', function (e) {
+                    if (e.key === 'Enter' || e.key === ' ') open();
+                });
+            });
+        }
+
+        // chips: делаем кнопками без submit
+        toolbar.querySelectorAll('.mod-toolbar__chips button[name="rating"]').forEach((btn) => {
+            btn.type = 'button';
+            btn.dataset.rating = btn.value || '';
+            btn.removeAttribute('name');
+            btn.addEventListener('click', function () {
+                setActiveChip(this.dataset.rating || '');
+                fetchAndRender(qsFromToolbar({ rating: this.dataset.rating || '' }));
+            });
+        });
+
+        // search debounce
+        const searchEl = toolbar.querySelector('input[name="search"]');
+        let t = null;
+        if (searchEl) {
+            searchEl.addEventListener('input', function () {
+                if (t) window.clearTimeout(t);
+                t = window.setTimeout(() => fetchAndRender(qsFromToolbar()), 300);
+            });
+        }
+
+        toolbar.addEventListener('submit', function (e) {
+            e.preventDefault();
+            fetchAndRender(qsFromToolbar());
+        });
+
+        // pagination
+        results.addEventListener('click', function (e) {
+            const a = e.target.closest('a');
+            if (!a) return;
+            const href = a.getAttribute('href') || '';
+            if (!href.startsWith('?')) return;
+            e.preventDefault();
+            fetchAndRender(new URLSearchParams(href.replace(/^\?/, '')));
+        });
+
+        applyStateToUI(new URLSearchParams(window.location.search.replace(/^\?/, '')));
+        wireRows();
     });
 })();

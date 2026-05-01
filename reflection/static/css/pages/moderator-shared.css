@@ -415,6 +415,18 @@
     }
 }
 
+/* Reviews grid: дата, клиент, оценка, текст, кнопка */
+.mod-grid--reviews .mod-grid__head,
+.mod-grid--reviews .mod-grid__row {
+    grid-template-columns: 130px 220px 140px minmax(260px, 1fr) 80px;
+}
+@media (max-width: 900px) {
+    .mod-grid--reviews .mod-grid__head,
+    .mod-grid--reviews .mod-grid__row {
+        grid-template-columns: 120px 200px 130px 320px 70px;
+    }
+}
+
 /* Статус-пилюли */
 .mod-status {
     display: inline-flex;

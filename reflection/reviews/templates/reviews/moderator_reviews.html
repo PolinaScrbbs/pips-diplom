@@ -88,7 +88,7 @@
 
         <label class="mod-search" aria-label="Поиск по автору или тексту">
             <i class="bi bi-search"></i>
-            <input type="search" name="search" value="{{ search_query|default:'' }}"
+            <input type="text" name="search" value="{{ search_query|default:'' }}"
                    placeholder="Поиск по автору или тексту…"
                    autocomplete="off">
             {% if search_query %}
@@ -98,99 +98,11 @@
                 </a>
             {% endif %}
         </label>
-
-        {# сохраняем rating при сабмите поисковой строки #}
-        <input type="hidden" name="rating" value="{{ rating_filter|default:'' }}">
     </form>
 
-    {# ===== Data-grid ===== #}
-    <div class="mod-datagrid">
-        <div class="table-responsive">
-            <table class="table align-middle m-0">
-                <thead>
-                    <tr>
-                        <th style="width: 130px;">Дата</th>
-                        <th style="width: 220px;">Клиент</th>
-                        <th style="width: 140px;">Оценка</th>
-                        <th>Текст отзыва</th>
-                        <th class="text-end" style="width: 80px;"></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for review in page_obj %}
-                    <tr class="mod-row-link review-row"
-                        onclick="viewReview('{{ review.author }}', '{{ review.rating }}', '{{ review.text|escapejs }}', '{{ review.created_at|date:'d.m.Y H:i' }}')">
-                        <td>
-                            <span class="d-block fw-semibold">{{ review.created_at|date:"d.m.Y" }}</span>
-                            <span class="text-muted small">{{ review.created_at|date:"H:i" }}</span>
-                        </td>
-                        <td>
-                            <div class="d-flex align-items-center gap-2">
-                                <span class="mod-avatar">{{ review.author.username|first }}</span>
-                                <div>
-                                    <span class="fw-bold d-block">{{ review.author.username }}</span>
-                                    <span class="text-muted small">клиент</span>
-                                </div>
-                            </div>
-                        </td>
-                        <td>
-                            <span class="mod-stars" aria-label="Оценка {{ review.rating }} из 5">
-                                {% for i in "12345" %}
-                                    {% if forloop.counter <= review.rating %}
-                                        <i class="bi bi-star-fill"></i>
-                                    {% else %}
-                                        <i class="bi bi-star"></i>
-                                    {% endif %}
-                                {% endfor %}
-                            </span>
-                        </td>
-                        <td>
-                            <span class="review-text-preview">{{ review.text }}</span>
-                        </td>
-                        <td class="text-end">
-                            <button class="mod-icon-btn" title="Подробнее">
-                                <i class="bi bi-arrow-right"></i>
-                            </button>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="5">
-                            <div class="mod-empty">
-                                <div class="mod-empty__icon"><i class="bi bi-chat-square"></i></div>
-                                <div class="mod-empty__title">
-                                    {% if has_filters %}По заданным фильтрам отзывов не найдено{% else %}Отзывов пока нет{% endif %}
-                                </div>
-                                <div>
-                                    {% if has_filters %}
-                                        Попробуйте изменить критерии или
-                                        <a href="{% url 'reviews:moderator_reviews' %}" class="link-success">сбросить фильтры</a>.
-                                    {% else %}
-                                        Как только клиенты оставят первые отзывы — они появятся здесь.
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+    <div id="mod-results-reviews">
+        {% include "reviews/_moderator_reviews_results.html" %}
     </div>
-
-    {% if page_obj.has_other_pages %}
-    <nav class="mt-4 d-flex justify-content-center" aria-label="Пагинация">
-        <ul class="mod-pagination list-unstyled m-0">
-            {% for num in page_obj.paginator.page_range %}
-                {% if page_obj.number == num %}
-                    <li><span class="is-current">{{ num }}</span></li>
-                {% else %}
-                    <li><a href="?page={{ num }}&search={{ search_query }}&rating={{ rating_filter }}">{{ num }}</a></li>
-                {% endif %}
-            {% endfor %}
-        </ul>
-    </nav>
-    {% endif %}
 </div>
 
 <div class="modal fade mod-modal" id="reviewDetailModal" tabindex="-1" aria-hidden="true">
