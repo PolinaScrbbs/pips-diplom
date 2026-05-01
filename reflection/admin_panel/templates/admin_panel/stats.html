@@ -13,7 +13,8 @@
 {% block content %}
 <div class="stats-page"
      id="admin-stats-root"
-     data-data-url="{% url 'admin_panel:stats_data' %}">
+     data-data-url="{% url 'admin_panel:stats_data' %}"
+     data-insights-url="{% url 'admin_panel:stats_insights' %}">
 
     {% include "admin_panel/_nav.html" with active='stats' %}
 
@@ -94,6 +95,45 @@
                 <span>по ценам услуг в записях</span>
             </footer>
         </article>
+    </section>
+
+    <section class="stats-insights" aria-label="Инсайты">
+        <header class="stats-insights__head">
+            <div>
+                <h2>Инсайты</h2>
+                <p class="stats-insights__subtitle">Короткое объяснение изменений и рекомендации по действиям</p>
+            </div>
+            <div class="stats-insights__actions">
+                <button type="button" class="stats-insights__btn" id="stats-insights-btn">
+                    Сгенерировать
+                </button>
+                <button type="button" class="stats-insights__btn secondary" id="stats-insights-refresh-btn" hidden>
+                    Обновить
+                </button>
+            </div>
+        </header>
+        <div class="stats-insights__progress" id="stats-insights-progress" hidden>
+            <div class="stats-insights__progress-bar" id="stats-insights-progress-bar"></div>
+        </div>
+        <div class="stats-insights__status" id="stats-insights-status">Нажмите «Сгенерировать», чтобы получить инсайты.</div>
+        <div class="stats-insights__body" id="stats-insights-body" hidden>
+            <p class="stats-insights__summary" id="stats-insights-summary"></p>
+
+            <div class="stats-insights__grid">
+                <div class="stats-insights__card">
+                    <h3>Что изменилось</h3>
+                    <ul id="stats-insights-changes"></ul>
+                </div>
+                <div class="stats-insights__card">
+                    <h3>Аномалии</h3>
+                    <ul id="stats-insights-anomalies"></ul>
+                </div>
+                <div class="stats-insights__card">
+                    <h3>Рекомендации</h3>
+                    <ul id="stats-insights-recommendations"></ul>
+                </div>
+            </div>
+        </div>
     </section>
 
     <section class="stats-grid">

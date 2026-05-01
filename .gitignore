@@ -47,3 +47,4 @@ pip-delete-this-directory.txt
 # Проект‑специфичные исключения (если что‑то особенное потребуется)
 reflection/local_settings.py
 .env
+docs/

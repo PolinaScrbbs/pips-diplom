@@ -16,13 +16,24 @@
         const root = document.getElementById('admin-stats-root');
         if (!root || typeof Chart === 'undefined') return;
 
-        const cfg = { dataUrl: root.dataset.dataUrl };
+        const cfg = { dataUrl: root.dataset.dataUrl, insightsUrl: root.dataset.insightsUrl };
         const rangeBtns = document.querySelectorAll('.stats-range-btn');
         const statusDot = document.getElementById('stats-status-dot');
         const statusText = document.getElementById('stats-status-text');
 
         const state = { days: 30 };
         const charts = {};
+
+        const insightsBtn = document.getElementById('stats-insights-btn');
+        const insightsRefreshBtn = document.getElementById('stats-insights-refresh-btn');
+        const insightsStatus = document.getElementById('stats-insights-status');
+        const insightsBody = document.getElementById('stats-insights-body');
+        const insightsSummary = document.getElementById('stats-insights-summary');
+        const insightsChanges = document.getElementById('stats-insights-changes');
+        const insightsAnomalies = document.getElementById('stats-insights-anomalies');
+        const insightsRecs = document.getElementById('stats-insights-recommendations');
+        const insightsProgress = document.getElementById('stats-insights-progress');
+        const insightsProgressBar = document.getElementById('stats-insights-progress-bar');
 
         // ---------- Chart.js defaults ----------
         Chart.defaults.font.family = "'Montserrat', system-ui, sans-serif";
@@ -427,6 +438,99 @@
             }
         }
 
+        function setInsightsStatus(text, kind) {
+            if (!insightsStatus) return;
+            insightsStatus.textContent = text;
+            insightsStatus.dataset.kind = kind || '';
+        }
+
+        let insightsTicker = null;
+        function startInsightsTicker() {
+            const labels = [
+                'Собираю статистику…',
+                'Формирую промпт для модели…',
+                'Отправляю данные в нейросеть…',
+                'Модель анализирует метрики…',
+                'Почти готово…',
+            ];
+            let i = 0;
+            if (insightsProgress) insightsProgress.hidden = false;
+            if (insightsProgressBar) insightsProgressBar.style.animationPlayState = 'running';
+            setInsightsStatus(labels[0], 'loading');
+            insightsTicker = window.setInterval(() => {
+                i = (i + 1) % labels.length;
+                setInsightsStatus(labels[i], 'loading');
+            }, 1300);
+        }
+
+        function stopInsightsTicker() {
+            if (insightsTicker) {
+                window.clearInterval(insightsTicker);
+                insightsTicker = null;
+            }
+            if (insightsProgress) insightsProgress.hidden = true;
+            if (insightsProgressBar) insightsProgressBar.style.animationPlayState = 'paused';
+        }
+
+        function renderInsightsList(ul, items, emptyText) {
+            if (!ul) return;
+            if (!items || !items.length) {
+                ul.innerHTML = `<li>${escapeHtml(emptyText || '—')}</li>`;
+                return;
+            }
+            ul.innerHTML = items.map((t) => `<li>${escapeHtml(t)}</li>`).join('');
+        }
+
+        function normalizeChangeItems(changes) {
+            if (!Array.isArray(changes)) return [];
+            return changes
+                .map((c) => (c && typeof c === 'object' ? c.text : c))
+                .filter((t) => typeof t === 'string' && t.trim().length);
+        }
+
+        async function loadInsights(force) {
+            if (!cfg.insightsUrl || !insightsBtn || !insightsStatus) return;
+            insightsBtn.disabled = true;
+            if (insightsRefreshBtn) insightsRefreshBtn.disabled = true;
+            startInsightsTicker();
+
+            const url = new URL(cfg.insightsUrl, window.location.origin);
+            url.searchParams.set('days', state.days);
+            if (force) url.searchParams.set('force', '1');
+
+            try {
+                const res = await fetch(url.toString(), {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    cache: 'no-store',
+                });
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                const data = await res.json();
+                if (!data || data.status !== 'success') throw new Error('Bad response');
+
+                const ins = data.insights || {};
+                if (insightsSummary) insightsSummary.textContent = ins.summary || '';
+                renderInsightsList(insightsChanges, normalizeChangeItems(ins.changes), 'Пока без выраженных изменений.');
+                renderInsightsList(insightsAnomalies, ins.anomalies || [], 'Аномалий не обнаружено.');
+                renderInsightsList(insightsRecs, ins.recommendations || [], 'Рекомендаций пока нет.');
+
+                if (insightsBody) insightsBody.hidden = false;
+                if (insightsRefreshBtn) insightsRefreshBtn.hidden = false;
+
+                const when = data.generated_at ? new Date(data.generated_at).toLocaleTimeString('ru-RU') : new Date().toLocaleTimeString('ru-RU');
+                const cached = data.cached ? 'кэш' : 'новое';
+                const mode = data.mode || '';
+                const elapsed = data.meta && data.meta.elapsed_ms != null ? `${data.meta.elapsed_ms}ms` : '';
+                stopInsightsTicker();
+                setInsightsStatus(`Готово • ${cached} • ${mode} • ${elapsed} • ${when}`, 'ok');
+            } catch (e) {
+                stopInsightsTicker();
+                setInsightsStatus('Ошибка инсайтов: ' + e.message, 'err');
+            } finally {
+                insightsBtn.disabled = false;
+                if (insightsRefreshBtn) insightsRefreshBtn.disabled = false;
+            }
+        }
+
         // ---------- Events ----------
         rangeBtns.forEach((btn) => {
             btn.addEventListener('click', () => {
@@ -434,8 +538,19 @@
                 btn.classList.add('active');
                 state.days = parseInt(btn.dataset.days, 10) || 30;
                 load();
+                if (insightsBody) insightsBody.hidden = true;
+                if (insightsRefreshBtn) insightsRefreshBtn.hidden = true;
+                stopInsightsTicker();
+                setInsightsStatus('Период изменён. Нажмите «Сгенерировать», чтобы обновить инсайты.', 'idle');
             });
         });
+
+        if (insightsBtn) {
+            insightsBtn.addEventListener('click', () => loadInsights(false));
+        }
+        if (insightsRefreshBtn) {
+            insightsRefreshBtn.addEventListener('click', () => loadInsights(true));
+        }
 
         function escapeHtml(s) {
             return String(s)

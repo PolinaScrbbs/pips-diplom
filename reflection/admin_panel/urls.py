@@ -21,6 +21,7 @@ urlpatterns = [
 
     path("stats/", views.stats_page, name="stats"),
     path("stats/data/", views.stats_data, name="stats_data"),
+    path("stats/insights/", views.stats_insights, name="stats_insights"),
 
     path("audit/", views.audit_page, name="audit"),
     path("audit/data/", views.audit_data, name="audit_data"),
@@ -34,4 +35,7 @@ urlpatterns = [
     path("db/schema/", views.db_schema, name="db_schema"),
     path("db/queries/", views.db_queries, name="db_queries"),
     path("db/queries/clear/", views.db_queries_clear, name="db_queries_clear"),
+
+    path("brief/daily/", views.daily_brief, name="daily_brief"),
+    path("reviews/insights/", views.reviews_insights, name="reviews_insights"),
 ]

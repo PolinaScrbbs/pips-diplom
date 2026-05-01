@@ -1,13 +1,16 @@
 import logging
 import re
-from datetime import date as date_type, datetime, timedelta
+import time
+import json
+from datetime import date as date_type, datetime, timedelta, timezone as dt_timezone
 
 from django.conf import settings
+from django.core.cache import cache
 from django.core.paginator import Paginator
 from django.db.models import Avg, Count, Q, Sum, Value
 from django.db.models.functions import Replace, TruncDate
 from django.contrib.auth import login
-from django.http import FileResponse, Http404, JsonResponse
+from django.http import FileResponse, Http404, JsonResponse, StreamingHttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
@@ -20,6 +23,16 @@ from services.models import Service
 from admin_panel.db_inspector import get_schema_overview
 from admin_panel.decorators import admin_required
 from admin_panel.forms import UserCreateForm, UserUpdateForm
+from admin_panel.insights import (
+    generate_stats_insights,
+    generate_stats_insights_compat,
+    limit_items,
+    mask_text,
+    normalize_sql,
+    ollama_stream_response,
+    sanitize_stats_data,
+    _llm_prompt_stats,
+)
 from admin_panel.models import AuditLog
 from admin_panel.query_log import query_log
 from admin_panel.signals import write_manual as audit_write
@@ -660,6 +673,219 @@ def stats_data(request):
     })
 
 
+_STATS_INSIGHTS_CACHE_TTL_S = 10 * 60  # 10 минут
+_STATS_INSIGHTS_TIMEOUT_S = 180.0  # По запросу: без лимитов, ждём дольше
+
+
+@admin_required
+def stats_insights(request):
+    """
+    JSON-инсайты поверх `stats_data`. Параметры:
+      days   — 7|30|90 (как у stats_data; ограничение 7..365),
+      force  — 1 чтобы игнорировать кэш.
+
+    Контракт ответа (успех):
+      {
+        "status": "success",
+        "cached": true|false,
+        "days": 30,
+        "mode": "heuristic",
+        "generated_at": "2026-05-01T18:00:00+00:00",
+        "input_digest": "a1b2c3d4e5f6g7h8",
+        "insights": {
+          "summary": "...",
+          "changes": [{"text": "...", "metric": "...", "new": 1, "old": 2, "pct": -50.0, "unit": ""}],
+          "anomalies": ["..."],
+          "recommendations": ["..."],
+          "numbers_used": {...},
+          "input_days": 30
+        }
+      }
+    """
+    try:
+        days = int(request.GET.get("days") or 30)
+    except (TypeError, ValueError):
+        days = 30
+    days = max(7, min(365, days))
+
+    force = (request.GET.get("force") or "").strip() in ("1", "true", "yes", "y")
+    cache_key = f"admin_panel:stats_insights:v1:days={days}"
+
+    if not force:
+        cached = cache.get(cache_key)
+        if cached:
+            cached["cached"] = True
+            return JsonResponse(cached)
+
+    # Собираем базовую статистику так же, как для графиков.
+    # Важно: не делаем доп. запросов к БД сверх уже существующих в stats_data().
+    started = time.monotonic()
+    stats_json = json.loads(stats_data(request).content.decode("utf-8"))
+    # generate_stats_insights now uses local LLM (Ollama) if available, else fallback.
+    result = generate_stats_insights(stats_json, prefer_llm=True)
+    elapsed_ms = int((time.monotonic() - started) * 1000)
+
+    payload = {
+        "status": "success",
+        "cached": False,
+        "days": days,
+        "mode": result.mode,
+        "generated_at": result.generated_at,
+        "input_digest": result.input_digest,
+        "insights": result.insights,
+        "meta": {
+            "timeout_s": _STATS_INSIGHTS_TIMEOUT_S,
+            "elapsed_ms": elapsed_ms,
+            "cache_ttl_s": _STATS_INSIGHTS_CACHE_TTL_S,
+            "llm_error": result.llm_error,
+        },
+    }
+    cache.set(cache_key, payload, timeout=_STATS_INSIGHTS_CACHE_TTL_S)
+    return JsonResponse(payload)
+
+
+@admin_required
+def stats_insights_stream(request):
+    """
+    SSE-стрим прогресса для LLM-инсайтов.
+    События:
+      - progress: {"pct": int, "label": str}
+      - result:   <полный JSON ответа как в stats_insights>
+    """
+    try:
+        days = int(request.GET.get("days") or 30)
+    except (TypeError, ValueError):
+        days = 30
+    days = max(7, min(365, days))
+
+    force = (request.GET.get("force") or "").strip() in ("1", "true", "yes", "y")
+    cache_key = f"admin_panel:stats_insights:v1:days={days}"
+
+    if not force:
+        cached = cache.get(cache_key)
+        if cached:
+            cached2 = dict(cached)
+            cached2["cached"] = True
+            cached_json = json.dumps(cached2, ensure_ascii=False)
+
+            def cached_gen():
+                yield "event: progress\ndata: {\"pct\":100,\"label\":\"Готово (кэш)\"}\n\n"
+                yield f"event: result\ndata: {cached_json}\n\n"
+
+            resp = StreamingHttpResponse(cached_gen(), content_type="text/event-stream")
+            resp["Cache-Control"] = "no-cache"
+            return resp
+
+    started = time.monotonic()
+    stats_json = json.loads(stats_data(request).content.decode("utf-8"))
+    safe = sanitize_stats_data(stats_json)
+
+    series = safe.get("series") or {}
+    signups = list(series.get("signups") or [])
+    bookings = list(series.get("bookings") or [])
+    revenue = list(series.get("revenue") or [])
+    window = 7
+    numbers_used = {
+        "signups_7d": sum(signups[-window:]) if len(signups) >= window else sum(signups),
+        "signups_prev_7d": sum(signups[-2 * window:-window]) if len(signups) >= 2 * window else 0.0,
+        "bookings_7d": sum(bookings[-window:]) if len(bookings) >= window else sum(bookings),
+        "bookings_prev_7d": sum(bookings[-2 * window:-window]) if len(bookings) >= 2 * window else 0.0,
+        "revenue_7d": sum(revenue[-window:]) if len(revenue) >= window else sum(revenue),
+        "revenue_prev_7d": sum(revenue[-2 * window:-window]) if len(revenue) >= 2 * window else 0.0,
+    }
+    full_payload = dict(safe)
+    full_payload["numbers_used"] = numbers_used
+
+    model = "qwen2.5:7b-instruct"
+    timeout_s = _STATS_INSIGHTS_TIMEOUT_S
+    try:
+        import os
+
+        model = os.getenv("REFLECTION_LLM_MODEL") or model
+        timeout_s = float(os.getenv("REFLECTION_LLM_TIMEOUT_S") or timeout_s)
+    except Exception:
+        pass
+
+    prompt = _llm_prompt_stats(compact=full_payload)
+
+    def sse_pack(event: str, data_obj) -> str:
+        return f"event: {event}\ndata: {json.dumps(data_obj, ensure_ascii=False)}\n\n"
+
+    def _validate_llm_insights(obj) -> bool:
+        if not isinstance(obj, dict):
+            return False
+        if not isinstance(obj.get("summary"), str):
+            return False
+        recs = obj.get("recommendations")
+        if not isinstance(recs, list) or not all(isinstance(x, str) for x in recs):
+            return False
+        changes = obj.get("changes")
+        if not isinstance(changes, list):
+            return False
+        anomalies = obj.get("anomalies")
+        if anomalies is not None and not isinstance(anomalies, list):
+            return False
+        return True
+
+    def gen():
+        yield sse_pack("progress", {"pct": 1, "label": "Подключение к модели…"})
+        buf = []
+        chars_seen = 0
+        last_sent_pct = 1
+        try:
+            for chunk in ollama_stream_response(model=model, prompt=prompt, timeout_s=timeout_s):
+                frag = chunk.get("response") or ""
+                if frag:
+                    buf.append(frag)
+                    chars_seen += len(frag)
+                    # Прогресс по факту генерации: растём до 95% пока done=false.
+                    pct = min(95, 5 + int((chars_seen / (chars_seen + 2000.0)) * 90))
+                    if pct > last_sent_pct:
+                        last_sent_pct = pct
+                        yield sse_pack("progress", {"pct": pct, "label": "Модель генерирует ответ…"})
+                if chunk.get("done"):
+                    break
+
+            text = "".join(buf).strip()
+            try:
+                llm_json = json.loads(text)
+            except json.JSONDecodeError:
+                m = re.search(r"\{[\s\S]*\}", text)
+                llm_json = json.loads(m.group(0)) if m else {}
+
+            llm_error = None
+            if not _validate_llm_insights(llm_json):
+                llm_error = "llm_output_invalid_contract"
+                llm_json = generate_stats_insights(stats_json, prefer_llm=False).insights
+
+            elapsed_ms = int((time.monotonic() - started) * 1000)
+            payload = {
+                "status": "success",
+                "cached": False,
+                "days": days,
+                "mode": "llm" if llm_error is None else "heuristic",
+                "generated_at": datetime.now(dt_timezone.utc).isoformat(timespec="seconds"),
+                "input_digest": "",
+                "insights": llm_json if isinstance(llm_json, dict) else {"summary": str(llm_json)},
+                "meta": {
+                    "timeout_s": timeout_s,
+                    "elapsed_ms": elapsed_ms,
+                    "cache_ttl_s": _STATS_INSIGHTS_CACHE_TTL_S,
+                    "llm_error": llm_error,
+                },
+            }
+            cache.set(cache_key, payload, timeout=_STATS_INSIGHTS_CACHE_TTL_S)
+            yield sse_pack("progress", {"pct": 100, "label": "Готово"})
+            yield sse_pack("result", payload)
+        except Exception as e:  # noqa: BLE001
+            yield sse_pack("progress", {"pct": 100, "label": "Ошибка"})
+            yield sse_pack("result", {"status": "error", "message": str(e)})
+
+    resp = StreamingHttpResponse(gen(), content_type="text/event-stream")
+    resp["Cache-Control"] = "no-cache"
+    return resp
+
+
 # ---------------------------------------------------------------------------
 # Аудит-журнал — лента действий персонала над ключевыми сущностями.
 # ---------------------------------------------------------------------------
@@ -936,3 +1162,188 @@ def db_queries_clear(request):
     query_log.clear()
     logger.info("Admin %s cleared query log", request.user.username)
     return JsonResponse({"status": "success"})
+
+
+# ---------------------------------------------------------------------------
+# Weekly extension: Daily brief + Reviews insights (scaffolding).
+# ---------------------------------------------------------------------------
+
+_DAILY_BRIEF_CACHE_TTL_S = 5 * 60
+_DAILY_BRIEF_MAX_LOG_LINES = 60
+_DAILY_BRIEF_MAX_AUDIT = 30
+
+
+@admin_required
+def daily_brief(request):
+    """
+    MVP на 1 неделю: daily brief = stats + ERROR logs + audit highlights.
+    Сейчас без LLM: отдаём структурированный JSON (чтобы легко подключить LLM позже).
+
+    Параметры:
+      days   — период для stats (7..365), по умолчанию 30
+      date   — дата логов YYYY-MM-DD (по умолчанию сегодня)
+      force  — 1 чтобы игнорировать кэш
+    """
+    try:
+        days = int(request.GET.get("days") or 30)
+    except (TypeError, ValueError):
+        days = 30
+    days = max(7, min(365, days))
+    force = (request.GET.get("force") or "").strip() in ("1", "true", "yes", "y")
+
+    date_str = request.GET.get("date") or date_type.today().isoformat()
+    cache_key = f"admin_panel:daily_brief:v1:days={days}:date={date_str}"
+    if not force:
+        cached = cache.get(cache_key)
+        if cached:
+            cached["cached"] = True
+            return JsonResponse(cached)
+
+    # 1) Stats (safe aggregates)
+    stats_json = json.loads(stats_data(request).content.decode("utf-8"))
+    safe_stats = generate_stats_insights(stats_json).insights  # already sanitized via sanitize_stats_data
+
+    # 2) ERROR logs only (safe masked messages)
+    d = _parse_date(date_str)
+    raw_lines = []
+    if d is not None:
+        path = _file_for_date(d)
+        parsed = [_parse_log_line(ln) for ln in _read_file_lines(path) if ln.strip()]
+        parsed = [p for p in parsed if p.get("level") == "ERROR"]
+        # tail-mode for brief
+        if len(parsed) > _LOGS_DEFAULT_TAIL:
+            parsed = parsed[-_LOGS_DEFAULT_TAIL:]
+        raw_lines = parsed
+    safe_lines = []
+    for row in raw_lines:
+        if not isinstance(row, dict):
+            continue
+        safe_lines.append({
+            "ts": row.get("ts") or "",
+            "level": row.get("level") or "",
+            "source": row.get("source") or "",
+            "message": mask_text(row.get("message") or "", max_len=400),
+        })
+    safe_lines = limit_items(safe_lines, max_items=_DAILY_BRIEF_MAX_LOG_LINES)
+
+    # 3) Audit highlights (no ip/user_agent/changes values)
+    audit_qs = AuditLog.objects.all().order_by("-created_at")[:_DAILY_BRIEF_MAX_AUDIT]
+    audit_entries = []
+    for row in audit_qs:
+        audit_entries.append({
+            "created_at": timezone.localtime(row.created_at).isoformat(timespec="seconds"),
+            "action": row.action,
+            "entity_type": row.entity_type,
+            "entity_id": row.entity_id,
+            "entity_repr": mask_text(row.entity_repr or "", max_len=140),
+            "actor_role": row.actor_role or "",
+            "changed_fields": sorted(list((row.changes or {}).keys())),
+        })
+
+    payload = {
+        "status": "success",
+        "cached": False,
+        "days": days,
+        "date": date_str,
+        "brief": {
+            "stats_insights": safe_stats,
+            "errors": {
+                "returned": len(safe_lines),
+                "lines": safe_lines,
+            },
+            "audit": audit_entries,
+        },
+        "meta": {
+            "cache_ttl_s": _DAILY_BRIEF_CACHE_TTL_S,
+            "limits": {
+                "max_log_lines": _DAILY_BRIEF_MAX_LOG_LINES,
+                "max_audit": _DAILY_BRIEF_MAX_AUDIT,
+            },
+        },
+    }
+    cache.set(cache_key, payload, timeout=_DAILY_BRIEF_CACHE_TTL_S)
+    return JsonResponse(payload)
+
+
+_REVIEWS_INSIGHTS_CACHE_TTL_S = 10 * 60
+_REVIEWS_INSIGHTS_MAX_ITEMS = 200
+_REVIEWS_INSIGHTS_MAX_LEN = 700
+
+
+@admin_required
+def reviews_insights(request):
+    """
+    MVP на 1 неделю: инсайты по отзывам (темы/негатив).
+    Сейчас без LLM: отдаём подготовленный безопасный payload + простую сводку.
+
+    Параметры:
+      limit — сколько отзывов анализировать (1..200), по умолчанию 120
+      only_negative — 1 чтобы брать rating<=2 (по умолчанию 1)
+      force — 1 чтобы игнорировать кэш
+    """
+    try:
+        limit = int(request.GET.get("limit") or 120)
+    except (TypeError, ValueError):
+        limit = 120
+    limit = max(1, min(_REVIEWS_INSIGHTS_MAX_ITEMS, limit))
+    only_negative = (request.GET.get("only_negative") or "1").strip() in ("1", "true", "yes", "y")
+    force = (request.GET.get("force") or "").strip() in ("1", "true", "yes", "y")
+
+    cache_key = f"admin_panel:reviews_insights:v1:limit={limit}:neg={int(only_negative)}"
+    if not force:
+        cached = cache.get(cache_key)
+        if cached:
+            cached["cached"] = True
+            return JsonResponse(cached)
+
+    qs = Review.objects.all().order_by("-created_at")
+    if only_negative:
+        qs = qs.filter(rating__lte=2)
+    rows = list(qs.values("rating", "text", "created_at")[:limit])
+
+    texts = []
+    for r in rows:
+        texts.append({
+            "rating": int(r.get("rating") or 0),
+            "created_at": timezone.localtime(r["created_at"]).isoformat(timespec="seconds") if r.get("created_at") else "",
+            "text": mask_text(r.get("text") or "", max_len=_REVIEWS_INSIGHTS_MAX_LEN),
+        })
+
+    # Простая “тематика” без ML: частотные слова (очень грубо, но демонстрационно).
+    # LLM можно подключить позже, используя texts[] как safe input.
+    stop = set([
+        "и","в","во","на","по","что","это","не","я","мы","вы","он","она","они","а","но","или",
+        "с","со","к","ко","у","за","от","до","для","как","же","то","так","бы","были","было",
+        "очень","просто","только","ещё","еще","уже","нет","да","все","всё",
+    ])
+    freq = {}
+    for t in texts:
+        words = re.findall(r"[A-Za-zА-Яа-яЁё]{3,}", t["text"].lower())
+        for w in words:
+            if w in stop:
+                continue
+            freq[w] = freq.get(w, 0) + 1
+    top_terms = sorted(freq.items(), key=lambda x: (-x[1], x[0]))[:12]
+
+    payload = {
+        "status": "success",
+        "cached": False,
+        "only_negative": only_negative,
+        "input": {
+            "count": len(texts),
+            "items": texts,
+        },
+        "summary": {
+            "top_terms": [{"term": k, "count": v} for k, v in top_terms],
+            "note": "Это простая эвристика. Для диплома можно заменить на LLM/кластеризацию, сохранив тот же безопасный вход.",
+        },
+        "meta": {
+            "cache_ttl_s": _REVIEWS_INSIGHTS_CACHE_TTL_S,
+            "limits": {
+                "max_items": _REVIEWS_INSIGHTS_MAX_ITEMS,
+                "max_len": _REVIEWS_INSIGHTS_MAX_LEN,
+            },
+        },
+    }
+    cache.set(cache_key, payload, timeout=_REVIEWS_INSIGHTS_CACHE_TTL_S)
+    return JsonResponse(payload)
