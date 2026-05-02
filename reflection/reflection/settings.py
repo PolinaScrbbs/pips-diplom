@@ -29,13 +29,25 @@ SECRET_KEY = os.getenv(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = (os.getenv("DJANGO_DEBUG") or "1").lower() in ("1", "true", "yes", "y", "on")
 
-ALLOWED_HOSTS = [h.strip() for h in (os.getenv("DJANGO_ALLOWED_HOSTS") or "").split(",") if h.strip()] or [
-    "localhost",
-    "127.0.0.1",
-]
+def _split_hosts(raw: str) -> list[str]:
+    return [h.strip() for h in (raw or "").split(",") if h.strip()]
+
+
+_env_hosts = _split_hosts(os.getenv("DJANGO_ALLOWED_HOSTS") or "")
+_default_hosts = ["localhost", "127.0.0.1", "[::1]"]
+# Если DJANGO_ALLOWED_HOSTS задан (прод-домен и т.п.), всё равно добавляем локальные хосты —
+# иначе Docker/Nginx на https://localhost даёт DisallowedHost при локальной проверке.
+ALLOWED_HOSTS = sorted(set(_env_hosts + _default_hosts)) if _env_hosts else list(_default_hosts)
 
 _csrf_raw = (os.getenv("DJANGO_CSRF_TRUSTED_ORIGINS") or "").strip()
-CSRF_TRUSTED_ORIGINS = [x.strip() for x in _csrf_raw.split(",") if x.strip()]
+_csrf_env = [x.strip() for x in _csrf_raw.split(",") if x.strip()]
+_csrf_defaults = [
+    "http://localhost",
+    "http://127.0.0.1",
+    "https://localhost",
+    "https://127.0.0.1",
+]
+CSRF_TRUSTED_ORIGINS = sorted(set(_csrf_env + _csrf_defaults)) if _csrf_env else list(_csrf_defaults)
 
 if (os.getenv("DJANGO_BEHIND_HTTPS_PROXY") or "").lower() in ("1", "true", "yes", "y", "on"):
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")

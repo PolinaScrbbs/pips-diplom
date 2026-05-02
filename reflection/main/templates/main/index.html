@@ -60,8 +60,14 @@
             <div class="col-lg-5 d-none d-lg-block" data-aos="zoom-in" data-aos-delay="200">
                 <div class="hero-image-wrapper">
                     <div class="hero-abstract-shape"></div>
-                    <img src="{% static 'images/hero-psychologist-family.svg' %}"
-                         alt="Психолог с ребенком" class="img-fluid rounded-5 shadow-2xl position-relative z-1" width="520" height="420">
+                    <img src="{% static 'images/hero-home.svg' %}"
+                         alt="Иллюстрация: диалог специалиста и ребёнка в атмосфере центра «Отражение»"
+                         class="img-fluid hero-main-photo rounded-5 shadow-2xl position-relative z-1"
+                         width="560"
+                         height="440"
+                         loading="eager"
+                         fetchpriority="high"
+                         decoding="async">
                 </div>
             </div>
         </div>

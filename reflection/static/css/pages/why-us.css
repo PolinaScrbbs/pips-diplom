@@ -94,7 +94,8 @@
 
 .step-item {
     position: relative;
-    padding-left: 50px;
+    /* Крупные 01/02 (колонка ~4.1rem) + зазор до заголовка; у absolute-цифр margin не двигает текст */
+    padding-left: 4.75rem;
 }
 
 .step-number {
@@ -103,9 +104,13 @@
     top: 0;
     font-size: 3rem;
     font-weight: 900;
-    color: var(--brand-green);
-    opacity: 0.15;
+    color: rgba(255, 255, 255, 0.25);
     line-height: 1;
+    width: 3.25rem;
+    text-align: right;
+    margin-right: 0.75rem;
+    padding-right: 0.75rem;
+    box-sizing: content-box;
 }
 
 .cta-box {
@@ -128,17 +133,48 @@
     right: -150px;
 }
 
-.btn-white {
+/* CTA: одинаковая высота, текст по центру (flex), без конфликта с btn-lg */
+.cta-box .cta-actions > .btn {
+    padding: 0.875rem 2.25rem;
+    font-size: 1.0625rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1.25;
+    min-height: 3.125rem;
+    box-sizing: border-box;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, background-color 0.25s ease,
+        color 0.25s ease, border-color 0.25s ease;
+}
+
+.cta-box .cta-actions .btn-white {
     background: #fff;
     color: var(--brand-dark);
     border-radius: 50px;
-    padding: 15px 35px;
-    font-weight: 700;
-    transition: all 0.3s;
+    border: 2px solid transparent;
 }
 
-.btn-white:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-    color: var(--brand-green);
+.cta-box .cta-actions .btn-white:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 28px rgba(26, 82, 53, 0.2);
+    color: var(--brand-dark);
+    background: linear-gradient(180deg, #ffffff 0%, #f2faf5 100%);
+    border-color: rgba(46, 204, 113, 0.35);
+}
+
+.cta-box .cta-actions .btn-white:focus-visible {
+    transform: translateY(-1px);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.55);
+    outline: none;
+}
+
+.cta-box .cta-actions .cta-btn-vk {
+    border-width: 2px;
+}
+
+.cta-box .cta-actions .cta-btn-vk:hover {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: #fff;
+    color: #fff;
 }

@@ -73,6 +73,14 @@
 
 .hero-wrap { min-height: 90vh; }
 
+/* SVG чуть компактнее */
+.hero-image-wrapper img.hero-main-photo {
+    width: 100%;
+    max-width: 420px;
+    height: auto;
+    max-height: min(52vh, 360px);
+}
+
 .bg-shape-1 {
     position: absolute;
     top: -10%;
