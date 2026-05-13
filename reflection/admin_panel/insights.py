@@ -2,10 +2,14 @@ import hashlib
 import json
 import re
 import urllib.error
-import urllib.request
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
+
+from main.ollama_utils import (
+    ollama_insights_json_with_fallback,
+    ollama_stream_generate_lines_with_fallback,
+)
 
 
 @dataclass(frozen=True)
@@ -135,106 +139,12 @@ def normalize_sql(sql: str, *, max_len: int = 400) -> str:
     return s
 
 
-def _ollama_base_url() -> str:
-    """
-    Base URL для Ollama.
-
-    В Docker 127.0.0.1 указывает на контейнер, поэтому адрес нужно уметь
-    настраивать, например: http://ollama:11434.
-    """
-    try:
-        import os
-
-        base = (os.getenv("REFLECTION_OLLAMA_BASE_URL") or "http://127.0.0.1:11434").rstrip("/")
-        if base.endswith("/api"):
-            base = base[: -len("/api")]
-        return base
-    except Exception:
-        return "http://127.0.0.1:11434"
-
-
 def _ollama_generate_json(*, model: str, prompt: str, timeout_s: float) -> Dict[str, Any]:
     """
     Вызов локальной LLM через Ollama (бесплатно, офлайн).
-    Ожидаем JSON-ответ в поле `response`.
+    Сначала узел из REFLECTION_OLLAMA_BASE_URL (часто Docker), при необходимости — запасной (хост Mac).
     """
-    payload = {
-        "model": model,
-        "prompt": prompt,
-        "stream": False,
-        # Просим Ollama вернуть валидный JSON (если поддерживается runtime'ом).
-        "format": "json",
-        # Держим модель прогретой, чтобы повторные запросы были быстрее.
-        "keep_alive": "10m",
-        # Делаем вывод более детерминированным и JSON-дружелюбным.
-        "options": {
-            "temperature": 0.2,
-            # Убираем ограничение генерации — пусть модель сама решает,
-            # но промпт просит короткий результат.
-        },
-    }
-    def _read_json(url: str, body: Dict[str, Any]) -> Dict[str, Any]:
-        req = urllib.request.Request(
-            url,
-            data=json.dumps(body, ensure_ascii=False).encode("utf-8"),
-            headers={"Content-Type": "application/json"},
-            method="POST",
-        )
-        with urllib.request.urlopen(req, timeout=timeout_s) as resp:
-            raw = resp.read().decode("utf-8", errors="replace")
-        return json.loads(raw)
-
-    try:
-        data = _read_json(f"{_ollama_base_url()}/api/generate", payload)
-        text = (data.get("response") or "").strip()
-    except urllib.error.HTTPError as e:
-        # Если /api/generate недоступен (404), пробуем /api/chat.
-        if getattr(e, "code", None) != 404:
-            raise
-        try:
-            data = _read_json(
-                f"{_ollama_base_url()}/api/chat",
-                {
-                    "model": model,
-                    "stream": False,
-                    "format": "json",
-                    "keep_alive": "10m",
-                    "options": {"temperature": 0.2},
-                    "messages": [
-                        {"role": "system", "content": "Возвращай строго JSON по контракту, без Markdown."},
-                        {"role": "user", "content": prompt},
-                    ],
-                },
-            )
-            msg = (data.get("message") or {}) if isinstance(data, dict) else {}
-            text = (msg.get("content") or "").strip()
-        except urllib.error.HTTPError as e2:
-            if getattr(e2, "code", None) != 404:
-                raise
-            # OpenAI-совместимый fallback
-            data = _read_json(
-                f"{_ollama_base_url()}/v1/chat/completions",
-                {
-                    "model": model,
-                    "temperature": 0.2,
-                    "messages": [
-                        {"role": "system", "content": "Возвращай строго JSON по контракту, без Markdown."},
-                        {"role": "user", "content": prompt},
-                    ],
-                },
-            )
-            choices = data.get("choices") or []
-            first = choices[0] if choices else {}
-            msg = first.get("message") or {}
-            text = (msg.get("content") or "").strip()
-    # Попытка распарсить как JSON. Если модель обернула в текст — вырежем блок {...}.
-    try:
-        return json.loads(text)
-    except json.JSONDecodeError:
-        m = re.search(r"\{[\s\S]*\}", text)
-        if not m:
-            raise
-        return json.loads(m.group(0))
+    return ollama_insights_json_with_fallback(model=model, prompt=prompt, timeout_s=timeout_s)
 
 
 def ollama_stream_response(*, model: str, prompt: str, timeout_s: float):
@@ -242,26 +152,7 @@ def ollama_stream_response(*, model: str, prompt: str, timeout_s: float):
     Потоковая генерация Ollama (stream=true).
     Возвращает итератор словарей: каждый элемент — JSON-объект из одной строки стрима.
     """
-    payload = {
-        "model": model,
-        "prompt": prompt,
-        "stream": True,
-        "format": "json",
-        "keep_alive": "10m",
-        "options": {"temperature": 0.2},
-    }
-    req = urllib.request.Request(
-        f"{_ollama_base_url()}/api/generate",
-        data=json.dumps(payload, ensure_ascii=False).encode("utf-8"),
-        headers={"Content-Type": "application/json"},
-        method="POST",
-    )
-    resp = urllib.request.urlopen(req, timeout=timeout_s)
-    for raw_line in resp:
-        line = raw_line.decode("utf-8", errors="replace").strip()
-        if not line:
-            continue
-        yield json.loads(line)
+    yield from ollama_stream_generate_lines_with_fallback(model=model, prompt=prompt, timeout_s=timeout_s)
 
 
 def _llm_prompt_stats(*, compact: Dict[str, Any]) -> str:
@@ -358,7 +249,7 @@ def generate_stats_insights(stats_data: Dict[str, Any], *, prefer_llm: bool = Tr
                     llm_error=None,
                 )
         except (urllib.error.URLError, TimeoutError) as e:
-            return _generate_stats_insights_heuristic(safe=safe, digest=digest, llm_error=f"ollama_unreachable_or_timeout: {type(e).__name__}")
+            return _generate_stats_insights_heuristic(safe=safe, digest=digest, llm_error=str(e))
         except json.JSONDecodeError:
             return _generate_stats_insights_heuristic(safe=safe, digest=digest, llm_error="ollama_invalid_json")
 
