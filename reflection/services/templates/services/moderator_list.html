@@ -182,7 +182,111 @@
   </div>
 </div>
 
-{# Остальные модалки должны оставаться в файле как были (create/edit/delete). #}
+{# ===== Создание услуги (Модалка) ===== #}
+<div class="modal fade mod-modal" id="createServiceModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-plus-lg"></i> Добавить услугу</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="create-service-form">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-12 mod-field">
+                            <label>Название</label>
+                            <input type="text" name="name" class="form-control" placeholder="Введите название услуги" required>
+                        </div>
+                        <div class="col-md-6 mod-field">
+                            <label>Цена (₽)</label>
+                            <input type="number" name="price" class="form-control" placeholder="0" required>
+                        </div>
+                        <div class="col-md-6 mod-field">
+                            <label>Длительность</label>
+                            <input type="text" name="duration" class="form-control" placeholder="Например, 60 мин.">
+                        </div>
+                        <div class="col-12 mod-field">
+                            <label>Краткое описание</label>
+                            <input type="text" name="short_description" class="form-control" placeholder="Краткое описание для карточки">
+                        </div>
+                        <div class="col-12 mod-field">
+                            <label>Полное описание</label>
+                            <textarea name="description" class="form-control" rows="4" placeholder="Полное описание услуги"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer justify-content-end gap-2">
+                    <button type="button" class="btn btn-mod-ghost" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-mod-primary">Создать услугу</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{# ===== Редактирование услуги (Модалка) ===== #}
+<div class="modal fade mod-modal" id="editServiceModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-pencil"></i> Редактировать услугу</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="edit-service-form">
+                {% csrf_token %}
+                <input type="hidden" name="service_id" id="edit-service-id">
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-12 mod-field">
+                            <label>Название</label>
+                            <input type="text" name="name" id="edit-name" class="form-control" required>
+                        </div>
+                        <div class="col-md-6 mod-field">
+                            <label>Цена (₽)</label>
+                            <input type="number" name="price" id="edit-price" class="form-control" required>
+                        </div>
+                        <div class="col-md-6 mod-field">
+                            <label>Длительность</label>
+                            <input type="text" name="duration" id="edit-duration" class="form-control">
+                        </div>
+                        <div class="col-12 mod-field">
+                            <label>Краткое описание</label>
+                            <input type="text" name="short_description" id="edit-short-description" class="form-control">
+                        </div>
+                        <div class="col-12 mod-field">
+                            <label>Полное описание</label>
+                            <textarea name="description" id="edit-description" class="form-control" rows="4"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer justify-content-end gap-2">
+                    <button type="button" class="btn btn-mod-ghost" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-mod-primary">Сохранить изменения</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{# ===== Удаление услуги (Подтверждение) ===== #}
+<div class="modal fade mod-modal" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-body text-center p-4">
+                <div class="text-danger mb-3">
+                    <i class="bi bi-exclamation-triangle-fill" style="font-size: 3rem;"></i>
+                </div>
+                <h5 class="fw-bold">Удалить услугу?</h5>
+                <p class="text-muted small">Вы собираетесь удалить "<span id="delete-service-name"></span>". Это действие необратимо.</p>
+                <div class="d-flex gap-2 mt-4">
+                    <button type="button" class="btn btn-mod-ghost w-100" data-bs-dismiss="modal">Отмена</button>
+                    <button type="button" id="confirm-delete-btn" class="btn btn-danger w-100 rounded-pill">Удалить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}

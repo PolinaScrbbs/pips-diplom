@@ -1,4 +1,5 @@
 # users/views.py
+import json
 import logging
 
 from django.shortcuts import render, redirect
@@ -23,7 +24,7 @@ def register(request):
             return redirect("users:login")
         logger.warning(
             "Registration validation failed: %s",
-            form.errors.as_json(ensure_ascii=False),
+            json.dumps(form.errors.get_json_data(), ensure_ascii=False),
         )
     else:
         form = RegisterForm()
@@ -50,7 +51,7 @@ def login_view(request):
         logger.warning(
             "Login validation failed for username='%s': %s",
             request.POST.get("username", ""),
-            form.errors.as_json(ensure_ascii=False),
+            json.dumps(form.errors.get_json_data(), ensure_ascii=False),
         )
     else:
         form = LoginForm()
