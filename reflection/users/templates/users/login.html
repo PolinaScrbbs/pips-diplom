@@ -27,38 +27,52 @@
 
                         {% if messages %}
                             {% for message in messages %}
-                                <div class="alert alert-{{ message.tags }} border-0 rounded-4 small mb-4 py-3 shadow-sm animate__animated animate__fadeIn">
-                                    <i class="bi bi-info-circle me-2"></i> {{ message }}
+                                {% if message.tags == 'success' %}
+                                <div class="alert alert-success border-0 rounded-4 small mb-4 py-3 shadow-sm animate__animated animate__fadeIn" role="alert">
+                                    <i class="bi bi-check-circle me-2"></i>{{ message }}
                                 </div>
+                                {% endif %}
                             {% endfor %}
                         {% endif %}
 
-                        <form method="post" id="loginForm" novalidate class="needs-validation">
+                        <form method="post" id="loginForm" novalidate class="needs-validation{% if form.errors %} was-validated{% endif %}">
                             {% csrf_token %}
+                            {% if request.GET.next %}
+                                <input type="hidden" name="next" value="{{ request.GET.next }}">
+                            {% endif %}
 
                             {% if form.non_field_errors %}
                                 {% for error in form.non_field_errors %}
-                                    <div class="alert alert-danger border-0 rounded-4 mb-4 py-2 small shadow-sm">
-                                        <i class="bi bi-exclamation-triangle me-2"></i> {{ error }}
+                                    <div class="alert alert-danger border-0 rounded-4 mb-4 py-2 small shadow-sm" role="alert">
+                                        <i class="bi bi-exclamation-triangle me-2"></i>{{ error }}
                                     </div>
                                 {% endfor %}
                             {% endif %}
 
                             <div class="form-floating mb-3">
                                 <input type="text" name="username"
-                                       class="form-control {% if form.username.errors %}is-invalid{% endif %}"
-                                       id="id_username" placeholder="Логин" required autofocus>
+                                       class="form-control{% if form.username.errors %} is-invalid{% endif %}"
+                                       id="id_username" placeholder="Логин" required autofocus
+                                       maxlength="150" autocomplete="username"
+                                       value="{{ form.username.value|default:'' }}"
+                                       aria-describedby="usernameError">
                                 <label for="id_username">Логин</label>
-                                <div class="invalid-feedback">Пожалуйста, введите логин</div>
+                                <div id="usernameError" class="invalid-feedback">
+                                    {% if form.username.errors %}{{ form.username.errors.0 }}{% else %}Введите логин.{% endif %}
+                                </div>
                             </div>
 
                             <div class="form-floating mb-4 position-relative">
                                 <input type="password" name="password"
-                                       class="form-control {% if form.password.errors %}is-invalid{% endif %}"
-                                       id="id_password" placeholder="Пароль" required>
+                                       class="form-control{% if form.password.errors %} is-invalid{% endif %}"
+                                       id="id_password" placeholder="Пароль" required
+                                       autocomplete="current-password"
+                                       aria-describedby="passwordError">
                                 <label for="id_password">Пароль</label>
-                                <i class="bi bi-eye password-toggle" id="togglePassword"></i>
-                                <div class="invalid-feedback">Пожалуйста, введите пароль</div>
+                                <i class="bi bi-eye password-toggle" id="togglePassword" role="button" tabindex="0" aria-label="Показать пароль"></i>
+                                <div id="passwordError" class="invalid-feedback">
+                                    {% if form.password.errors %}{{ form.password.errors.0 }}{% else %}Введите пароль.{% endif %}
+                                </div>
                             </div>
 
                             <div class="d-grid">

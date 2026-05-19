@@ -2,7 +2,7 @@
 import logging
 
 from django.shortcuts import render, redirect
-from django.contrib.auth import login, logout, authenticate
+from django.contrib.auth import login, logout
 from django.contrib import messages
 from django.core.paginator import Paginator
 
@@ -21,6 +21,10 @@ def register(request):
             logger.info("New user registered: %s", user.username)
             messages.success(request, "Вы успешно зарегистрировались.")
             return redirect("users:login")
+        logger.warning(
+            "Registration validation failed: %s",
+            form.errors.as_json(ensure_ascii=False),
+        )
     else:
         form = RegisterForm()
 
@@ -29,31 +33,25 @@ def register(request):
 
 def login_view(request):
     if request.method == "POST":
-        form = LoginForm(data=request.POST)
+        form = LoginForm(request, data=request.POST)
         if form.is_valid():
-            username = form.cleaned_data["username"]
-            password = form.cleaned_data["password"]
-            user = authenticate(username=username, password=password)
-            if user:
-                login(request, user)
-                logger.info("User %s logged in (role=%s)", user.username, user.role)
-                messages.success(request, "Добро пожаловать!")
-                # Если фронт передал ?next=..., — уважаем его; иначе редиректим
-                # по роли на подходящую посадочную страницу.
-                next_url = request.GET.get("next") or request.POST.get("next")
-                if next_url:
-                    return redirect(next_url)
-                if user.is_admin():
-                    return redirect("admin_panel:users_list")
-                if user.is_moderator():
-                    return redirect("services:moderator_list")
-                return redirect("main:index")
-            else:
-                logger.warning(
-                    "Failed login attempt for username='%s'",
-                    form.cleaned_data.get("username", ""),
-                )
-                messages.error(request, "Неверный логин или пароль.")
+            user = form.get_user()
+            login(request, user)
+            logger.info("User %s logged in (role=%s)", user.username, user.role)
+            messages.success(request, "Добро пожаловать!")
+            next_url = request.GET.get("next") or request.POST.get("next")
+            if next_url:
+                return redirect(next_url)
+            if user.is_admin():
+                return redirect("admin_panel:users_list")
+            if user.is_moderator():
+                return redirect("services:moderator_list")
+            return redirect("main:index")
+        logger.warning(
+            "Login validation failed for username='%s': %s",
+            request.POST.get("username", ""),
+            form.errors.as_json(ensure_ascii=False),
+        )
     else:
         form = LoginForm()
 

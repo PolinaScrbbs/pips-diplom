@@ -23,6 +23,16 @@
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
 }
 
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25%      { transform: translateX(-8px); }
+    75%      { transform: translateX(8px); }
+}
+
+.auth-card.shake {
+    animation: shake 0.4s cubic-bezier(.36, .07, .19, .97) both;
+}
+
 .form-floating > .form-control {
     border: 2px solid #edf2f0;
     border-radius: 16px;
