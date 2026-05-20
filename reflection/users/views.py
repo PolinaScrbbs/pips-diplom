@@ -8,7 +8,7 @@ from django.contrib import messages
 from django.core.paginator import Paginator
 
 from main.utils import user_required
-from users.forms import LoginForm, RegisterForm
+from users.forms import LoginForm, RegisterForm, ProfileForm
 from reviews.forms import ReviewCreateForm
 from django.core.exceptions import PermissionDenied
 
@@ -76,20 +76,14 @@ def logout_view(request):
 @user_required
 def profile_view(request):
     if request.method == "POST":
-        # 1. Получаем данные из формы
-        new_username = request.POST.get("username")
-        new_email = request.POST.get("email")
-        new_phone = request.POST.get("phone")
-
-        # 2. Обновляем поля пользователя напрямую
-        request.user.username = new_username
-        request.user.email = new_email
-        request.user.phone = new_phone  # Теперь это поле есть в самой модели User
-
-        # 3. Сохраняем изменения в базе данных
-        request.user.save()
-
-        # 4. Перенаправляем обратно в профиль
+        form = ProfileForm(request.POST, instance=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Профиль успешно обновлен.")
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, error)
         return redirect("users:profile")
 
     bookings_list = request.user.bookings.all().order_by("-created_at")

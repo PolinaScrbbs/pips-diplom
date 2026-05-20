@@ -197,3 +197,72 @@ class LoginForm(AuthenticationForm):
         if not password:
             raise ValidationError("Введите пароль.")
         return password
+
+
+PHONE_PATTERN = re.compile(r"^\+7 \(\d{3}\) \d{3}-\d{2}-\d{2}$")
+
+
+class ProfileForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ["username", "email", "phone"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["email"].required = True
+        self.fields["phone"].required = False
+
+    def clean_username(self):
+        username = (self.cleaned_data.get("username") or "").strip()
+        if not username:
+            raise ValidationError("Введите логин.")
+
+        if len(username) < 3:
+            raise ValidationError("Логин должен содержать не менее 3 символов.")
+
+        if len(username) > 150:
+            raise ValidationError("Логин не может быть длиннее 150 символов.")
+
+        if not USERNAME_PATTERN.match(username):
+            raise ValidationError(
+                "Логин может содержать только буквы, цифры и символы @ . + - _."
+            )
+
+        # Проверка уникальности с исключением текущего пользователя
+        qs = User.objects.filter(username__iexact=username)
+        if self.instance and self.instance.pk:
+            qs = qs.exclude(pk=self.instance.pk)
+        if qs.exists():
+            raise ValidationError("Этот логин уже занят.")
+
+        return username
+
+    def clean_email(self):
+        email = (self.cleaned_data.get("email") or "").strip().lower()
+        if not email:
+            raise ValidationError("Введите email.")
+
+        if not EMAIL_PATTERN.match(email):
+            raise ValidationError("Введите корректный адрес email.")
+
+        if len(email) > 254:
+            raise ValidationError("Email слишком длинный.")
+
+        # Проверка уникальности с исключением текущего пользователя
+        qs = User.objects.filter(email__iexact=email)
+        if self.instance and self.instance.pk:
+            qs = qs.exclude(pk=self.instance.pk)
+        if qs.exists():
+            raise ValidationError("Пользователь с таким email уже существует.")
+
+        return email
+
+    def clean_phone(self):
+        phone = (self.cleaned_data.get("phone") or "").strip()
+        if not phone:
+            return phone
+
+        if not PHONE_PATTERN.match(phone):
+            raise ValidationError("Формат телефона должен быть +7 (XXX) XXX-XX-XX.")
+        return phone
+

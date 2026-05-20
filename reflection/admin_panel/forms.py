@@ -1,6 +1,7 @@
 from django import forms
-
+from django.contrib.auth import password_validation
 from users.models import User
+from users.forms import USERNAME_PATTERN, EMAIL_PATTERN, PHONE_PATTERN
 
 
 class UserCreateForm(forms.ModelForm):
@@ -26,6 +27,71 @@ class UserCreateForm(forms.ModelForm):
         # Разрешаем создавать пользователя без email/phone
         self.fields["email"].required = False
         self.fields["phone"].required = False
+
+    def clean_username(self):
+        username = (self.cleaned_data.get("username") or "").strip()
+        if not username:
+            raise forms.ValidationError("Введите логин.")
+
+        if len(username) < 3:
+            raise forms.ValidationError("Логин должен содержать не менее 3 символов.")
+
+        if len(username) > 150:
+            raise forms.ValidationError("Логин не может быть длиннее 150 символов.")
+
+        if not USERNAME_PATTERN.match(username):
+            raise forms.ValidationError(
+                "Логин может содержать только буквы, цифры и символы @ . + - _."
+            )
+
+        if User.objects.filter(username__iexact=username).exists():
+            raise forms.ValidationError("Этот логин уже занят.")
+
+        return username
+
+    def clean_email(self):
+        email = (self.cleaned_data.get("email") or "").strip().lower()
+        if not email:
+            return email
+
+        if not EMAIL_PATTERN.match(email):
+            raise forms.ValidationError("Введите корректный адрес email.")
+
+        if len(email) > 254:
+            raise forms.ValidationError("Email слишком длинный.")
+
+        if User.objects.filter(email__iexact=email).exists():
+            raise forms.ValidationError("Пользователь с таким email уже существует.")
+
+        return email
+
+    def clean_phone(self):
+        phone = (self.cleaned_data.get("phone") or "").strip()
+        if not phone:
+            return phone
+
+        if not PHONE_PATTERN.match(phone):
+            raise forms.ValidationError("Формат телефона должен быть +7 (XXX) XXX-XX-XX.")
+        return phone
+
+    def clean_password1(self):
+        password = self.cleaned_data.get("password1")
+        if not password:
+            raise forms.ValidationError("Введите пароль.")
+
+        if len(password) < 8:
+            raise forms.ValidationError("Пароль должен быть не менее 8 символов.")
+
+        user = User(
+            username=self.cleaned_data.get("username", ""),
+            email=self.cleaned_data.get("email", ""),
+        )
+        try:
+            password_validation.validate_password(password, user)
+        except forms.ValidationError as exc:
+            raise forms.ValidationError(exc.messages)
+
+        return password
 
     def clean(self):
         cleaned = super().clean()
@@ -74,6 +140,77 @@ class UserUpdateForm(forms.ModelForm):
                 (User.MODERATOR, "Модератор"),
             ]
 
+    def clean_username(self):
+        username = (self.cleaned_data.get("username") or "").strip()
+        if not username:
+            raise forms.ValidationError("Введите логин.")
+
+        if len(username) < 3:
+            raise forms.ValidationError("Логин должен содержать не менее 3 символов.")
+
+        if len(username) > 150:
+            raise forms.ValidationError("Логин не может быть длиннее 150 символов.")
+
+        if not USERNAME_PATTERN.match(username):
+            raise forms.ValidationError(
+                "Логин может содержать только буквы, цифры и символы @ . + - _."
+            )
+
+        qs = User.objects.filter(username__iexact=username)
+        if self.instance and self.instance.pk:
+            qs = qs.exclude(pk=self.instance.pk)
+        if qs.exists():
+            raise forms.ValidationError("Этот логин уже занят.")
+
+        return username
+
+    def clean_email(self):
+        email = (self.cleaned_data.get("email") or "").strip().lower()
+        if not email:
+            return email
+
+        if not EMAIL_PATTERN.match(email):
+            raise forms.ValidationError("Введите корректный адрес email.")
+
+        if len(email) > 254:
+            raise forms.ValidationError("Email слишком длинный.")
+
+        qs = User.objects.filter(email__iexact=email)
+        if self.instance and self.instance.pk:
+            qs = qs.exclude(pk=self.instance.pk)
+        if qs.exists():
+            raise forms.ValidationError("Пользователь с таким email уже существует.")
+
+        return email
+
+    def clean_phone(self):
+        phone = (self.cleaned_data.get("phone") or "").strip()
+        if not phone:
+            return phone
+
+        if not PHONE_PATTERN.match(phone):
+            raise forms.ValidationError("Формат телефона должен быть +7 (XXX) XXX-XX-XX.")
+        return phone
+
+    def clean_password1(self):
+        password = self.cleaned_data.get("password1")
+        if not password:
+            return password
+
+        if len(password) < 8:
+            raise forms.ValidationError("Пароль должен быть не менее 8 символов.")
+
+        user = self.instance or User(
+            username=self.cleaned_data.get("username", ""),
+            email=self.cleaned_data.get("email", ""),
+        )
+        try:
+            password_validation.validate_password(password, user)
+        except forms.ValidationError as exc:
+            raise forms.ValidationError(exc.messages)
+
+        return password
+
     def clean_role(self):
         role = self.cleaned_data.get("role")
         if role == User.ADMIN and (not self.instance or self.instance.role != User.ADMIN):
@@ -103,4 +240,5 @@ class UserUpdateForm(forms.ModelForm):
         if commit:
             user.save()
         return user
+
 
