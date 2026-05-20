@@ -10,11 +10,15 @@ from django.core.paginator import Paginator
 from main.utils import user_required
 from users.forms import LoginForm, RegisterForm
 from reviews.forms import ReviewCreateForm
+from django.core.exceptions import PermissionDenied
 
 logger = logging.getLogger("app.users")
 
 
 def register(request):
+    if request.user.is_authenticated:
+        raise PermissionDenied()
+
     if request.method == "POST":
         form = RegisterForm(request.POST)
         if form.is_valid():
@@ -33,6 +37,9 @@ def register(request):
 
 
 def login_view(request):
+    if request.user.is_authenticated:
+        raise PermissionDenied()
+
     if request.method == "POST":
         form = LoginForm(request, data=request.POST)
         if form.is_valid():

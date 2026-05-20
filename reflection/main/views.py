@@ -125,6 +125,7 @@ def start_moderator_preview(request):
 
 
 @require_POST
+@moderator_required
 def stop_moderator_preview(request):
     """Выключает режим предпросмотра. Доступен всем, у кого он активен в сессии."""
     was_active = request.session.pop(MODERATOR_PREVIEW_KEY, False)
