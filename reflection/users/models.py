@@ -34,7 +34,7 @@ class User(AbstractUser):
 
     def reviews_count(self):
         """Возвращает количество записей пользователя, к которым привязан отзыв"""
-        return self.bookings.filter(review__isnull=False).count()
+        return self.bookings.filter(review_link__isnull=False).count()
 
     def __str__(self):
         return f"{self.username} ({self.get_role_display()})"

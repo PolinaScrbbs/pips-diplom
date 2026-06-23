@@ -231,12 +231,15 @@
                 <button type="button" class="btn-close me-2" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4">
+                <div id="reviewFormError" class="alert alert-danger border-0 rounded-4 small py-3 shadow-sm d-none" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i><span id="reviewFormErrorText"></span>
+                </div>
                 <form id="reviewCreateForm" method="post" data-url="{% url 'reviews:create_review' %}">
                     {% csrf_token %}
                     <input type="hidden" name="booking_id" id="modal_booking_id">
                     <div class="rating-system-wrapper text-center mb-4">
                         <div class="mb-2"><span id="rating-label" class="badge rounded-pill bg-light text-dark px-3 py-2 fw-bold">Выберите оценку</span></div>
-                        <div class="stars-group d-flex justify-content-center flex-row-reverse">
+                        <div class="stars-group d-flex justify-content-center flex-row-reverse" id="reviewStarsGroup">
                             <input type="radio" name="rating" value="5" id="star5" required><label for="star5" data-hint="Отлично!"></label>
                             <input type="radio" name="rating" value="4" id="star4"><label for="star4" data-hint="Хорошо"></label>
                             <input type="radio" name="rating" value="3" id="star3"><label for="star3" data-hint="Нормально"></label>
@@ -244,8 +247,17 @@
                             <input type="radio" name="rating" value="1" id="star1"><label for="star1" data-hint="Ужасно"></label>
                         </div>
                     </div>
-                    <div class="form-floating mb-3"><input type="text" name="relation" class="form-control custom-input" id="id_relation" placeholder="Кто вы?" required><label for="id_relation">Кем вы приходитесь ребенку?</label></div>
-                    <div class="form-floating mb-4"><textarea name="text" class="form-control custom-input" id="id_text" placeholder="Ваш отзыв" style="height: 150px" required></textarea><label for="id_text">Расскажите подробнее...</label></div>
+                    <div class="form-floating mb-3">
+                        <input type="text" name="relation" class="form-control custom-input" id="id_relation"
+                               placeholder="Кто вы?" required minlength="2" maxlength="255">
+                        <label for="id_relation">Кем вы приходитесь ребенку?</label>
+                    </div>
+                    <div class="form-floating mb-2">
+                        <textarea name="text" class="form-control custom-input" id="id_text" placeholder="Ваш отзыв"
+                                  style="height: 150px" required minlength="10"></textarea>
+                        <label for="id_text">Расскажите подробнее...</label>
+                    </div>
+                    <p class="small text-muted mb-4">Минимум 10 символов в тексте отзыва.</p>
                     <button type="submit" class="btn btn-success-gradient w-100 py-3 rounded-pill fw-bold">Опубликовать</button>
                 </form>
             </div>

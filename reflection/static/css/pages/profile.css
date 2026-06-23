@@ -138,6 +138,14 @@
     background-color: var(--star-gold);
 }
 
+.stars-group.is-invalid-stars label {
+    background-color: #f8d7da;
+}
+
+#reviewFormError {
+    margin-bottom: 1rem;
+}
+
 .custom-input {
     border: 2px solid rgba(25, 135, 84, 0.14) !important;
     border-radius: 12px !important;

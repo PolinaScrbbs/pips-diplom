@@ -76,6 +76,12 @@ def create_review(request):
         # Проверяем, что бронь существует и принадлежит текущему пользователю
         booking = get_object_or_404(Booking, id=booking_id, user=request.user)
 
+        if Review.objects.filter(booking=booking).exists():
+            return JsonResponse(
+                {"ok": False, "message": "Отзыв на эту запись уже оставлен."},
+                status=400,
+            )
+
         form = ReviewCreateForm(request.POST)
         if form.is_valid():
             review = form.save(commit=False)
@@ -91,7 +97,14 @@ def create_review(request):
                 {"ok": True, "message": "Спасибо! Ваш отзыв опубликован."}
             )
 
-        return JsonResponse({"ok": False, "errors": form.errors}, status=400)
+        first_error = next(
+            (msg for field_errors in form.errors.values() for msg in field_errors),
+            "Проверьте правильность заполнения формы.",
+        )
+        return JsonResponse(
+            {"ok": False, "message": first_error, "errors": form.errors},
+            status=400,
+        )
     return JsonResponse({"ok": False, "message": "Метод не поддерживается"}, status=405)
 
 
